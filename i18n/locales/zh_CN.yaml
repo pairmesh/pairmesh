@@ -1,0 +1,68 @@
+# Copyright 2021 PairMesh, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "zh_CN"
+desc: "中文简体"
+tray:
+  app:
+    title_not_login: "请先登入PairMesh"
+    title_disconnected: "连接已断开,请点击以重新连接"
+    title_connecting: "连接中..."
+
+  auth_expires_in:
+    title_foramt: "认证将于%d小时后过期"
+    tips: "认证过期提醒"
+  my_address:  "我的地址: %s"
+  connect:
+    title: "上线"
+    tips: "上线当前节点"
+  disconnect:
+    title: "下线"
+    tips: "下线当前节点"
+  admin:
+    title: "管理后台"
+    tips: "登入meshstep管理后台"
+  login: "登入"
+  profile:
+    console: "管理后台"
+    logout: "登出"
+  device: "当前设备：%s"
+  my_devices: "我的设备"
+  my_networks: "我的网络"
+  status:
+    connecting: "网络状态：连接中..."
+    connected: "网络状态：已连接"
+  enable:  "启用设备"
+  autorun: "开机启动"
+  help:
+    title: "帮助"
+    debug: "启用调试日志"
+    file:  "打开日志文件"
+    update: "更新"
+  about: "关于"
+  exit: "退出"
+  toast:
+    my_address:
+      title: "我的地址"
+      tips_format: "地址(%s)已拷贝到剪贴板"
+    peer_address:
+      tips_format: "地址(%s)已拷贝到剪贴板"
+    my_devices:
+      tips_format: "地址(%s)已拷贝到剪贴板"
+message:
+  about: "关于"
+  version: "当前版本：%s"
+
+
+
