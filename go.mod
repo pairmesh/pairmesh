@@ -11,5 +11,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.0 // indirect
+	github.com/pingcap/fn v0.0.0-20200306044125-d5540d389059 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 )
