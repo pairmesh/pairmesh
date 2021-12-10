@@ -15,10 +15,9 @@
 package device
 
 import (
-	"fmt"
+	"github.com/pairmesh/pairmesh/node/device/runner"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/runner"
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/tun"
+	"github.com/pairmesh/pairmesh/node/device/tun"
 )
 
 var _ Device = &device{}
@@ -29,7 +28,7 @@ type device struct {
 
 // NewDevice constructs a new virtual network interface device.
 func NewDevice() (Device, error) {
-	dev, err := tun.NewTUN("pairmesh0")
+	dev, err := tun.NewTUN()
 	if err != nil {
 		return nil, err
 	}
@@ -43,42 +42,20 @@ func (d device) Router() Router {
 
 // Up implements the Device interface.
 func (d device) Up(address string) error {
-	// Set the IP address for the virtual interface
-	setAddress := []string{
-		"ip",
-		"addr",
-		"add",
-		fmt.Sprintf("%s/%d", address, 32),
-		"dev",
+	// Set the IP address for the virtual interface and enable the device
+	setAddressAndUp := []string{
+		"ifconfig",
 		d.Name(),
-	}
-	err := runner.Run(setAddress)
-	if err != nil {
-		return err
-	}
-
-	// Up the virtual interface device
-	upDevice := []string{
-		"ip",
-		"link",
-		"set",
-		"dev",
-		d.Name(),
+		"inet",
+		address,
+		address,
 		"up",
 	}
-
-	return runner.Run(upDevice)
+	return runner.Run(setAddressAndUp)
 }
 
 // Down implements the Device interface.
 func (d device) Down() error {
-	downDevice := []string{
-		"ip",
-		"link",
-		"set",
-		"dev",
-		d.Name(),
-		"down",
-	}
-	return runner.Run(downDevice)
+	// Noting to do
+	return nil
 }

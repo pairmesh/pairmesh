@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/pairmesh/pairmesh/cmd/pairmesh/entry"
+import "github.com/pairmesh/pairmesh/node/entry"
 
 func main() {
 	entry.Run()

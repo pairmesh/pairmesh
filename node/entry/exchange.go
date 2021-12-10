@@ -15,8 +15,8 @@
 package entry
 
 import (
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/api"
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/config"
+	"github.com/pairmesh/pairmesh/node/api"
+	"github.com/pairmesh/pairmesh/node/config"
 	"go.uber.org/zap"
 )
 

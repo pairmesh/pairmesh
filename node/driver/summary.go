@@ -19,7 +19,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/mesh"
+	"github.com/pairmesh/pairmesh/node/mesh"
 )
 
 const mockSummary = true

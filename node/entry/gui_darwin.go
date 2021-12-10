@@ -19,8 +19,8 @@ import (
 	"runtime"
 
 	"github.com/atotto/clipboard"
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/resources"
 	"github.com/pairmesh/pairmesh/i18n"
+	"github.com/pairmesh/pairmesh/node/resources"
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"

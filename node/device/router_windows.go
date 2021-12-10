@@ -1,7 +1,7 @@
 package device
 
 import (
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/runner"
+	"github.com/pairmesh/pairmesh/node/device/runner"
 
 	"inet.af/netaddr"
 )

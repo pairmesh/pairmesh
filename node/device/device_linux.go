@@ -17,10 +17,8 @@ package device
 import (
 	"fmt"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/firewall"
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/runner"
-
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/tun"
+	"github.com/pairmesh/pairmesh/node/device/runner"
+	"github.com/pairmesh/pairmesh/node/device/tun"
 )
 
 var _ Device = &device{}
@@ -31,7 +29,7 @@ type device struct {
 
 // NewDevice constructs a new virtual network interface device.
 func NewDevice() (Device, error) {
-	dev, err := tun.NewTUN()
+	dev, err := tun.NewTUN("pairmesh0")
 	if err != nil {
 		return nil, err
 	}
@@ -47,31 +45,27 @@ func (d device) Router() Router {
 func (d device) Up(address string) error {
 	// Set the IP address for the virtual interface
 	setAddress := []string{
-		"netsh",
-		"interface",
 		"ip",
-		"set",
-		"address",
-		fmt.Sprintf(`name="%s"`, d.Name()),
-		fmt.Sprintf("addr=%s", address),
-		"gateway=none",
+		"addr",
+		"add",
+		fmt.Sprintf("%s/%d", address, 32),
+		"dev",
+		d.Name(),
 	}
 	err := runner.Run(setAddress)
 	if err != nil {
 		return err
 	}
 
+	// Up the virtual interface device
 	upDevice := []string{
-		"netsh",
-		"interface",
+		"ip",
+		"link",
 		"set",
-		"interface",
-		fmt.Sprintf("\"%s\"", d.Name()),
-		"enable",
+		"dev",
+		d.Name(),
+		"up",
 	}
-
-	// Async setup firewall rules when process startup.
-	go firewall.Setup(address)
 
 	return runner.Run(upDevice)
 }
@@ -79,13 +73,12 @@ func (d device) Up(address string) error {
 // Down implements the Device interface.
 func (d device) Down() error {
 	downDevice := []string{
-		"netsh",
-		"interface",
+		"ip",
+		"link",
 		"set",
-		"interface",
-		fmt.Sprintf("\"%s\"", d.Name()),
-		"disable",
+		"dev",
+		d.Name(),
+		"down",
 	}
-
 	return runner.Run(downDevice)
 }

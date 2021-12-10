@@ -21,13 +21,13 @@ import (
 	"sort"
 	"time"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/mesh/types"
 	"github.com/pairmesh/pairmesh/codec"
 	"github.com/pairmesh/pairmesh/codec/serde"
 	"github.com/pairmesh/pairmesh/constant"
 	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
+	"github.com/pairmesh/pairmesh/node/mesh/types"
 	"github.com/pairmesh/pairmesh/protocol"
 	"go.uber.org/atomic"
 

@@ -19,8 +19,8 @@ import (
 
 	"github.com/atotto/clipboard"
 	"github.com/lxn/walk"
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/resources"
 	"github.com/pairmesh/pairmesh/i18n"
+	"github.com/pairmesh/pairmesh/node/resources"
 	"go.uber.org/zap"
 )
 

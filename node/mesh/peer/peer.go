@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/mesh/tunnel"
+	"github.com/pairmesh/pairmesh/node/mesh/tunnel"
 	"github.com/pairmesh/pairmesh/protocol"
 )
 

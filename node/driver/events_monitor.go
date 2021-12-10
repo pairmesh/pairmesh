@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/monitor"
 	"github.com/pairmesh/pairmesh/internal/relay"
+	"github.com/pairmesh/pairmesh/node/monitor"
 	"go.uber.org/zap"
 )
 

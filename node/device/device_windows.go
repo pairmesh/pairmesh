@@ -15,9 +15,12 @@
 package device
 
 import (
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/runner"
+	"fmt"
 
-	"github.com/pairmesh/pairmesh/cmd/pairmesh/device/tun"
+	"github.com/pairmesh/pairmesh/node/device/firewall"
+	"github.com/pairmesh/pairmesh/node/device/runner"
+
+	"github.com/pairmesh/pairmesh/node/device/tun"
 )
 
 var _ Device = &device{}
@@ -42,20 +45,47 @@ func (d device) Router() Router {
 
 // Up implements the Device interface.
 func (d device) Up(address string) error {
-	// Set the IP address for the virtual interface and enable the device
-	setAddressAndUp := []string{
-		"ifconfig",
-		d.Name(),
-		"inet",
-		address,
-		address,
-		"up",
+	// Set the IP address for the virtual interface
+	setAddress := []string{
+		"netsh",
+		"interface",
+		"ip",
+		"set",
+		"address",
+		fmt.Sprintf(`name="%s"`, d.Name()),
+		fmt.Sprintf("addr=%s", address),
+		"gateway=none",
 	}
-	return runner.Run(setAddressAndUp)
+	err := runner.Run(setAddress)
+	if err != nil {
+		return err
+	}
+
+	upDevice := []string{
+		"netsh",
+		"interface",
+		"set",
+		"interface",
+		fmt.Sprintf("\"%s\"", d.Name()),
+		"enable",
+	}
+
+	// Async setup firewall rules when process startup.
+	go firewall.Setup(address)
+
+	return runner.Run(upDevice)
 }
 
 // Down implements the Device interface.
 func (d device) Down() error {
-	// Noting to do
-	return nil
+	downDevice := []string{
+		"netsh",
+		"interface",
+		"set",
+		"interface",
+		fmt.Sprintf("\"%s\"", d.Name()),
+		"disable",
+	}
+
+	return runner.Run(downDevice)
 }
