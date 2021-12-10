@@ -1,2 +1,2 @@
-# pairmesh
-The next-generation VPN implementation.
+# Pairmesh
+The next-generation security P2P VPN implementation.
