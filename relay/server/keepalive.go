@@ -22,9 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pairmesh/pairmesh/cmd/pairrelay/api"
-	"github.com/pairmesh/pairmesh/cmd/pairrelay/config"
 	"github.com/pairmesh/pairmesh/internal/relay"
+	"github.com/pairmesh/pairmesh/relay/api"
+	"github.com/pairmesh/pairmesh/relay/config"
 	"github.com/pairmesh/pairmesh/security"
 	"go.uber.org/zap"
 )

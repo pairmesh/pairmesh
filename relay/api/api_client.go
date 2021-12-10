@@ -17,10 +17,10 @@ package api
 import (
 	"time"
 
-	"github.com/pairmesh/pairmesh/cmd/pairrelay/config"
 	"github.com/pairmesh/pairmesh/constant"
 	"github.com/pairmesh/pairmesh/jsonapi"
 	"github.com/pairmesh/pairmesh/protocol"
+	"github.com/pairmesh/pairmesh/relay/config"
 )
 
 // Client is used to access with the remote gateway

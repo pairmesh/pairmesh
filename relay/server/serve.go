@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pairmesh/pairmesh/cmd/pairrelay/api"
-	"github.com/pairmesh/pairmesh/cmd/pairrelay/config"
 	"github.com/pairmesh/pairmesh/constant"
 	"github.com/pairmesh/pairmesh/internal/relay"
+	"github.com/pairmesh/pairmesh/relay/api"
+	"github.com/pairmesh/pairmesh/relay/config"
 	"go.uber.org/zap"
 )
 
