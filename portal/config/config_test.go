@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/config"
+	"github.com/pairmesh/pairmesh/portal/config"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

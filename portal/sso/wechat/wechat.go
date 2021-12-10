@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/config"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/queryutil"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/sso"
+	"github.com/pairmesh/pairmesh/portal/config"
+	"github.com/pairmesh/pairmesh/portal/db"
+	"github.com/pairmesh/pairmesh/portal/db/models"
+	"github.com/pairmesh/pairmesh/portal/db/queryutil"
+	"github.com/pairmesh/pairmesh/portal/sso"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

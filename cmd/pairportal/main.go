@@ -24,10 +24,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/api"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/config"
 	"github.com/pairmesh/pairmesh/internal/cmdutil"
 	"github.com/pairmesh/pairmesh/internal/logutil"
+	"github.com/pairmesh/pairmesh/portal/api"
+	"github.com/pairmesh/pairmesh/portal/config"
 	"github.com/pairmesh/pairmesh/version"
 
 	"github.com/spf13/cobra"

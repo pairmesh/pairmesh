@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
+	"github.com/pairmesh/pairmesh/portal/db/models"
 
 	"gorm.io/gorm"
 	"inet.af/netaddr"

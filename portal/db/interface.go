@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/config"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
+	"github.com/pairmesh/pairmesh/portal/config"
+	"github.com/pairmesh/pairmesh/portal/db/models"
 
 	"go.uber.org/atomic"
 	"go.uber.org/zap"

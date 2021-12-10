@@ -25,9 +25,9 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
 	"github.com/pairmesh/pairmesh/constant"
+	"github.com/pairmesh/pairmesh/portal/db"
+	"github.com/pairmesh/pairmesh/portal/db/models"
 	"github.com/pingcap/fn"
 	"go.uber.org/zap"
 	"gorm.io/gorm"

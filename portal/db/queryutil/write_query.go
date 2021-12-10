@@ -18,8 +18,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
+	"github.com/pairmesh/pairmesh/portal/db"
+	"github.com/pairmesh/pairmesh/portal/db/models"
 	"github.com/pairmesh/pairmesh/security"
 
 	"github.com/google/uuid"

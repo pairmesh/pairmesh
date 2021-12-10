@@ -27,10 +27,10 @@ import (
 
 	"github.com/pairmesh/pairmesh/internal/redis"
 
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/sso"
 	"github.com/pairmesh/pairmesh/internal/jwt"
+	"github.com/pairmesh/pairmesh/portal/db"
+	"github.com/pairmesh/pairmesh/portal/db/models"
+	"github.com/pairmesh/pairmesh/portal/sso"
 
 	"github.com/pingcap/fn"
 	"go.uber.org/zap"

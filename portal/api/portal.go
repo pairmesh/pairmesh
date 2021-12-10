@@ -25,14 +25,14 @@ import (
 	"sync"
 
 	// grouped for init
-	"github.com/pairmesh/pairmesh/cmd/pairportal/config"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/sso"
-	_ "github.com/pairmesh/pairmesh/cmd/pairportal/sso/github"
-	_ "github.com/pairmesh/pairmesh/cmd/pairportal/sso/wechat"
 	"github.com/pairmesh/pairmesh/internal/fsutil"
 	"github.com/pairmesh/pairmesh/internal/jwt"
 	"github.com/pairmesh/pairmesh/internal/redis"
+	"github.com/pairmesh/pairmesh/portal/config"
+	"github.com/pairmesh/pairmesh/portal/db"
+	"github.com/pairmesh/pairmesh/portal/sso"
+	_ "github.com/pairmesh/pairmesh/portal/sso/github"
+	_ "github.com/pairmesh/pairmesh/portal/sso/wechat"
 
 	"go.uber.org/zap"
 )
