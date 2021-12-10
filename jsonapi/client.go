@@ -22,12 +22,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pairmesh/pairmesh/errcode"
-
 	"github.com/pairmesh/pairmesh/constant"
+	"github.com/pairmesh/pairmesh/errcode"
 	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/version"
-	"github.com/pkg/errors"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -62,7 +60,7 @@ func (c *Client) do(method, api string, reader io.Reader, res interface{}) error
 
 	req, err := http.NewRequest(method, url, reader)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	// Set the req headers
@@ -73,7 +71,7 @@ func (c *Client) do(method, api string, reader io.Reader, res interface{}) error
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	defer resp.Body.Close()
@@ -105,7 +103,7 @@ func (c *Client) Post(api string, req, res interface{}) error {
 	buffer := &bytes.Buffer{}
 	err := json.NewEncoder(buffer).Encode(req)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	return c.do(http.MethodPost, api, buffer, res)
@@ -116,7 +114,7 @@ func (c *Client) Put(api string, req, res interface{}) error {
 	buffer := &bytes.Buffer{}
 	err := json.NewEncoder(buffer).Encode(req)
 	if err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 
 	return c.do(http.MethodPut, api, buffer, res)
