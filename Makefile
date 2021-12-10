@@ -23,7 +23,7 @@ FILES     := $$(find . -name "*.go")
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)
 
-default: fmt pairrelay
+default: fmt pairmesh pairportal pairrelay
 
 fmt:
 	@echo "gofmt (simplify)"
@@ -33,6 +33,9 @@ proto:
 	@cd message/protos; \
     protoc --go_out=. *.proto; \
     protoc --go-grpc_out=. *.proto
+
+pairmesh:
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairmesh ./cmd/pairmesh
 
 pairportal:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairportal ./cmd/pairportal

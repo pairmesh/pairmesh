@@ -1,0 +1,219 @@
+// Copyright 2021 PairMesh, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// SPDX-License-Identifier: MIT
+//
+// Copyright (C) 2019 WireGuard LLC. All Rights Reserved.
+//
+
+package tun
+
+import (
+	"fmt"
+	"os"
+	"sync/atomic"
+	"time"
+
+	// import unsafe
+	_ "unsafe"
+
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+	"golang.org/x/sys/windows"
+)
+
+const (
+	rateMeasurementGranularity = uint64((time.Second / 2) / time.Nanosecond)
+	spinloopRateThreshold      = 800000000 / 8                                   // 800mbps
+	spinloopDuration           = uint64(time.Millisecond / 80 / time.Nanosecond) // ~1gbit/s
+)
+
+const ifaceName = "PairMesh"
+
+type rateJuggler struct {
+	current       uint64
+	nextByteCount uint64
+	nextStartTime int64
+	changing      int32
+}
+
+type windowsDevice struct {
+	name      string
+	wt        *wintun.Adapter
+	handle    windows.Handle
+	close     bool
+	errors    chan error
+	forcedMTU int
+	rate      rateJuggler
+	session   wintun.Session
+	readWait  windows.Handle
+}
+
+var wintunPool *wintun.Pool
+
+func init() {
+	var err error
+	wintunPool, err = wintun.MakePool("PairMesh")
+	if err != nil {
+		panic(fmt.Errorf("failed to make pool: %w", err))
+	}
+
+	wintun.DisableLog = true
+}
+
+//go:linkname procyield runtime.procyield
+func procyield(cycles uint32)
+
+//go:linkname nanotime runtime.nanotime
+func nanotime() int64
+
+// NewTUN creates a new TUN device and set the address to the specified address
+// It will creates a Wintun interface with the given name. Should a Wintun
+// interface with the same name exist, it is reused.
+func NewTUN() (Device, error) {
+	// Does an interface with this name already exist?
+	wt, err := wintunPool.OpenAdapter(ifaceName)
+	if err == nil {
+		// If so, we delete it, in case it has weird residual configuration.
+		_, err = wt.Delete(true)
+		if err != nil {
+			return nil, fmt.Errorf("deleting already existing interface: %w failed", err)
+		}
+	}
+
+	wt, rebootRequired, err := wintunPool.CreateAdapter(ifaceName, nil)
+	if err != nil {
+		return nil, fmt.Errorf("creating interface: %w failed", err)
+	}
+	if rebootRequired {
+		zap.L().Info("Windows indicated a reboot is required.")
+	}
+
+	name, err := wt.Name()
+	if err != nil {
+		return nil, err
+	}
+
+	dev := &windowsDevice{
+		name:      name,
+		wt:        wt,
+		handle:    windows.InvalidHandle,
+		errors:    make(chan error, 1),
+		forcedMTU: DefaultMTU,
+	}
+
+	dev.session, err = wt.StartSession(0x800000) // Ring capacity, 8 MiB
+	if err != nil {
+		dev.wt.Delete(false)
+		return nil, fmt.Errorf("Error starting session: %w", err)
+	}
+	dev.readWait = dev.session.ReadWaitEvent()
+
+	return dev, err
+}
+
+func (d *windowsDevice) Name() string {
+	return d.name
+}
+
+func (d *windowsDevice) Close() error {
+	d.close = true
+	d.session.End()
+	var err error
+	if d.wt != nil {
+		_, err = d.wt.Delete(true)
+	}
+	return err
+}
+
+// Note: Read() and Write() assume the caller comes only from a single thread; there's no locking.
+
+func (d *windowsDevice) Read(buff []byte) (int, error) {
+retry:
+	select {
+	case err := <-d.errors:
+		return 0, err
+	default:
+	}
+	start := nanotime()
+	shouldSpin := atomic.LoadUint64(&d.rate.current) >= spinloopRateThreshold && uint64(start-atomic.LoadInt64(&d.rate.nextStartTime)) <= rateMeasurementGranularity*2
+	for {
+		if d.close {
+			return 0, os.ErrClosed
+		}
+		packet, err := d.session.ReceivePacket()
+		switch err {
+		case nil:
+			packetSize := len(packet)
+			copy(buff, packet)
+			d.session.ReleaseReceivePacket(packet)
+			d.rate.update(uint64(packetSize))
+			return packetSize, nil
+		case windows.ERROR_NO_MORE_ITEMS:
+			if !shouldSpin || uint64(nanotime()-start) >= spinloopDuration {
+				windows.WaitForSingleObject(d.readWait, windows.INFINITE)
+				goto retry
+			}
+			procyield(1)
+			continue
+		case windows.ERROR_HANDLE_EOF:
+			return 0, os.ErrClosed
+		case windows.ERROR_INVALID_DATA:
+			return 0, errors.New("Send ring corrupt")
+		}
+		return 0, fmt.Errorf("Read failed: %w", err)
+	}
+}
+
+func (d *windowsDevice) Flush() error {
+	return nil
+}
+
+func (d *windowsDevice) Write(buff []byte) (int, error) {
+	if d.close {
+		return 0, os.ErrClosed
+	}
+
+	packetSize := len(buff)
+	d.rate.update(uint64(packetSize))
+
+	packet, err := d.session.AllocateSendPacket(packetSize)
+	if err == nil {
+		copy(packet, buff)
+		d.session.SendPacket(packet)
+		return packetSize, nil
+	}
+	switch err {
+	case windows.ERROR_HANDLE_EOF:
+		return 0, os.ErrClosed
+	case windows.ERROR_BUFFER_OVERFLOW:
+		return 0, nil // Dropping when ring is full.
+	}
+	return 0, fmt.Errorf("Write failed: %w", err)
+}
+
+func (rate *rateJuggler) update(packetLen uint64) {
+	now := nanotime()
+	total := atomic.AddUint64(&rate.nextByteCount, packetLen)
+	period := uint64(now - atomic.LoadInt64(&rate.nextStartTime))
+	if period >= rateMeasurementGranularity {
+		if !atomic.CompareAndSwapInt32(&rate.changing, 0, 1) {
+			return
+		}
+		atomic.StoreInt64(&rate.nextStartTime, now)
+		atomic.StoreUint64(&rate.current, total*uint64(time.Second/time.Nanosecond)/period)
+		atomic.StoreUint64(&rate.nextByteCount, 0)
+		atomic.StoreInt32(&rate.changing, 0)
+	}
+}
