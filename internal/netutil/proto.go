@@ -45,7 +45,7 @@ const (
 	UDP    Proto = 0x11
 	SCTP   Proto = 0x84
 
-	// MSMP is the Meshstep Message Protocol (our ICMP-ish
+	// MSMP is the PairMesh Message Protocol (our ICMP-ish
 	// thing), an IP protocol used only between Tailscale nodes
 	// (still encrypted by WireGuard) that communicates why things
 	// failed, etc.

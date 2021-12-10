@@ -69,7 +69,7 @@ const (
 	FragmentHeaderSize   = 14
 )
 
-// WintunInterfaceDesc is the description attached to Meshstep
+// WintunInterfaceDesc is the description attached to PairMesh
 // interfaces on Windows. This is set by our modified WinTun driver.
 const WintunInterfaceDesc = "Peerly Tunnel"
 

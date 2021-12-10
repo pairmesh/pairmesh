@@ -34,7 +34,13 @@ proto:
     protoc --go_out=. *.proto; \
     protoc --go-grpc_out=. *.proto
 
+pairportal:
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairportal ./cmd/pairportal
+
 pairrelay:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairrelay ./cmd/pairrelay
+
+queryset:
+	go run ./tools/qs/main.go -in ./cmd/pairportal/db/models/models.go -out ./cmd/pairportal/db/models/autogen_query.go
 
 .PHONY: build package

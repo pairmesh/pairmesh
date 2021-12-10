@@ -103,7 +103,7 @@ func appendU32(b []byte, v uint32) []byte {
 // ParseBindingRequest parses a STUN binding request.
 //
 // It returns an error unless it advertises that it came from
-// Meshstep.
+// PairMesh.
 func ParseBindingRequest(b []byte) (TxID, error) {
 	if !Is(b) {
 		return TxID{}, ErrNotSTUN
@@ -146,7 +146,7 @@ var (
 	ErrNotSuccessResponse = errors.New("STUN packet is not a response")
 	ErrMalformedAttrs     = errors.New("STUN response has malformed attributes")
 	ErrNotBindingRequest  = errors.New("STUN request not a binding request")
-	ErrWrongSoftware      = errors.New("STUN request came from non-Meshstep software")
+	ErrWrongSoftware      = errors.New("STUN request came from non-PairMesh software")
 	ErrNoFingerprint      = errors.New("STUN request didn't end in fingerprint")
 	ErrWrongFingerprint   = errors.New("STUN request had bogus fingerprint")
 )

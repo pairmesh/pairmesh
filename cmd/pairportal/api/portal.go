@@ -1,0 +1,164 @@
+// Copyright 2020 PairMesh.com
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package api
+
+import (
+	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"fmt"
+	"io/ioutil"
+	"net"
+	"net/http"
+	"sync"
+
+	// grouped for init
+	"github.com/pairmesh/pairmesh/cmd/pairportal/config"
+	"github.com/pairmesh/pairmesh/cmd/pairportal/db"
+	"github.com/pairmesh/pairmesh/cmd/pairportal/sso"
+	_ "github.com/pairmesh/pairmesh/cmd/pairportal/sso/github"
+	_ "github.com/pairmesh/pairmesh/cmd/pairportal/sso/wechat"
+	"github.com/pairmesh/pairmesh/internal/fsutil"
+	"github.com/pairmesh/pairmesh/internal/jwt"
+	"github.com/pairmesh/pairmesh/internal/redis"
+
+	"go.uber.org/zap"
+)
+
+func serveHTTP(cfg *config.Config) (*http.Server, error) {
+	setupMiddleware()
+
+	// Preflight the database
+	var err error
+	if err = sso.Initialize(cfg.SSO); err != nil {
+		return nil, fmt.Errorf("initialize sso is failed: %w", err)
+	}
+
+	if err = db.Initialize(cfg.MySQL); err != nil {
+		return nil, fmt.Errorf("initialize mysql is failed: %w", err)
+	}
+
+	err = redis.Initialize(
+		cfg.Redis.Conn,
+		redis.Timeout(cfg.Redis.Timeout),
+		redis.DB(cfg.Redis.DB),
+		redis.Password(cfg.Redis.Password))
+	if err != nil {
+		return nil, fmt.Errorf("initialize redis is failed: %w", err)
+	}
+
+	// Preflight the jwt
+	err = jwt.Initialize(
+		cfg.JWT.AccessSecret,
+		cfg.JWT.RefreshSecret,
+		jwt.AccessTokenTTL(cfg.JWT.AccessTokenTTL),
+		jwt.RefreshTokenTTL(cfg.JWT.RefreshTokenTTL),
+		jwt.WithStore(redis.Shared()))
+	if err != nil {
+		return nil, fmt.Errorf("initialize jwt is failed: %w", err)
+	}
+
+	// Load the private key
+	var key *rsa.PrivateKey
+	if cfg.PrivateKey == "" {
+		path := "pairportal.private.pem"
+		if fsutil.IsExists(path) {
+			zap.L().Info("Private privateKey path does not specified, find default path", zap.String("path", path))
+			data, err := ioutil.ReadFile(path)
+			if err != nil {
+				return nil, fmt.Errorf("read private key is failed: %w", err)
+			}
+			key, err = x509.ParsePKCS1PrivateKey(data)
+			if err != nil {
+				return nil, fmt.Errorf("parse private key is failed: %w", err)
+			}
+
+		} else {
+			zap.L().Info("Private privateKey path does not specified, generated automatically", zap.String("path", path))
+			priv, err := rsa.GenerateKey(rand.Reader, 512)
+			if err != nil {
+				return nil, fmt.Errorf("generate private key is failed: %w", err)
+			}
+			data := x509.MarshalPKCS1PrivateKey(priv)
+			err = ioutil.WriteFile(path, data, 0600)
+			if err != nil {
+				return nil, fmt.Errorf("save private key is failed: %w", err)
+			}
+			key = priv
+		}
+		cfg.PrivateKey = path
+	}
+
+	var (
+		server    = newServer(cfg.Relay.AuthKey, key)
+		ssoServer = newSSOServer(cfg.SSO.Redirect)
+
+		mux     = route(server, ssoServer)
+		address = fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	)
+
+	if err := server.preload(); err != nil {
+		return nil, fmt.Errorf("preload data is failed: %w", err)
+	}
+
+	srv := &http.Server{
+		Handler: mux,
+	}
+
+	go func() {
+		zap.L().Info("Listening on:	" + address)
+		l, err := net.Listen("tcp", address)
+		if err != nil {
+			zap.L().Fatal("Listen local HTTP server failed", zap.Error(err))
+		}
+
+		if cfg.TLSCert == "" {
+			err = srv.Serve(l)
+		} else {
+			err = srv.ServeTLS(l, cfg.TLSCert, cfg.TLSKey)
+		}
+
+		if err == nil || err == http.ErrServerClosed {
+			zap.L().Info("The web server is over")
+			return
+		}
+		zap.L().Error("The web server is over", zap.Error(err))
+	}()
+
+	return srv, nil
+}
+
+// Serve serves the gateway service
+func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) {
+	defer wg.Done()
+
+	srv, err := serveHTTP(cfg)
+	if err != nil {
+		zap.L().Error("Serve http is failed", zap.Error(err))
+		return
+	}
+
+	select {
+	case <-ctx.Done():
+		ctx, cancel := context.WithTimeout(context.Background(), 5e9)
+		defer cancel()
+		err := srv.Shutdown(ctx)
+		if err != nil {
+			zap.L().Error("Shutdown server failed", zap.Error(err))
+		}
+	}
+
+	zap.L().Info("The web server is shutdown gracefully")
+}

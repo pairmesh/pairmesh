@@ -14,7 +14,7 @@
 
 package protocol
 
-// Internal protocols between MeshStep relay and portal
+// Internal protocols between PairMesh relay and portal
 type (
 	// ServerID represents the identifier of relay server.
 	ServerID uint64
