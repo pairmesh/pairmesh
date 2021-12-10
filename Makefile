@@ -46,4 +46,25 @@ pairrelay:
 queryset:
 	go run ./tools/qs/main.go -in ./cmd/pairportal/db/models/models.go -out ./cmd/pairportal/db/models/autogen_query.go
 
+# Check
+# Lint tools
+check: vet fmt check-static # TODO: enable lint
+
+lint: tools/bin/revive
+	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(FILES)
+
+vet:
+	$(GO) vet ./...
+
+check-static: tools/bin/golangci-lint
+	tools/bin/golangci-lint run --timeout 5m ./...
+
+tools/bin/revive: tools/check/go.mod
+	cd tools/check; \
+	$(GO) build -o ../bin/revive github.com/mgechev/revive
+
+tools/bin/golangci-lint: tools/check/go.mod
+	cd tools/check; \
+	$(GO) build -o ../bin/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
+
 .PHONY: build package

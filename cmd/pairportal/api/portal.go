@@ -150,14 +150,13 @@ func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) {
 		return
 	}
 
-	select {
-	case <-ctx.Done():
-		ctx, cancel := context.WithTimeout(context.Background(), 5e9)
-		defer cancel()
-		err := srv.Shutdown(ctx)
-		if err != nil {
-			zap.L().Error("Shutdown server failed", zap.Error(err))
-		}
+	// Wait for server shutdown.
+	<-ctx.Done()
+	ctx, cancel := context.WithTimeout(context.Background(), 5e9)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		zap.L().Error("Shutdown server failed", zap.Error(err))
 	}
 
 	zap.L().Info("The web server is shutdown gracefully")

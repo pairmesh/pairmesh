@@ -95,7 +95,6 @@ But fields values in the configuration are optinal.`,
 			wg.Wait()
 			zap.L().Info("See you again, bye!")
 			return nil
-
 		},
 	}
 
