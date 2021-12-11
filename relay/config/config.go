@@ -20,9 +20,11 @@ import (
 	"encoding/base64"
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/flynn/noise"
+	"github.com/pairmesh/pairmesh/security"
 	"go.uber.org/zap"
 )
 
@@ -49,8 +51,8 @@ type Config struct {
 	// https://datatracker.ietf.org/doc/html/rfc5389#section-18.4
 	STUNPort int `json:"stun_port,omitempty" toml:"stun_port,omitempty"`
 
-	DHKey  noise.DHKey `toml:"dh_key"`
-	Portal *Portal     `toml:"portal"`
+	DHKey  *security.DHKey `toml:"dh_key"`
+	Portal *Portal         `toml:"portal"`
 }
 
 // Portal represents the gateway instance configuration
@@ -82,17 +84,6 @@ func FromReader(reader io.Reader) (*Config, error) {
 		return nil, err
 	}
 
-	if len(c.DHKey.Public) != noise.DH25519.DHLen() {
-		// Generate the static key for the current node.
-		staticKey, err := noise.DH25519.GenerateKeypair(rand.Reader)
-		if err != nil {
-			return nil, err
-		}
-		c.DHKey = staticKey
-		zap.L().Info("Generate key", zap.String("publicKey", base64.RawStdEncoding.EncodeToString(staticKey.Public)))
-		// TODO: Save the relay DHKey
-	}
-
 	return c, nil
 }
 
@@ -108,5 +99,32 @@ func FromPath(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return FromBytes(data)
+	cfg, err := FromBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.DHKey == nil || len(cfg.DHKey.Public) != noise.DH25519.DHLen() {
+		// Generate the static key for the current node.
+		staticKey, err := noise.DH25519.GenerateKeypair(rand.Reader)
+		if err != nil {
+			return nil, err
+		}
+		cfg.DHKey = security.FromNoiseDHKey(staticKey)
+		zap.L().Info("Generate key", zap.String("publicKey", base64.RawStdEncoding.EncodeToString(staticKey.Public)))
+
+		// Save to the configuration.
+		file, err := os.OpenFile(path, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		err = toml.NewEncoder(file).Encode(cfg)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return cfg, nil
 }

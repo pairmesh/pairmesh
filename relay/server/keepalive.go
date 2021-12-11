@@ -32,7 +32,7 @@ import (
 var startedAt = time.Now()
 
 func retrievePortalKey(apiClient *api.Client, cfg *config.Config) (*rsa.PublicKey, error) {
-	resp, err := apiClient.Keepalive(cfg, security.NewDHPublic(cfg.DHKey.Public).String(), startedAt)
+	resp, err := apiClient.Keepalive(cfg, security.NewDHPublic(cfg.DHKey.ToNoiseDHKey().Public).String(), startedAt)
 	if err != nil {
 		return nil, err
 	}

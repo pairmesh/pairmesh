@@ -40,7 +40,7 @@ func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) {
 
 	// Preflight the relay server
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
-	server := relay.NewServer(addr, constant.HeartbeatInterval, cfg.DHKey, publicKey)
+	server := relay.NewServer(addr, constant.HeartbeatInterval, cfg.DHKey.ToNoiseDHKey(), publicKey)
 
 	// Register the packet customized callback.
 	registerCallback(server)

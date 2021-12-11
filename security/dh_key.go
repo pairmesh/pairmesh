@@ -110,8 +110,8 @@ func NewDHPublic(s []byte) DHPublic {
 
 // DHKey a noise.DHkey wrapper for PairMesh
 type DHKey struct {
-	Public  DHPublic
-	Private DHPrivate
+	Public  DHPublic  `json:"public"`
+	Private DHPrivate `json:"private"`
 }
 
 // FromNoiseDHKey generate a DHKey from noise.DHKey
