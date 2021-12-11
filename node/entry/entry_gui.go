@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
+	"time"
 
 	"github.com/pairmesh/pairmesh/i18n"
 
@@ -149,6 +151,8 @@ func Run() {
 }
 
 func (app *osApp) Run() error {
+	runtime.LockOSThread()
+
 	zap.L().Info("Driver initialized successfully")
 
 	app.auto = &autostart.App{
@@ -163,15 +167,22 @@ func (app *osApp) Run() error {
 	}
 
 	// Refresh UI dynamically.
-	go app.uiRender()
+	go app.refreshTray()
 
 	app.run()
 
 	return nil
 }
 
-func (app osApp) uiRender() {
-	// TODO:
+func (app *osApp) refreshTray() {
+	timer := time.After(0)
+	for {
+		select {
+		case <-timer:
+			timer = time.After(3 * time.Second)
+			app.renderTrayContextMenu()
+		}
+	}
 }
 
 func (app *osApp) onQuit() {

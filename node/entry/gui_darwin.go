@@ -16,7 +16,6 @@ package entry
 
 import (
 	"fmt"
-	"runtime"
 
 	"github.com/atotto/clipboard"
 	"github.com/pairmesh/pairmesh/i18n"
@@ -24,15 +23,17 @@ import (
 	"github.com/progrium/macdriver/cocoa"
 	"github.com/progrium/macdriver/core"
 	"github.com/progrium/macdriver/objc"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 
 type osApp struct {
 	baseApp
 
-	nsApp      cocoa.NSApplication
-	menuApp    cocoa.NSMenu
-	statusItem cocoa.NSStatusItem
+	initialized atomic.Bool
+	nsApp       cocoa.NSApplication
+	menuApp     cocoa.NSMenu
+	statusItem  cocoa.NSStatusItem
 }
 
 func newOSApp() *osApp {
@@ -40,8 +41,6 @@ func newOSApp() *osApp {
 }
 
 func (app *osApp) createTray() error {
-	runtime.LockOSThread()
-
 	cocoa.TerminateAfterWindowsClose = false
 	app.nsApp = cocoa.NSApp_WithDidLaunch(func(n objc.Object) {
 		obj := cocoa.NSStatusBar_System().StatusItemWithLength(cocoa.NSVariableStatusItemLength)
@@ -55,7 +54,7 @@ func (app *osApp) createTray() error {
 		obj.SetMenu(menu)
 		app.menuApp = menu
 		app.statusItem = obj
-
+		app.initialized.Store(true)
 		app.renderTrayContextMenu()
 	})
 
@@ -67,11 +66,15 @@ func (app *osApp) run() {
 }
 
 func (app *osApp) renderTrayContextMenu() {
+	if !app.initialized.Load() {
+		return
+	}
+
 	app.menuApp.RemoveAllItems()
 
 	summary := app.driver.Summarize()
 
-	if app.cfg.IsGuest() {
+	if false && app.cfg.IsGuest() {
 		// Login
 		login := app.addMenuItem(i18n.L("tray.login"), "handleLogin:", func(_ objc.Object) { app.onOpenLoginWeb() })
 		app.menuApp.AddItem(login)

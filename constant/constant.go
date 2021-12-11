@@ -51,8 +51,8 @@ const (
 )
 
 // DefaultAPIGateway represents the gateway's default address
-const DefaultAPIGateway = "https://api.peerly.cn"
-const DefaultMyGateway = "https://my.peerly.cn"
+const DefaultAPIGateway = "https://api.pairmesh.com"
+const DefaultMyGateway = "https://my.pairmesh.com"
 
 // Packet protocol constants
 
