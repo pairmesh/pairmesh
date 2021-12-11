@@ -28,7 +28,7 @@ require (
 	go.uber.org/zap v1.19.1
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654
+	golang.org/x/sys v0.0.0-20211106132015-ebca88c72f68
 	golang.org/x/tools v0.1.8
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b

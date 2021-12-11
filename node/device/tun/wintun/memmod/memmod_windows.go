@@ -8,6 +8,8 @@ package memmod
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -37,16 +39,20 @@ type Module struct {
 	blockedMemory *addressList
 }
 
+func (module *Module) BaseAddr() uintptr {
+	return module.codeBase
+}
+
 func (module *Module) headerDirectory(idx int) *IMAGE_DATA_DIRECTORY {
 	return &module.headers.OptionalHeader.DataDirectory[idx]
 }
 
-func (module *Module) copySections(address uintptr, size uintptr, old_headers *IMAGE_NT_HEADERS) error {
+func (module *Module) copySections(address uintptr, size uintptr, oldHeaders *IMAGE_NT_HEADERS) error {
 	sections := module.headers.Sections()
 	for i := range sections {
 		if sections[i].SizeOfRawData == 0 {
 			// Section doesn't contain data in the dll itself, but may define uninitialized data.
-			sectionSize := old_headers.OptionalHeader.SectionAlignment
+			sectionSize := oldHeaders.OptionalHeader.SectionAlignment
 			if sectionSize == 0 {
 				continue
 			}
@@ -62,8 +68,7 @@ func (module *Module) copySections(address uintptr, size uintptr, old_headers *I
 			dest = module.codeBase + uintptr(sections[i].VirtualAddress)
 			// NOTE: On 64bit systems we truncate to 32bit here but expand again later when "PhysicalAddress" is used.
 			sections[i].SetPhysicalAddress((uint32)(dest & 0xffffffff))
-			var dst []byte
-			unsafeSlice(unsafe.Pointer(&dst), a2p(dest), int(sectionSize))
+			dst := unsafe.Slice((*byte)(a2p(dest)), sectionSize)
 			for j := range dst {
 				dst[j] = 0
 			}
@@ -159,6 +164,15 @@ func (module *Module) finalizeSection(sectionData *sectionFinalizeData) error {
 	return nil
 }
 
+func (module *Module) registerExceptionHandlers() {
+	directory := module.headerDirectory(IMAGE_DIRECTORY_ENTRY_EXCEPTION)
+	if directory.Size == 0 || directory.VirtualAddress == 0 {
+		return
+	}
+	runtimeFuncs := (*windows.RUNTIME_FUNCTION)(unsafe.Pointer(module.codeBase + uintptr(directory.VirtualAddress)))
+	windows.RtlAddFunctionTable(runtimeFuncs, uint32(uintptr(directory.Size)/unsafe.Sizeof(*runtimeFuncs)), module.codeBase)
+}
+
 func (module *Module) finalizeSections() error {
 	sections := module.headers.Sections()
 	imageOffset := module.headers.OptionalHeader.imageOffset()
@@ -166,6 +180,7 @@ func (module *Module) finalizeSections() error {
 	sectionData.address = uintptr(sections[0].PhysicalAddress()) | imageOffset
 	sectionData.alignedAddress = alignDown(sectionData.address, uintptr(module.headers.OptionalHeader.SectionAlignment))
 	sectionData.size = module.realSectionSize(&sections[0])
+	sections[0].SetVirtualSize(uint32(sectionData.size))
 	sectionData.characteristics = sections[0].Characteristics
 
 	// Loop through all sections and change access flags.
@@ -173,6 +188,7 @@ func (module *Module) finalizeSections() error {
 		sectionAddress := uintptr(sections[i].PhysicalAddress()) | imageOffset
 		alignedAddress := alignDown(sectionAddress, uintptr(module.headers.OptionalHeader.SectionAlignment))
 		sectionSize := module.realSectionSize(&sections[i])
+		sections[i].SetVirtualSize(uint32(sectionSize))
 		// Combine access flags of all sections that share a page.
 		// TODO: We currently share flags of a trailing large section with the page of a first small section. This should be optimized.
 		if sectionData.alignedAddress == alignedAddress || sectionData.address+sectionData.size > alignedAddress {
@@ -233,11 +249,9 @@ func (module *Module) performBaseRelocation(delta uintptr) (relocated bool, err 
 	for relocationHdr.VirtualAddress > 0 {
 		dest := module.codeBase + uintptr(relocationHdr.VirtualAddress)
 
-		var relInfos []uint16
-		unsafeSlice(
-			unsafe.Pointer(&relInfos),
-			a2p(uintptr(unsafe.Pointer(relocationHdr))+unsafe.Sizeof(*relocationHdr)),
-			int((uintptr(relocationHdr.SizeOfBlock)-unsafe.Sizeof(*relocationHdr))/unsafe.Sizeof(relInfos[0])))
+		relInfos := unsafe.Slice(
+			(*uint16)(a2p(uintptr(unsafe.Pointer(relocationHdr))+unsafe.Sizeof(*relocationHdr))),
+			(uintptr(relocationHdr.SizeOfBlock)-unsafe.Sizeof(*relocationHdr))/unsafe.Sizeof(uint16(0)))
 		for _, relInfo := range relInfos {
 			// The upper 4 bits define the type of relocation.
 			relType := relInfo >> 12
@@ -312,7 +326,7 @@ func (module *Module) buildImportTable() error {
 
 	module.modules = make([]windows.Handle, 0, 16)
 	importDesc := (*IMAGE_IMPORT_DESCRIPTOR)(a2p(module.codeBase + uintptr(directory.VirtualAddress)))
-	for !isBadReadPtr(uintptr(unsafe.Pointer(importDesc)), unsafe.Sizeof(*importDesc)) && importDesc.Name != 0 {
+	for importDesc.Name != 0 {
 		handle, err := windows.LoadLibraryEx(windows.BytePtrToString((*byte)(a2p(module.codeBase+uintptr(importDesc.Name)))), 0, windows.LOAD_LIBRARY_SEARCH_SYSTEM32)
 		if err != nil {
 			return fmt.Errorf("Error loading module: %w", err)
@@ -358,14 +372,82 @@ func (module *Module) buildNameExports() error {
 	if exports.NumberOfNames == 0 {
 		return errors.New("No functions exported by name")
 	}
-	var nameRefs []uint32
-	unsafeSlice(unsafe.Pointer(&nameRefs), a2p(module.codeBase+uintptr(exports.AddressOfNames)), int(exports.NumberOfNames))
-	var ordinals []uint16
-	unsafeSlice(unsafe.Pointer(&ordinals), a2p(module.codeBase+uintptr(exports.AddressOfNameOrdinals)), int(exports.NumberOfNames))
+	nameRefs := unsafe.Slice((*uint32)(a2p(module.codeBase+uintptr(exports.AddressOfNames))), exports.NumberOfNames)
+	ordinals := unsafe.Slice((*uint16)(a2p(module.codeBase+uintptr(exports.AddressOfNameOrdinals))), exports.NumberOfNames)
 	module.nameExports = make(map[string]uint16)
 	for i := range nameRefs {
 		nameArray := windows.BytePtrToString((*byte)(a2p(module.codeBase + uintptr(nameRefs[i]))))
 		module.nameExports[nameArray] = ordinals[i]
+	}
+	return nil
+}
+
+type addressRange struct {
+	start uintptr
+	end   uintptr
+}
+
+var loadedAddressRanges []addressRange
+var loadedAddressRangesMu sync.RWMutex
+var haveHookedRtlPcToFileHeader sync.Once
+var hookRtlPcToFileHeaderResult error
+
+func hookRtlPcToFileHeader() error {
+	var kernelBase windows.Handle
+	err := windows.GetModuleHandleEx(windows.GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, windows.StringToUTF16Ptr("kernelbase.dll"), &kernelBase)
+	if err != nil {
+		return err
+	}
+	imageBase := unsafe.Pointer(kernelBase)
+	dosHeader := (*IMAGE_DOS_HEADER)(imageBase)
+	ntHeaders := (*IMAGE_NT_HEADERS)(unsafe.Add(imageBase, dosHeader.E_lfanew))
+	importsDirectory := ntHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+	importDescriptor := (*IMAGE_IMPORT_DESCRIPTOR)(unsafe.Add(imageBase, importsDirectory.VirtualAddress))
+	for ; importDescriptor.Name != 0; importDescriptor = (*IMAGE_IMPORT_DESCRIPTOR)(unsafe.Add(unsafe.Pointer(importDescriptor), unsafe.Sizeof(*importDescriptor))) {
+		libraryName := windows.BytePtrToString((*byte)(unsafe.Add(imageBase, importDescriptor.Name)))
+		if strings.EqualFold(libraryName, "ntdll.dll") {
+			break
+		}
+	}
+	if importDescriptor.Name == 0 {
+		return errors.New("ntdll.dll not found")
+	}
+	originalThunk := (*uintptr)(unsafe.Add(imageBase, importDescriptor.OriginalFirstThunk()))
+	thunk := (*uintptr)(unsafe.Add(imageBase, importDescriptor.FirstThunk))
+	for ; *originalThunk != 0; originalThunk = (*uintptr)(unsafe.Add(unsafe.Pointer(originalThunk), unsafe.Sizeof(*originalThunk))) {
+		if *originalThunk&IMAGE_ORDINAL_FLAG == 0 {
+			function := (*IMAGE_IMPORT_BY_NAME)(unsafe.Add(imageBase, *originalThunk))
+			name := windows.BytePtrToString(&function.Name[0])
+			if name == "RtlPcToFileHeader" {
+				break
+			}
+		}
+		thunk = (*uintptr)(unsafe.Add(unsafe.Pointer(thunk), unsafe.Sizeof(*thunk)))
+	}
+	if *originalThunk == 0 {
+		return errors.New("RtlPcToFileHeader not found")
+	}
+	var oldProtect uint32
+	err = windows.VirtualProtect(uintptr(unsafe.Pointer(thunk)), unsafe.Sizeof(*thunk), windows.PAGE_READWRITE, &oldProtect)
+	if err != nil {
+		return err
+	}
+	originalRtlPcToFileHeader := *thunk
+	*thunk = windows.NewCallback(func(pcValue uintptr, baseOfImage *uintptr) uintptr {
+		loadedAddressRangesMu.RLock()
+		for i := range loadedAddressRanges {
+			if pcValue >= loadedAddressRanges[i].start && pcValue < loadedAddressRanges[i].end {
+				pcValue = *thunk
+				break
+			}
+		}
+		loadedAddressRangesMu.RUnlock()
+		ret, _, _ := syscall.Syscall(originalRtlPcToFileHeader, 2, pcValue, uintptr(unsafe.Pointer(baseOfImage)), 0)
+		return ret
+	})
+	err = windows.VirtualProtect(uintptr(unsafe.Pointer(thunk)), unsafe.Sizeof(*thunk), oldProtect, &oldProtect)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -498,6 +580,21 @@ func LoadLibrary(data []byte) (module *Module, err error) {
 		return
 	}
 
+	// Register exception tables, if they exist.
+	module.registerExceptionHandlers()
+
+	// Register function PCs.
+	loadedAddressRangesMu.Lock()
+	loadedAddressRanges = append(loadedAddressRanges, addressRange{module.codeBase, module.codeBase + alignedImageSize})
+	loadedAddressRangesMu.Unlock()
+	haveHookedRtlPcToFileHeader.Do(func() {
+		hookRtlPcToFileHeaderResult = hookRtlPcToFileHeader()
+	})
+	err = hookRtlPcToFileHeaderResult
+	if err != nil {
+		return
+	}
+
 	// TLS callbacks are executed BEFORE the main loading.
 	module.executeTLS()
 
@@ -595,26 +692,5 @@ func a2p(addr uintptr) unsafe.Pointer {
 }
 
 func memcpy(dst, src, size uintptr) {
-	var d, s []byte
-	unsafeSlice(unsafe.Pointer(&d), a2p(dst), int(size))
-	unsafeSlice(unsafe.Pointer(&s), a2p(src), int(size))
-	copy(d, s)
-}
-
-// unsafeSlice updates the slice slicePtr to be a slice
-// referencing the provided data with its length & capacity set to
-// lenCap.
-//
-// TODO: when Go 1.16 or Go 1.17 is the minimum supported version,
-// update callers to use unsafe.Slice instead of this.
-func unsafeSlice(slicePtr, data unsafe.Pointer, lenCap int) {
-	type sliceHeader struct {
-		Data unsafe.Pointer
-		Len  int
-		Cap  int
-	}
-	h := (*sliceHeader)(slicePtr)
-	h.Data = data
-	h.Len = lenCap
-	h.Cap = lenCap
+	copy(unsafe.Slice((*byte)(a2p(dst)), size), unsafe.Slice((*byte)(a2p(src)), size))
 }
