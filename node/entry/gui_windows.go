@@ -16,6 +16,7 @@ package entry
 
 import (
 	"fmt"
+
 	"github.com/atotto/clipboard"
 	"github.com/lxn/walk"
 	"github.com/pairmesh/pairmesh/i18n"
@@ -47,7 +48,9 @@ type osApp struct {
 }
 
 func newOSApp() *osApp {
-	return &osApp{}
+	return &osApp{
+		baseApp: baseApp{events: make(chan struct{}, 4)},
+	}
 }
 
 func (app *osApp) run() {
@@ -85,8 +88,7 @@ func (app *osApp) createTray() error {
 	}
 
 	// Guest status
-	app.login = app.addAction(nil, i18n.L("tray.login"))
-	app.login.Triggered().Attach(app.onOpenLoginWeb)
+	app.login = app.addActionWithAction(nil, i18n.L("tray.login"), app.onOpenLoginWeb)
 
 	// Login status
 	app.device = app.addAction(nil, i18n.L("tray.unknown"))
@@ -96,28 +98,23 @@ func (app *osApp) createTray() error {
 
 	app.seps = append(app.seps, app.addSeparator())
 
-	app.console = app.addAction(nil, i18n.L("tray.profile.console"))
-	app.console.Triggered().Attach(app.onOpenConsole)
+	app.console = app.addActionWithAction(nil, i18n.L("tray.profile.console"), app.onOpenConsole)
 	app.myDevices = app.addMenu(i18n.L("tray.my_devices"))
 	app.myNetworks = app.addMenu(i18n.L("tray.my_networks"))
 
 	app.seps = append(app.seps, app.addSeparator())
 
 	// General menu item
-	app.start = app.addAction(nil, i18n.L("tray.autorun"))
+	app.start = app.addActionWithAction(nil, i18n.L("tray.autorun"), app.onAutoStart)
 	app.start.SetChecked(app.auto.IsEnabled())
-	app.start.Triggered().Attach(app.onAutoStart)
 
-	app.logout = app.addAction(nil, i18n.L("tray.profile.logout"))
-	app.logout.Triggered().Attach(app.onLogout)
+	app.logout = app.addActionWithAction(nil, i18n.L("tray.profile.logout"), app.onLogout)
 
-	app.about = app.addAction(nil, i18n.L("tray.about"))
-	app.about.Triggered().Attach(app.onOpenAbout)
+	app.about = app.addActionWithAction(nil, i18n.L("tray.about"), app.onOpenAbout)
 
 	app.addSeparator()
 
-	app.exit = app.addAction(nil, i18n.L("tray.exit"))
-	app.exit.Triggered().Attach(app.onQuit)
+	app.exit = app.addActionWithAction(nil, i18n.L("tray.exit"), app.onQuit)
 
 	return tray.SetVisible(true)
 }
@@ -150,20 +147,14 @@ func (app *osApp) render(summary *driver.Summary) {
 
 		// Only keep the first handler.
 		app.device.SetText(i18n.L("tray.device", fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4)))
-		app.replaceTrigger(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
+		app.replaceHandler(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current device network status.
 		app.status.SetText(i18n.L("tray.status." + summary.Status))
 
 		// Enabled devices
 		app.enable.SetChecked(summary.Enabled)
-		app.replaceTrigger(app.enable, func() {
-			if summary.Enabled {
-				app.driver.Disable()
-			} else {
-				app.driver.Enable()
-			}
-		})
+		app.replaceHandler(app.enable, func() { app.switchDriverEnable(summary.Enabled) })
 
 		// My devices list
 		app.myDevices.SetEnabled(len(summary.Mesh.MyDevices) != 0)
@@ -174,7 +165,7 @@ func (app *osApp) render(summary *driver.Summary) {
 			if i < deviceShowCount {
 				device := myDevicesMenu.Actions().At(i)
 				device.SetText(deviceName)
-				app.replaceTrigger(device, app.copyAddressToClipboard(d.Name, d.IPv4))
+				app.replaceHandler(device, app.copyAddressToClipboard(d.Name, d.IPv4))
 			} else {
 				app.addAction(myDevicesMenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
 			}
@@ -197,7 +188,7 @@ func (app *osApp) render(summary *driver.Summary) {
 					if i < deviceShowCount {
 						device := submenu.Actions().At(i)
 						device.SetText(deviceName)
-						app.replaceTrigger(device, app.copyAddressToClipboard(d.Name, d.IPv4))
+						app.replaceHandler(device, app.copyAddressToClipboard(d.Name, d.IPv4))
 					} else {
 						app.addAction(submenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
 					}
@@ -234,8 +225,8 @@ func (app *osApp) removeExtraItem(menu *walk.Menu, expectLength int) {
 	}
 }
 
-// replaceTrigger attach the handler to the action trigger list and remove all the previous.
-func (app *osApp) replaceTrigger(action *walk.Action, handler walk.EventHandler) {
+// replaceHandler attach the handler to the action trigger list and remove all the previous.
+func (app *osApp) replaceHandler(action *walk.Action, handler walk.EventHandler) {
 	index := action.Triggered().Attach(handler)
 	if index == 0 {
 		return
@@ -256,6 +247,12 @@ func (app *osApp) addAction(parent *walk.Menu, title string) *walk.Action {
 	} else {
 		_ = app.tray.ContextMenu().Actions().Add(action)
 	}
+	return action
+}
+
+func (app *osApp) addActionWithAction(parent *walk.Menu, title string, handler walk.EventHandler) *walk.Action {
+	action := app.addAction(parent, title)
+	action.Triggered().Attach(handler)
 	return action
 }
 

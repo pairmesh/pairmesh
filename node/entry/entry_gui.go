@@ -22,13 +22,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/pairmesh/pairmesh/i18n"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"runtime"
 	"time"
+
+	"github.com/pairmesh/pairmesh/i18n"
 
 	"github.com/emersion/go-autostart"
 	"github.com/pairmesh/pairmesh/internal/logutil"
@@ -49,6 +50,7 @@ type (
 		api      *api.Client
 		driver   driver.Driver
 		auto     *autostart.App
+		events   chan struct{}
 
 		cancel context.CancelFunc
 	}
@@ -173,26 +175,37 @@ func (app *osApp) Run() error {
 	return nil
 }
 
+func (app *osApp) refreshEvent() {
+	app.events <- struct{}{}
+}
+
 func (app *osApp) refreshTray() {
 	var cachedSummary *driver.Summary
 
 	timer := time.After(0)
+
+	refresh := func() {
+		timer = time.After(3 * time.Second)
+		if app.cfg.IsGuest() {
+			return
+		}
+
+		summary := app.driver.Summarize()
+		isEqual := cachedSummary != nil && cachedSummary.Equal(summary)
+		if isEqual {
+			return
+		}
+
+		cachedSummary = summary
+		app.render(summary)
+	}
+
 	for {
 		select {
+		case <-app.events:
+			refresh()
 		case <-timer:
-			timer = time.After(2 * time.Second)
-			if app.cfg.IsGuest() {
-				continue
-			}
-
-			summary := app.driver.Summarize()
-			isEqual := cachedSummary != nil && cachedSummary.Equal(summary)
-			if isEqual {
-				continue
-			}
-
-			cachedSummary = summary
-			app.render(summary)
+			refresh()
 		}
 	}
 }
@@ -233,8 +246,18 @@ func (app *osApp) onAutoStart() {
 		zap.L().Error("Switch application auto start failed", zap.Error(err))
 		return
 	}
+	app.refreshEvent()
 
 	zap.L().Info("Switch application auto start when bootstrap", zap.Bool("enabled", app.auto.IsEnabled()))
+}
+
+func (app *osApp) switchDriverEnable(currentEnabled bool) {
+	if currentEnabled {
+		app.driver.Disable()
+	} else {
+		app.driver.Enable()
+	}
+	app.refreshEvent()
 }
 
 func (app *osApp) onOpenAbout() {
@@ -260,6 +283,7 @@ func (app *osApp) onLogout() {
 
 	app.driver = driver.New(app.cfg, app.dev, app.api)
 	app.setTrayIcon(false)
+	app.refreshEvent()
 }
 
 func (app *osApp) onLoginCallback(w http.ResponseWriter, r *http.Request) {
@@ -283,6 +307,8 @@ func (app *osApp) onLoginCallback(w http.ResponseWriter, r *http.Request) {
 	app.setTrayIcon(true)
 
 	go app.driver.Drive(ctx)
+
+	app.refreshEvent()
 
 	_, _ = w.Write([]byte("Success"))
 }
