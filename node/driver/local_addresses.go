@@ -46,7 +46,7 @@ func isProblematicInterface(iface *net.Interface) bool {
 
 // localAddresses detects the local interfaces and returns all the IP addresses
 // belongs to current node.
-func (d *deviceDriver) localAddresses() []string {
+func (d *nodeDriver) localAddresses() []string {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		zap.L().Error("Retrieve the interfaces failed", zap.Error(err))

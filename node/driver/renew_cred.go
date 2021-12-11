@@ -34,7 +34,7 @@ type credential struct {
 	Lease time.Duration
 }
 
-func (d *deviceDriver) renewCredential(ctx context.Context) {
+func (d *nodeDriver) renewCredential(ctx context.Context) {
 	defer d.wg.Done()
 
 	nextRenewTime := func() <-chan time.Time {

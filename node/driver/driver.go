@@ -39,7 +39,7 @@ import (
 	"inet.af/netaddr"
 )
 
-var _ Driver = &deviceDriver{}
+var _ Driver = &nodeDriver{}
 
 type SummaryChangedCallback func()
 
@@ -67,8 +67,8 @@ type Driver interface {
 	Terminate()
 }
 
-// deviceDriver implements the Driver interface.
-// deviceDriver is mainly used to control the overall procedure of
+// nodeDriver implements the Driver interface.
+// nodeDriver is mainly used to control the overall procedure of
 // peerly application.
 // 1. Initialize all resources in the Initialize function.
 // 2. Som long-run routines:
@@ -76,7 +76,7 @@ type Driver interface {
 //    - Read tunnel device data goroutine will read the data from tunnel device.
 //    - Write tunnel device data goroutine will write the data to the tunnel device.
 // 3. Filter out data via filter.
-type deviceDriver struct {
+type nodeDriver struct {
 	// Concurrent-safe fields.
 	wg           *sync.WaitGroup
 	running      atomic.Bool // indicates whether the driver has been initialized.
@@ -110,7 +110,7 @@ type deviceDriver struct {
 
 // New constructs the engines instance.
 func New(cfg *config.Config, dev device.Device, apiClient *api.Client) Driver {
-	return &deviceDriver{
+	return &nodeDriver{
 		wg:         &sync.WaitGroup{},
 		enable:     *atomic.NewBool(true),
 		chDevWrite: make(chan []byte, 512),
@@ -120,7 +120,7 @@ func New(cfg *config.Config, dev device.Device, apiClient *api.Client) Driver {
 	}
 }
 
-func (d *deviceDriver) Preflight() error {
+func (d *nodeDriver) Preflight() error {
 	hostname, err := os.Hostname()
 	if err != nil {
 		zap.L().Error("Retrieve the host name failed", zap.Error(err))
@@ -193,7 +193,7 @@ func (d *deviceDriver) Preflight() error {
 
 // Drive implement the Driver interface and will start all background threads
 // to drive the application followup process.
-func (d *deviceDriver) Drive(ctx context.Context) {
+func (d *nodeDriver) Drive(ctx context.Context) {
 	if d.running.Swap(true) {
 		zap.L().Error("The drive method had been called duplicated")
 		return
@@ -220,19 +220,19 @@ func (d *deviceDriver) Drive(ctx context.Context) {
 }
 
 // Enable implements the Driver interface
-func (d *deviceDriver) Enable() {
+func (d *nodeDriver) Enable() {
 	zap.L().Info("Enable driver and will handle all traffics")
 	d.enable.Store(true)
 }
 
 // Disable implements the Driver interface
-func (d *deviceDriver) Disable() {
+func (d *nodeDriver) Disable() {
 	zap.L().Info("Disable driver and will drop all traffics")
 	d.enable.Store(false)
 }
 
 // Summarize implements the Driver interface.
-func (d *deviceDriver) Summarize() *Summary {
+func (d *nodeDriver) Summarize() *Summary {
 	if mockSummary {
 		return d.mockSummarize()
 	}
@@ -260,7 +260,7 @@ func (d *deviceDriver) Summarize() *Summary {
 }
 
 // Terminate implements the Driver interface
-func (d *deviceDriver) Terminate() {
+func (d *nodeDriver) Terminate() {
 	if !d.running.Load() {
 		return
 	}

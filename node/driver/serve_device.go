@@ -30,7 +30,7 @@ func parseDst(b []byte) net.IP {
 	return net.IPv4(b[16], b[17], b[18], b[19])
 }
 
-func (d *deviceDriver) serveDevRead(ctx context.Context) {
+func (d *nodeDriver) serveDevRead(ctx context.Context) {
 	defer d.wg.Done()
 
 	npnp := net.IPv4(239, 255, 255, 250)
@@ -87,7 +87,7 @@ func (d *deviceDriver) serveDevRead(ctx context.Context) {
 	}
 }
 
-func (d *deviceDriver) serveDevWrite(ctx context.Context) {
+func (d *nodeDriver) serveDevWrite(ctx context.Context) {
 	defer d.wg.Done()
 
 	for {

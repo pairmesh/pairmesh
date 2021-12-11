@@ -23,7 +23,7 @@ import (
 )
 
 // pullPeerGraph updates peers graph from portal service periodically.
-func (d *deviceDriver) pullPeerGraph(ctx context.Context) {
+func (d *nodeDriver) pullPeerGraph(ctx context.Context) {
 	defer d.wg.Done()
 
 	pullInterval := 1800 * time.Second
