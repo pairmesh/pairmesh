@@ -211,6 +211,10 @@ func (app *osApp) refreshTray() {
 }
 
 func (app *osApp) onQuit() {
+	if app.cancel != nil {
+		app.cancel()
+	}
+
 	err := app.dev.Close()
 	if err != nil {
 		zap.L().Error("Close device failed", zap.Error(err))
