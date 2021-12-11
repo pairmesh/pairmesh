@@ -26,6 +26,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
+	"time"
 
 	"github.com/pairmesh/pairmesh/i18n"
 
@@ -48,6 +50,7 @@ type (
 		api      *api.Client
 		driver   driver.Driver
 		auto     *autostart.App
+		events   chan struct{}
 
 		cancel context.CancelFunc
 	}
@@ -149,6 +152,8 @@ func Run() {
 }
 
 func (app *osApp) Run() error {
+	runtime.LockOSThread()
+
 	zap.L().Info("Driver initialized successfully")
 
 	app.auto = &autostart.App{
@@ -163,15 +168,46 @@ func (app *osApp) Run() error {
 	}
 
 	// Refresh UI dynamically.
-	go app.uiRender()
+	go app.refreshTray()
 
 	app.run()
 
 	return nil
 }
 
-func (app osApp) uiRender() {
-	// TODO:
+func (app *osApp) refreshEvent() {
+	app.events <- struct{}{}
+}
+
+func (app *osApp) refreshTray() {
+	var cachedSummary *driver.Summary
+
+	timer := time.After(0)
+
+	refresh := func() {
+		timer = time.After(3 * time.Second)
+		if app.cfg.IsGuest() {
+			return
+		}
+
+		summary := app.driver.Summarize()
+		isEqual := cachedSummary != nil && cachedSummary.Equal(summary)
+		if isEqual {
+			return
+		}
+
+		cachedSummary = summary
+		app.render(summary)
+	}
+
+	for {
+		select {
+		case <-app.events:
+			refresh()
+		case <-timer:
+			refresh()
+		}
+	}
 }
 
 func (app *osApp) onQuit() {
@@ -210,8 +246,18 @@ func (app *osApp) onAutoStart() {
 		zap.L().Error("Switch application auto start failed", zap.Error(err))
 		return
 	}
+	app.refreshEvent()
 
 	zap.L().Info("Switch application auto start when bootstrap", zap.Bool("enabled", app.auto.IsEnabled()))
+}
+
+func (app *osApp) switchDriverEnable(currentEnabled bool) {
+	if currentEnabled {
+		app.driver.Disable()
+	} else {
+		app.driver.Enable()
+	}
+	app.refreshEvent()
 }
 
 func (app *osApp) onOpenAbout() {
@@ -237,6 +283,7 @@ func (app *osApp) onLogout() {
 
 	app.driver = driver.New(app.cfg, app.dev, app.api)
 	app.setTrayIcon(false)
+	app.refreshEvent()
 }
 
 func (app *osApp) onLoginCallback(w http.ResponseWriter, r *http.Request) {
@@ -260,6 +307,8 @@ func (app *osApp) onLoginCallback(w http.ResponseWriter, r *http.Request) {
 	app.setTrayIcon(true)
 
 	go app.driver.Drive(ctx)
+
+	app.refreshEvent()
 
 	_, _ = w.Write([]byte("Success"))
 }

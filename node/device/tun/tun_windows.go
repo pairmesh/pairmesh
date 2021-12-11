@@ -61,8 +61,8 @@ type windowsDevice struct {
 }
 
 var (
-	WintunTunnelType          = "PairMesh"
 	WintunTunnelName          = "PairMesh"
+	WintunTunnelType          = "PairMesh"
 	WintunStaticRequestedGUID *windows.GUID
 )
 
