@@ -37,6 +37,36 @@ type Profile struct {
 	IPv4   string `json:"ipv4"`
 }
 
+// Equal returns true if the p equals rhs.
+func (p *Profile) Equal(rhs *Profile) bool {
+	// The same pointer or nil
+	if p == rhs {
+		return true
+	}
+	if p == nil && rhs != nil {
+		return false
+	}
+	if p != nil && rhs == nil {
+		return false
+	}
+	return p.UserID == rhs.UserID && p.Name == rhs.Name && p.IPv4 == rhs.IPv4
+}
+
+// Equal returns true if the s equals rhs.
+func (s *Summary) Equal(rhs *Summary) bool {
+	// The same pointer or nil
+	if s == rhs {
+		return true
+	}
+	if s == nil && rhs != nil {
+		return false
+	}
+	if s != nil && rhs == nil {
+		return false
+	}
+	return s.Enabled == rhs.Enabled && s.Profile.Equal(rhs.Profile) && s.Mesh.LastChangedAt == rhs.Mesh.LastChangedAt
+}
+
 // mockSummarize returns a mock summary for testing.
 func (d *deviceDriver) mockSummarize() *Summary {
 	networkStatus := []string{"connecting", "connected"}

@@ -16,10 +16,10 @@ package entry
 
 import (
 	"fmt"
-
 	"github.com/atotto/clipboard"
 	"github.com/lxn/walk"
 	"github.com/pairmesh/pairmesh/i18n"
+	"github.com/pairmesh/pairmesh/node/driver"
 	"github.com/pairmesh/pairmesh/node/resources"
 	"go.uber.org/zap"
 )
@@ -29,10 +29,36 @@ type osApp struct {
 
 	mw   *walk.MainWindow
 	tray *walk.NotifyIcon
+
+	login      *walk.Action
+	device     *walk.Action
+	status     *walk.Action
+	enable     *walk.Action
+	console    *walk.Action
+	myDevices  *walk.Action
+	myNetworks *walk.Action
+	start      *walk.Action
+	logout     *walk.Action
+	about      *walk.Action
+	exit       *walk.Action
+
+	// Separators which are showed only when login status
+	seps []*walk.Action
 }
 
 func newOSApp() *osApp {
 	return &osApp{}
+}
+
+func (app *osApp) run() {
+	app.mw.Run()
+}
+
+func (app *osApp) dispose() {
+	zap.L().Info("This node is shutdown, see you next time.")
+	_ = app.tray.Dispose()
+	app.mw.Dispose()
+	walk.App().Exit(0)
 }
 
 func (app *osApp) createTray() error {
@@ -47,6 +73,7 @@ func (app *osApp) createTray() error {
 		return fmt.Errorf("create notify icon failed: %w", err)
 	}
 	app.tray = tray
+	app.tray.MouseDown().Attach(app.onShowTray)
 
 	icon := resources.Logo
 	if app.cfg.IsGuest() {
@@ -57,109 +84,166 @@ func (app *osApp) createTray() error {
 		return err
 	}
 
-	tray.MouseDown().Attach(app.renderTrayContextMenu)
+	// Guest status
+	app.login = app.addAction(nil, i18n.L("tray.login"))
+	app.login.Triggered().Attach(app.onOpenLoginWeb)
+
+	// Login status
+	app.device = app.addAction(nil, i18n.L("tray.unknown"))
+	app.status = app.addAction(nil, i18n.L("tray.unknown"))
+	app.status.SetEnabled(false)
+	app.enable = app.addAction(nil, i18n.L("tray.enable"))
+
+	app.seps = append(app.seps, app.addSeparator())
+
+	app.console = app.addAction(nil, i18n.L("tray.profile.console"))
+	app.console.Triggered().Attach(app.onOpenConsole)
+	app.myDevices = app.addMenu(i18n.L("tray.my_devices"))
+	app.myNetworks = app.addMenu(i18n.L("tray.my_networks"))
+
+	app.seps = append(app.seps, app.addSeparator())
+
+	// General menu item
+	app.start = app.addAction(nil, i18n.L("tray.autorun"))
+	app.start.SetChecked(app.auto.IsEnabled())
+	app.start.Triggered().Attach(app.onAutoStart)
+
+	app.logout = app.addAction(nil, i18n.L("tray.profile.logout"))
+	app.logout.Triggered().Attach(app.onLogout)
+
+	app.about = app.addAction(nil, i18n.L("tray.about"))
+	app.about.Triggered().Attach(app.onOpenAbout)
+
+	app.addSeparator()
+
+	app.exit = app.addAction(nil, i18n.L("tray.exit"))
+	app.exit.Triggered().Attach(app.onQuit)
 
 	return tray.SetVisible(true)
 }
 
-func (app *osApp) run() {
-	app.mw.Run()
+// onShowTray refreshes the tray menu items when the tray button clicked.
+func (app *osApp) onShowTray(_, _ int, _ walk.MouseButton) {
+	app.render(app.driver.Summarize())
 }
 
-func (app *osApp) dispose() {
-	zap.L().Info("This node is shutdown, see you next time.")
-	_ = app.tray.Dispose()
-	app.mw.Dispose()
-	walk.App().Exit(0)
-}
+func (app *osApp) render(summary *driver.Summary) {
+	isGuest := app.cfg.IsGuest()
 
-// onTrayClicked handles the app event
-func (app *osApp) renderTrayContextMenu(x, y int, button walk.MouseButton) {
-	err := app.tray.ContextMenu().Actions().Clear()
-	if err != nil {
-		zap.L().Error("Clear actions failed", zap.Error(err))
-		return
+	// Guest status menu items
+	app.login.SetVisible(isGuest)
+
+	// Login status menu items
+	app.device.SetVisible(!isGuest)
+	app.status.SetVisible(!isGuest)
+	app.console.SetVisible(!isGuest)
+	app.enable.SetVisible(!isGuest)
+	app.myDevices.SetVisible(!isGuest)
+	app.myNetworks.SetVisible(!isGuest)
+	app.logout.SetVisible(!isGuest)
+	// Hidden some separators.
+	for _, sep := range app.seps {
+		sep.SetVisible(!isGuest)
 	}
-
-	summary := app.driver.Summarize()
-
-	if app.cfg.IsGuest() {
-		// Login
-		login := app.addAction(nil, i18n.L("tray.login"))
-		login.Triggered().Attach(app.onOpenLoginWeb)
-	} else {
+	if !isGuest {
 		profile := summary.Profile
-		// Current device information.
-		app.addAction(nil, i18n.L("tray.device", fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4))).
-			Triggered().Attach(app.copyAddressToClipboard(profile.Name, profile.IPv4))
+
+		// Only keep the first handler.
+		app.device.SetText(i18n.L("tray.device", fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4)))
+		app.replaceTrigger(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current device network status.
-		app.addAction(nil, i18n.L("tray.status."+summary.Status)).SetEnabled(false)
+		app.status.SetText(i18n.L("tray.status." + summary.Status))
 
 		// Enabled devices
-		enable := app.addAction(nil, i18n.L("tray.enable"))
-		enable.Triggered().Attach(func() {
+		app.enable.SetChecked(summary.Enabled)
+		app.replaceTrigger(app.enable, func() {
 			if summary.Enabled {
 				app.driver.Disable()
 			} else {
 				app.driver.Enable()
 			}
 		})
-		_ = enable.SetChecked(summary.Enabled)
-
-		app.addSeparator()
-
-		// Profile
-		app.addAction(nil, i18n.L("tray.profile.console")).
-			Triggered().Attach(app.onOpenConsole)
 
 		// My devices list
-		myDevicesMenu, myDevice, _ := app.addMenu(i18n.L("tray.my_devices"))
-		_ = myDevice.SetEnabled(len(summary.Mesh.MyDevices) != 0)
-		for _, d := range summary.Mesh.MyDevices {
-			app.addAction(myDevicesMenu, i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))).
-				Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
-		}
-
-		myNetworksMenu, myNetworks, _ := app.addMenu(i18n.L("tray.my_networks"))
-		_ = myNetworks.SetEnabled(len(summary.Mesh.Networks) != 0)
-		for _, n := range summary.Mesh.Networks {
-			submenu, err := walk.NewMenu()
-			if err != nil {
-				continue
-			}
-			sub := walk.NewMenuAction(submenu)
-			_ = sub.SetText(n.Name)
-			_ = myNetworksMenu.Actions().Add(sub)
-			_ = sub.SetEnabled(len(n.Devices) != 0)
-			for _, d := range n.Devices {
-				app.addAction(submenu, i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))).
-					Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
+		app.myDevices.SetEnabled(len(summary.Mesh.MyDevices) != 0)
+		myDevicesMenu := app.myDevices.Menu()
+		deviceShowCount := myDevicesMenu.Actions().Len()
+		for i, d := range summary.Mesh.MyDevices {
+			deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
+			if i < deviceShowCount {
+				device := myDevicesMenu.Actions().At(i)
+				device.SetText(deviceName)
+				app.replaceTrigger(device, app.copyAddressToClipboard(d.Name, d.IPv4))
+			} else {
+				app.addAction(myDevicesMenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
 			}
 		}
+		app.removeExtraItem(myDevicesMenu, len(summary.Mesh.MyDevices))
+
+		// My networks list
+		app.myNetworks.SetEnabled(len(summary.Mesh.Networks) != 0)
+		myNetworksMenu := app.myNetworks.Menu()
+		networksShowCount := myNetworksMenu.Actions().Len()
+		for i, n := range summary.Mesh.Networks {
+			if i < networksShowCount {
+				network := myNetworksMenu.Actions().At(i)
+				network.SetText(n.Name)
+				network.SetEnabled(len(n.Devices) != 0)
+				submenu := network.Menu()
+				deviceShowCount := submenu.Actions().Len()
+				for _, d := range n.Devices {
+					deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
+					if i < deviceShowCount {
+						device := submenu.Actions().At(i)
+						device.SetText(deviceName)
+						app.replaceTrigger(device, app.copyAddressToClipboard(d.Name, d.IPv4))
+					} else {
+						app.addAction(submenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
+					}
+				}
+				app.removeExtraItem(submenu, len(n.Devices))
+			} else {
+				submenu, err := walk.NewMenu()
+				if err != nil {
+					continue
+				}
+				sub := walk.NewMenuAction(submenu)
+				sub.SetText(n.Name)
+				myNetworksMenu.Actions().Add(sub)
+				sub.SetEnabled(len(n.Devices) != 0)
+				for _, d := range n.Devices {
+					deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
+					app.addAction(submenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
+				}
+			}
+		}
+		app.removeExtraItem(myNetworksMenu, len(summary.Mesh.Networks))
 	}
 
-	app.addSeparator()
+	app.start.SetChecked(app.auto.IsEnabled())
+}
 
-	// Auto start
-	start := app.addAction(nil, i18n.L("tray.autorun"))
-	_ = start.SetChecked(app.auto.IsEnabled())
-	start.Triggered().Attach(app.onAutoStart)
-
-	if !app.cfg.IsGuest() {
-		app.addAction(nil, i18n.L("tray.profile.logout")).
-			Triggered().Attach(app.onLogout)
+func (app *osApp) removeExtraItem(menu *walk.Menu, expectLength int) {
+	menuItemCount := menu.Actions().Len()
+	if expectLength >= menuItemCount {
+		return
 	}
+	for i := menuItemCount - 1; i >= expectLength; i-- {
+		menu.Actions().RemoveAt(i)
+	}
+}
 
-	// About
-	app.addAction(nil, i18n.L("tray.about")).
-		Triggered().Attach(app.onOpenAbout)
-
-	app.addSeparator()
-
-	// Exit
-	app.addAction(nil, i18n.L("tray.exit")).
-		Triggered().Attach(app.onQuit)
+// replaceTrigger attach the handler to the action trigger list and remove all the previous.
+func (app *osApp) replaceTrigger(action *walk.Action, handler walk.EventHandler) {
+	index := action.Triggered().Attach(handler)
+	if index == 0 {
+		return
+	}
+	// Remove existing handlers
+	for i := 0; i < index; i++ {
+		action.Triggered().Detach(i)
+	}
 }
 
 func (app *osApp) addAction(parent *walk.Menu, title string) *walk.Action {
@@ -175,23 +259,25 @@ func (app *osApp) addAction(parent *walk.Menu, title string) *walk.Action {
 	return action
 }
 
-func (app *osApp) addSeparator() {
-	_ = app.tray.ContextMenu().Actions().Add(walk.NewSeparatorAction())
+func (app *osApp) addSeparator() *walk.Action {
+	action := walk.NewSeparatorAction()
+	_ = app.tray.ContextMenu().Actions().Add(action)
+	return action
 }
 
-func (app *osApp) addMenu(name string) (*walk.Menu, *walk.Action, error) {
+func (app *osApp) addMenu(name string) *walk.Action {
 	menu, err := walk.NewMenu()
 	if err != nil {
-		return nil, nil, err
+		return nil
 	}
 
 	action := walk.NewMenuAction(menu)
 	_ = action.SetText(name)
 	err = app.tray.ContextMenu().Actions().Add(action)
 	if err != nil {
-		return nil, nil, err
+		return nil
 	}
-	return menu, action, nil
+	return action
 }
 
 func (app *osApp) openLogWindow() {

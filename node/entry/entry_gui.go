@@ -22,14 +22,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/pairmesh/pairmesh/i18n"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"runtime"
 	"time"
-
-	"github.com/pairmesh/pairmesh/i18n"
 
 	"github.com/emersion/go-autostart"
 	"github.com/pairmesh/pairmesh/internal/logutil"
@@ -175,12 +174,25 @@ func (app *osApp) Run() error {
 }
 
 func (app *osApp) refreshTray() {
+	var cachedSummary *driver.Summary
+
 	timer := time.After(0)
 	for {
 		select {
 		case <-timer:
-			timer = time.After(3 * time.Second)
-			app.renderTrayContextMenu()
+			timer = time.After(2 * time.Second)
+			if app.cfg.IsGuest() {
+				continue
+			}
+
+			summary := app.driver.Summarize()
+			isEqual := cachedSummary != nil && cachedSummary.Equal(summary)
+			if isEqual {
+				continue
+			}
+
+			cachedSummary = summary
+			app.render(summary)
 		}
 	}
 }

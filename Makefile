@@ -46,6 +46,9 @@ pairrelay:
 queryset:
 	go run ./tools/qs/main.go -in ./cmd/pairportal/db/models/models.go -out ./cmd/pairportal/db/models/autogen_query.go
 
+cloc:
+	cloc . --exclude-dir=node_modules,vendor
+
 # Check
 # Lint tools
 check: vet fmt check-static # TODO: enable lint
