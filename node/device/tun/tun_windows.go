@@ -22,14 +22,15 @@ package tun
 import (
 	"fmt"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
 	// import unsafe
 	_ "unsafe"
 
+	"github.com/pairmesh/pairmesh/node/device/tun/wintun"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"golang.org/x/sys/windows"
 )
 
@@ -39,8 +40,6 @@ const (
 	spinloopDuration           = uint64(time.Millisecond / 80 / time.Nanosecond) // ~1gbit/s
 )
 
-const ifaceName = "PairMesh"
-
 type rateJuggler struct {
 	current       uint64
 	nextByteCount uint64
@@ -49,27 +48,30 @@ type rateJuggler struct {
 }
 
 type windowsDevice struct {
-	name      string
 	wt        *wintun.Adapter
+	name      string
 	handle    windows.Handle
-	close     bool
-	errors    chan error
-	forcedMTU int
 	rate      rateJuggler
 	session   wintun.Session
 	readWait  windows.Handle
+	running   sync.WaitGroup
+	closeOnce sync.Once
+	close     int32
+	forcedMTU int
 }
 
-var wintunPool *wintun.Pool
+var (
+	WintunTunnelType          = "PairMesh"
+	WintunTunnelName          = "PairMesh"
+	WintunStaticRequestedGUID *windows.GUID
+)
 
 func init() {
-	var err error
-	wintunPool, err = wintun.MakePool("PairMesh")
+	guid, err := windows.GUIDFromString("{418099dd-0ee3-4624-96ae-fef1070f8777}")
 	if err != nil {
-		panic(fmt.Errorf("failed to make pool: %w", err))
+		panic(err)
 	}
-
-	wintun.DisableLog = true
+	WintunStaticRequestedGUID = &guid
 }
 
 //go:linkname procyield runtime.procyield
@@ -82,44 +84,24 @@ func nanotime() int64
 // It will creates a Wintun interface with the given name. Should a Wintun
 // interface with the same name exist, it is reused.
 func NewTUN() (Device, error) {
-	// Does an interface with this name already exist?
-	wt, err := wintunPool.OpenAdapter(ifaceName)
-	if err == nil {
-		// If so, we delete it, in case it has weird residual configuration.
-		_, err = wt.Delete(true)
-		if err != nil {
-			return nil, fmt.Errorf("deleting already existing interface: %w failed", err)
-		}
-	}
-
-	wt, rebootRequired, err := wintunPool.CreateAdapter(ifaceName, nil)
+	wt, err := wintun.CreateAdapter(WintunTunnelName, WintunTunnelType, WintunStaticRequestedGUID)
 	if err != nil {
-		return nil, fmt.Errorf("creating interface: %w failed", err)
-	}
-	if rebootRequired {
-		zap.L().Info("Windows indicated a reboot is required.")
-	}
-
-	name, err := wt.Name()
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error creating interface: %w", err)
 	}
 
 	dev := &windowsDevice{
-		name:      name,
+		name:      WintunTunnelName,
 		wt:        wt,
 		handle:    windows.InvalidHandle,
-		errors:    make(chan error, 1),
 		forcedMTU: DefaultMTU,
 	}
 
 	dev.session, err = wt.StartSession(0x800000) // Ring capacity, 8 MiB
 	if err != nil {
-		dev.wt.Delete(false)
+		wt.Close()
 		return nil, fmt.Errorf("Error starting session: %w", err)
 	}
 	dev.readWait = dev.session.ReadWaitEvent()
-
 	return dev, err
 }
 
@@ -128,28 +110,32 @@ func (d *windowsDevice) Name() string {
 }
 
 func (d *windowsDevice) Close() error {
-	d.close = true
-	d.session.End()
 	var err error
-	if d.wt != nil {
-		_, err = d.wt.Delete(true)
-	}
+	d.closeOnce.Do(func() {
+		atomic.StoreInt32(&d.close, 1)
+		windows.SetEvent(d.readWait)
+		d.running.Wait()
+		d.session.End()
+		if d.wt != nil {
+			d.wt.Close()
+		}
+	})
 	return err
 }
 
 // Note: Read() and Write() assume the caller comes only from a single thread; there's no locking.
 
 func (d *windowsDevice) Read(buff []byte) (int, error) {
+	d.running.Add(1)
+	defer d.running.Done()
 retry:
-	select {
-	case err := <-d.errors:
-		return 0, err
-	default:
+	if atomic.LoadInt32(&d.close) == 1 {
+		return 0, os.ErrClosed
 	}
 	start := nanotime()
 	shouldSpin := atomic.LoadUint64(&d.rate.current) >= spinloopRateThreshold && uint64(start-atomic.LoadInt64(&d.rate.nextStartTime)) <= rateMeasurementGranularity*2
 	for {
-		if d.close {
+		if atomic.LoadInt32(&d.close) == 1 {
 			return 0, os.ErrClosed
 		}
 		packet, err := d.session.ReceivePacket()
@@ -175,13 +161,14 @@ retry:
 		return 0, fmt.Errorf("Read failed: %w", err)
 	}
 }
-
 func (d *windowsDevice) Flush() error {
 	return nil
 }
 
 func (d *windowsDevice) Write(buff []byte) (int, error) {
-	if d.close {
+	d.running.Add(1)
+	defer d.running.Done()
+	if atomic.LoadInt32(&d.close) == 1 {
 		return 0, os.ErrClosed
 	}
 
@@ -201,6 +188,11 @@ func (d *windowsDevice) Write(buff []byte) (int, error) {
 		return 0, nil // Dropping when ring is full.
 	}
 	return 0, fmt.Errorf("Write failed: %w", err)
+}
+
+// RunningVersion returns the running version of the Wintun driver.
+func (d *windowsDevice) RunningVersion() (version uint32, err error) {
+	return wintun.RunningVersion()
 }
 
 func (rate *rateJuggler) update(packetLen uint64) {
