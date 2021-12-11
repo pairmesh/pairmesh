@@ -15,9 +15,10 @@
 package types
 
 import (
-	"github.com/flynn/noise"
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/protocol"
+
+	"github.com/flynn/noise"
 	"inet.af/netaddr"
 )
 

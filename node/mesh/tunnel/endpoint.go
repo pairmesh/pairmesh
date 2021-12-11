@@ -23,7 +23,6 @@ import (
 	"github.com/pairmesh/pairmesh/internal/logutil"
 
 	"go.uber.org/atomic"
-
 	"go.uber.org/zap"
 )
 

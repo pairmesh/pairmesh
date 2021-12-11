@@ -19,7 +19,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/flynn/noise"
 	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
@@ -28,6 +27,8 @@ import (
 	"github.com/pairmesh/pairmesh/node/mesh/tunnel"
 	"github.com/pairmesh/pairmesh/node/mesh/types"
 	"github.com/pairmesh/pairmesh/protocol"
+
+	"github.com/flynn/noise"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"inet.af/netaddr"

@@ -29,9 +29,9 @@ import (
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/node/mesh/types"
 	"github.com/pairmesh/pairmesh/protocol"
-	"go.uber.org/atomic"
 
 	"github.com/flynn/noise"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 

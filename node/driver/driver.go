@@ -17,7 +17,6 @@ package driver
 import (
 	"context"
 	"encoding/base64"
-	"github.com/libp2p/go-reuseport"
 	"net"
 	"os"
 	"runtime"
@@ -33,6 +32,8 @@ import (
 	"github.com/pairmesh/pairmesh/node/mesh/types"
 	"github.com/pairmesh/pairmesh/node/monitor"
 	"github.com/pairmesh/pairmesh/protocol"
+
+	"github.com/libp2p/go-reuseport"
 	"github.com/pkg/errors"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
