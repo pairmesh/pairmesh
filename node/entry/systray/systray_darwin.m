@@ -95,6 +95,7 @@ withParentMenuId: (int)theParentMenuId
     } else {
       statusItem.button.imagePosition = NSImageLeft;
     }
+    statusItem.button.imageScaling = NSImageScaleProportionallyDown;
   } else {
     statusItem.button.imagePosition = NSNoImage;
   }
