@@ -15,28 +15,13 @@ package resources
 
 import (
 	_ "embed"
-
-	"github.com/progrium/macdriver/cocoa"
-	"github.com/progrium/macdriver/core"
 )
 
 //go:embed logo_darwin.png
-var logo []byte
+var Logo []byte
 
 //go:embed disabled_logo_darwin.png
-var disabledLogo []byte
+var DisabledLogo []byte
 
 //go:embed alert_logo_darwin.png
 var alertLogo []byte
-
-var (
-	Logo         cocoa.NSImage
-	DisabledLogo cocoa.NSImage
-	AlertLogo    cocoa.NSImage
-)
-
-func init() {
-	Logo = cocoa.NSImage_InitWithData(core.NSData_WithBytes(logo, uint64(len(logo))))
-	DisabledLogo = cocoa.NSImage_InitWithData(core.NSData_WithBytes(disabledLogo, uint64(len(disabledLogo))))
-	AlertLogo = cocoa.NSImage_InitWithData(core.NSData_WithBytes(alertLogo, uint64(len(alertLogo))))
-}

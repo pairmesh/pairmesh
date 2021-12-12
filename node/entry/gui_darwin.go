@@ -20,10 +20,8 @@ import (
 	"github.com/atotto/clipboard"
 	"github.com/pairmesh/pairmesh/i18n"
 	"github.com/pairmesh/pairmesh/node/driver"
+	"github.com/pairmesh/pairmesh/node/entry/systray"
 	"github.com/pairmesh/pairmesh/node/resources"
-	"github.com/progrium/macdriver/cocoa"
-	"github.com/progrium/macdriver/core"
-	"github.com/progrium/macdriver/objc"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
@@ -32,24 +30,27 @@ type osApp struct {
 	baseApp
 
 	initialized atomic.Bool
-	nsApp       cocoa.NSApplication
-	menuApp     cocoa.NSMenu
-	statusItem  cocoa.NSStatusItem
+	monitorInit atomic.Bool
 
-	login      cocoa.NSMenuItem
-	device     cocoa.NSMenuItem
-	status     cocoa.NSMenuItem
-	enable     cocoa.NSMenuItem
-	console    cocoa.NSMenuItem
-	myDevices  cocoa.NSMenuItem
-	myNetworks cocoa.NSMenuItem
-	start      cocoa.NSMenuItem
-	logout     cocoa.NSMenuItem
-	about      cocoa.NSMenuItem
-	quit       cocoa.NSMenuItem
+	login      *systray.MenuItem
+	device     *systray.MenuItem
+	status     *systray.MenuItem
+	enable     *systray.MenuItem
+	console    *systray.MenuItem
+	myDevices  *systray.MenuItem
+	myNetworks *systray.MenuItem
+	start      *systray.MenuItem
+	logout     *systray.MenuItem
+	about      *systray.MenuItem
+	quit       *systray.MenuItem
 
 	// Separators which are showed only when login status
-	seps []cocoa.NSMenuItem
+	seps []*systray.MenuItem
+
+	myDevicesList  []*systray.MenuItem
+	myNetworksList []*systray.MenuItem
+	myDevicesSep   *systray.MenuItem
+	myNetworksSep  *systray.MenuItem
 }
 
 func newOSApp() *osApp {
@@ -58,71 +59,62 @@ func newOSApp() *osApp {
 	}
 }
 
-func (app *osApp) createTray() error {
-	cocoa.TerminateAfterWindowsClose = false
-	app.nsApp = cocoa.NSApp_WithDidLaunch(func(n objc.Object) {
-		obj := cocoa.NSStatusBar_System().StatusItemWithLength(cocoa.NSVariableStatusItemLength)
-		obj.Retain()
-		logo := resources.Logo
-		if app.cfg.IsGuest() {
-			logo = resources.DisabledLogo
-		}
-		obj.Button().SetImage(logo)
-		menu := cocoa.NSMenu_New()
-		obj.SetMenu(menu)
-		app.menuApp = menu
-		app.statusItem = obj
+func (app *osApp) createTray() {
+	app.setTrayIcon(app.cfg.IsGuest())
 
-		// Guest status
-		app.login = app.addMenuItemWithAction(i18n.L("tray.login"), "handleLogin:", func(_ objc.Object) { app.onOpenLoginWeb() })
+	// Guest status
+	app.login = app.addMenuItemWithAction(i18n.L("tray.login"), app.onOpenLoginWeb)
 
-		// Login status
-		app.device = app.addMenuItem(i18n.L("tray.unknown"))
-		app.status = app.addMenuItem(i18n.L("tray.unknown"))
-		app.status.SetEnabled(false)
-		app.enable = app.addMenuItem(i18n.L("tray.enable"))
+	// Login status
+	app.device = app.addMenuItem(i18n.L("tray.unknown"))
+	app.status = app.addMenuItem(i18n.L("tray.unknown"))
+	app.status.SetDisabled(true)
+	app.enable = app.addMenuItem(i18n.L("tray.enable"))
+	app.console = app.addMenuItemWithAction(i18n.L("tray.profile.console"), app.onOpenConsole)
 
-		app.seps = append(app.seps, app.addSeparator())
+	app.seps = append(app.seps, app.addSeparator())
 
-		app.console = app.addMenuItemWithAction(i18n.L("tray.profile.console"), "handleProfile:", func(_ objc.Object) { app.onOpenConsole() })
-		app.myDevices = app.addMenu(app.menuApp, i18n.L("tray.my_devices"))
-		app.myNetworks = app.addMenu(app.menuApp, i18n.L("tray.my_networks"))
+	app.myDevices = app.addMenuItem(i18n.L("tray.my_devices"))
+	app.myDevices.SetDisabled(true)
+	app.myDevicesSep = app.addSeparator()
+	app.myNetworks = app.addMenuItem(i18n.L("tray.my_networks"))
+	app.myNetworks.SetDisabled(true)
+	app.myNetworksSep = app.addSeparator()
 
-		app.seps = append(app.seps, app.addSeparator())
+	app.seps = append(app.seps, app.myDevicesSep, app.myNetworksSep)
 
-		// General menu item
-		app.start = app.addMenuItemWithAction(i18n.L("tray.autorun"), "handleAutoRun:", func(_ objc.Object) { app.onAutoStart() })
-		if app.auto.IsEnabled() {
-			app.start.SetState(1)
-		} else {
-			app.start.SetState(0)
-		}
+	// General menu item
+	app.start = app.addMenuItemWithAction(i18n.L("tray.autorun"), app.onAutoStart)
+	app.start.SetChecked(app.auto.IsEnabled())
 
-		app.logout = app.addMenuItemWithAction(i18n.L("tray.profile.logout"), "handleLogout:", func(_ objc.Object) { app.onLogout() })
-		app.about = app.addMenuItemWithAction(i18n.L("tray.about"), "handleAbout:", func(_ objc.Object) { app.onOpenAbout() })
+	app.logout = app.addMenuItemWithAction(i18n.L("tray.profile.logout"), app.onLogout)
+	app.about = app.addMenuItemWithAction(i18n.L("tray.about"), app.onOpenAbout)
 
-		app.addSeparator()
+	app.addSeparator()
 
-		app.quit = app.addMenuItemWithAction(i18n.L("tray.exit"), "handleQuit:", func(_ objc.Object) { app.onQuit() })
+	app.quit = app.addMenuItemWithAction(i18n.L("tray.exit"), app.onQuit)
 
-		app.initialized.Store(true)
-		app.render(app.driver.Summarize())
-	})
-
-	return nil
+	app.initialized.Store(true)
+	app.setMenuVisibility(app.cfg.IsGuest())
+	app.refreshEvent()
 }
 
 func (app *osApp) run() {
-	app.nsApp.Run()
+	if !app.monitorInit.Swap(true) {
+		go func() {
+			for {
+				m := <-systray.Events()
+				a := m.Action()
+				if a != nil {
+					a()
+				}
+			}
+		}()
+	}
+	systray.Run(app.createTray, nil)
 }
 
-func (app *osApp) render(summary *driver.Summary) {
-	if !app.initialized.Load() {
-		return
-	}
-
-	isGuest := app.cfg.IsGuest()
-
+func (app *osApp) setMenuVisibility(isGuest bool) {
 	// Guest status menu items
 	app.login.SetHidden(!isGuest)
 
@@ -134,156 +126,149 @@ func (app *osApp) render(summary *driver.Summary) {
 	app.myDevices.SetHidden(isGuest)
 	app.myNetworks.SetHidden(isGuest)
 	app.logout.SetHidden(isGuest)
-	// Hidden some separators
-	for _, sep := range app.seps {
-		sep.SetHidden(isGuest)
+
+	if isGuest {
+		// Hidden some separators
+		for _, sep := range app.seps {
+			sep.SetHidden(true)
+		}
+		for _, item := range app.myDevicesList {
+			item.SetHidden(true)
+		}
+		for _, item := range app.myNetworksList {
+			item.SetHidden(true)
+		}
 	}
+}
+
+func (app *osApp) render(summary *driver.Summary) {
+	if !app.initialized.Load() {
+		return
+	}
+
+	isGuest := app.cfg.IsGuest() && false
+	summary.Profile.Name = "xxx"
+	summary.Profile.IPv4 = "10.0.2.3"
+
+	app.setMenuVisibility(isGuest)
 
 	if !isGuest {
 		profile := summary.Profile
 
 		// Current device information.
-		desc := fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4)
-		app.device.SetTitle(desc)
-		app.replaceHandler(app.device, "handleSelfAddress:", app.copyAddressToClipboard(profile.Name, profile.IPv4))
+		app.device.SetTitle(i18n.L("tray.device", fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4)))
+		app.device.SetAction(app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current network status.
 		app.status.SetTitle(i18n.L("tray.status." + summary.Status))
 
 		// Enabled devices
-		if summary.Enabled {
-			app.enable.SetState(1)
-		} else {
-			app.enable.SetState(0)
-		}
-		app.replaceHandler(app.enable, "handleEnabled:", func(object objc.Object) { app.switchDriverEnable(summary.Enabled) })
+		app.enable.SetChecked(summary.Enabled)
+		app.enable.SetAction(func() { app.switchDriverEnable(summary.Enabled) })
 
 		// My devices list
-		app.myDevices.SetEnabled(len(summary.Mesh.MyDevices) != 0)
-		myDevicesMenu := app.myDevices.Submenu()
-		devicesShowCount := myDevicesMenu.ItemArray().Count()
+		devicesShowCount := len(app.myDevicesList)
 		for i, d := range summary.Mesh.MyDevices {
-			deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
-			handleName := fmt.Sprintf("handleDeviceAddress%d:", i)
-			if i < int(devicesShowCount) {
-				device := myDevicesMenu.ItemAtIndex_(core.NSInteger(i))
+			deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
+			var device *systray.MenuItem
+			if i < devicesShowCount {
+				device = app.myDevicesList[i]
 				device.SetTitle(deviceName)
-				device.SetAction(objc.Sel(handleName))
-				cocoa.DefaultDelegateClass.AddMethod(handleName, app.copyAddressToClipboard(d.Name, d.IPv4))
+				device.SetHidden(false)
 			} else {
-				item := cocoa.NSMenuItem_New()
-				item.SetTitle(deviceName)
-				item.SetAction(objc.Sel(handleName))
-				cocoa.DefaultDelegateClass.AddMethod(handleName, app.copyAddressToClipboard(d.Name, d.IPv4))
-				myDevicesMenu.AddItem(item)
+				device = systray.NewMenuItem(deviceName)
+				systray.AddMenuItemBefore(nil, device, app.myDevicesSep)
+				app.myDevicesList = append(app.myDevicesList, device)
+			}
+			device.SetAction(app.copyAddressToClipboard(d.Name, d.IPv4))
+		}
+		// remove extra menu items
+		if actualDeviceCount := len(summary.Mesh.MyDevices); actualDeviceCount < len(app.myDevicesList) {
+			for _, item := range app.myDevicesList[actualDeviceCount:] {
+				item.SetHidden(true)
 			}
 		}
-		app.removeExtraItem(myDevicesMenu, len(summary.Mesh.MyDevices))
 
 		// My networks list
-		app.myNetworks.SetEnabled(len(summary.Mesh.Networks) != 0)
-		myNetworksMenu := app.myNetworks.Submenu()
-		networksShowCount := int(myNetworksMenu.ItemArray().Count())
+		networksShowCount := len(app.myNetworksList)
 		for j, n := range summary.Mesh.Networks {
+			var network *systray.MenuItem
 			if j < networksShowCount {
-				network := myNetworksMenu.ItemAtIndex_(core.NSInteger(j))
-				network.SetTitle(n.Name)
-				network.SetEnabled(len(n.Devices) != 0)
-				submenu := network.Submenu()
-				devicesShowCount := int(submenu.ItemArray().Count())
+				network = app.myNetworksList[j]
+				children := network.Children()
+				deviceShowCount := len(children)
 				for i, d := range n.Devices {
-					deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
-					handleName := fmt.Sprintf("handleDeviceAddress%d_%d:", j, i)
-					if i < devicesShowCount {
-						device := submenu.ItemAtIndex_(core.NSInteger(i))
+					deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
+					var device *systray.MenuItem
+					if i < deviceShowCount {
+						device = children[i]
 						device.SetTitle(deviceName)
-						device.SetAction(objc.Sel(handleName))
-						cocoa.DefaultDelegateClass.AddMethod(handleName, app.copyAddressToClipboard(d.Name, d.IPv4))
+						device.SetHidden(false)
 					} else {
-						item := cocoa.NSMenuItem_New()
-						item.SetTitle(deviceName)
-						item.SetAction(objc.Sel(handleName))
-						cocoa.DefaultDelegateClass.AddMethod(handleName, app.copyAddressToClipboard(d.Name, d.IPv4))
-						submenu.AddItem(item)
+						device = systray.NewMenuItem(deviceName)
+						systray.AddMenuItem(network, device)
+					}
+					device.SetAction(app.copyAddressToClipboard(d.Name, d.IPv4))
+				}
+				// remove extra menu items
+				if actualDeviceCount := len(n.Devices); actualDeviceCount < deviceShowCount {
+					for _, item := range children[actualDeviceCount:] {
+						item.SetHidden(true)
 					}
 				}
-				app.removeExtraItem(submenu, len(n.Devices))
 			} else {
-				network := app.addMenu(myNetworksMenu, n.Name)
-				network.SetEnabled(len(n.Devices) != 0)
-				submenu := network.Submenu()
-				for i, d := range n.Devices {
-					deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
-					handleName := fmt.Sprintf("handleDeviceAddress%d_%d:", j, i)
-					item := cocoa.NSMenuItem_New()
-					item.SetTitle(deviceName)
-					item.SetAction(objc.Sel(handleName))
-					cocoa.DefaultDelegateClass.AddMethod(handleName, app.copyAddressToClipboard(d.Name, d.IPv4))
-					submenu.AddItem(item)
+				network = systray.NewMenuItem(n.Name)
+				systray.AddMenuItemBefore(nil, network, app.myNetworksSep)
+				app.myNetworksList = append(app.myNetworksList, network)
+				for _, d := range n.Devices {
+					deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
+					device := systray.NewMenuItem(deviceName)
+					device.SetAction(app.copyAddressToClipboard(d.Name, d.IPv4))
+					systray.AddMenuItem(network, device)
 				}
 			}
+			network.SetTitle(n.Name)
+			network.SetHidden(false)
+			network.SetDisabled(len(n.Devices) == 0)
 		}
-		app.removeExtraItem(myNetworksMenu, len(summary.Mesh.Networks))
+		// remove extra menu items
+		if actualDeviceCount := len(summary.Mesh.Networks); actualDeviceCount < len(app.myNetworksList) {
+			for _, item := range app.myNetworksList[actualDeviceCount:] {
+				item.SetHidden(true)
+			}
+		}
 	}
 
-	// Auto start
-	if app.auto.IsEnabled() {
-		app.start.SetState(1)
-	} else {
-		app.start.SetState(0)
-	}
+	app.start.SetDisabled(!app.auto.IsEnabled())
 }
 
-func (app *osApp) removeExtraItem(menu cocoa.NSMenu, expectedLength int) {
-	menuItemCount := int(menu.ItemArray().Count())
-	if expectedLength >= menuItemCount {
-		return
-	}
-	for i := menuItemCount - 1; i >= expectedLength; i-- {
-		menu.RemoveItemAtIndex_(core.NSInteger(i))
-	}
-}
-
-func (app *osApp) replaceHandler(item cocoa.NSMenuItem, sel string, action func(object objc.Object)) {
-	item.SetAction(objc.Sel(sel))
-	cocoa.DefaultDelegateClass.AddMethod(sel, action)
-}
-
-func (app *osApp) addSeparator() cocoa.NSMenuItem {
-	sep := cocoa.NSMenuItem_Separator()
-	app.menuApp.AddItem(sep)
+func (app *osApp) addSeparator() *systray.MenuItem {
+	sep := systray.NewSeparator()
+	systray.AddMenuItem(nil, sep)
 	return sep
 }
 
-func (app *osApp) addMenuItemWithAction(title, sel string, action func(object objc.Object)) cocoa.NSMenuItem {
-	item := cocoa.NSMenuItem_New()
-	item.SetTitle(title)
-	item.SetAction(objc.Sel(sel))
-	cocoa.DefaultDelegateClass.AddMethod(sel, action)
-	app.menuApp.AddItem(item)
+func (app *osApp) addMenuItemWithAction(title string, action func()) *systray.MenuItem {
+	item := systray.NewMenuItem(title)
+	item.SetAction(action)
+	systray.AddMenuItem(nil, item)
 	return item
 }
 
-func (app *osApp) addMenuItem(title string) cocoa.NSMenuItem {
-	item := cocoa.NSMenuItem_New()
-	item.SetTitle(title)
-	app.menuApp.AddItem(item)
+func (app *osApp) addMenuItem(title string) *systray.MenuItem {
+	item := systray.NewMenuItem(title)
+	systray.AddMenuItem(nil, item)
 	return item
 }
 
-func (app *osApp) addMenu(parent cocoa.NSMenu, title string) cocoa.NSMenuItem {
-	menu := cocoa.NSMenu_New()
-	item := cocoa.NSMenuItem_New()
-	item.SetTitle(title)
-	item.SetSubmenu(menu)
-	parent.AddItem(item)
-	return item
+func (app *osApp) addMenu(parent *systray.MenuItem, title string) *systray.MenuItem {
+	menu := systray.NewMenuItem(title)
+	systray.AddMenuItem(parent, menu)
+	return menu
 }
 
 func (app *osApp) dispose() {
-	app.nsApp.Autorelease()
-	app.menuApp.Autorelease()
-	app.statusItem.Autorelease()
+	systray.Quit()
 }
 
 func (app *osApp) showMessage(title, message string) {
@@ -305,8 +290,8 @@ func (app *osApp) showAlbert(title, msg string) bool {
 	return false
 }
 
-func (app *osApp) copyAddressToClipboard(name, address string) func(object objc.Object) {
-	return func(object objc.Object) {
+func (app *osApp) copyAddressToClipboard(name, address string) func() {
+	return func() {
 		err := clipboard.WriteAll(address)
 		if err != nil {
 			zap.L().Error("Write to clipboard failed", zap.Error(err))
@@ -316,23 +301,23 @@ func (app *osApp) copyAddressToClipboard(name, address string) func(object objc.
 		if app.cfg.OnceAlert {
 			return
 		}
-		core.Dispatch(func() {
-			msg := i18n.L("tray.toast.my_devices.tips_format", address)
-			suppressed := app.showAlbert(name, msg)
-			if suppressed {
-				app.cfg.OnceAlert = true
-				if err := app.cfg.Save(); err != nil {
-					zap.L().Error("Set once alert failed", zap.Error(err))
-				}
-			}
-		})
+		//core.Dispatch(func() {
+		//	msg := i18n.L("tray.toast.my_devices.tips_format", address)
+		//	suppressed := app.showAlbert(name, msg)
+		//	if suppressed {
+		//		app.cfg.OnceAlert = true
+		//		if err := app.cfg.Save(); err != nil {
+		//			zap.L().Error("Set once alert failed", zap.Error(err))
+		//		}
+		//	}
+		//})
 	}
 }
 
 func (app *osApp) setTrayIcon(enabled bool) {
 	if enabled {
-		app.statusItem.Button().SetImage(resources.DisabledLogo)
+		systray.SetIcon(resources.DisabledLogo)
 	} else {
-		app.statusItem.Button().SetImage(resources.Logo)
+		systray.SetIcon(resources.Logo)
 	}
 }

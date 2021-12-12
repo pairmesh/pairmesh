@@ -16,8 +16,8 @@ package entry
 
 import (
 	"fmt"
+
 	"github.com/atotto/clipboard"
-	"github.com/lxn/walk"
 	"github.com/pairmesh/pairmesh/i18n"
 	"github.com/pairmesh/pairmesh/node/driver"
 	"github.com/pairmesh/pairmesh/node/resources"
@@ -58,6 +58,11 @@ func newOSApp() *osApp {
 }
 
 func (app *osApp) run() {
+	err := app.createTray()
+	if err != nil {
+		zap.L().Fatal("Create tray failed", zap.Error(err))
+	}
+
 	app.mw.Run()
 }
 
@@ -146,15 +151,18 @@ func (app *osApp) setMenuVisibility(isGuest bool) {
 	app.myDevices.SetVisible(!isGuest)
 	app.myNetworks.SetVisible(!isGuest)
 	app.logout.SetVisible(!isGuest)
-	// Hidden some separators.
-	for _, sep := range app.seps {
-		sep.SetVisible(!isGuest)
-	}
-	for _, action := range app.myDevicesList {
-		action.SetVisible(!isGuest)
-	}
-	for _, action := range app.myNetworksList {
-		action.SetVisible(!isGuest)
+
+	if isGuest {
+		// Hidden some separators.
+		for _, sep := range app.seps {
+			sep.SetVisible(false)
+		}
+		for _, action := range app.myDevicesList {
+			action.SetVisible(false)
+		}
+		for _, action := range app.myNetworksList {
+			action.SetVisible(false)
+		}
 	}
 }
 
@@ -198,7 +206,7 @@ func (app *osApp) render(summary *driver.Summary) {
 			device.SetText(deviceName)
 			device.SetVisible(true)
 		}
-		// remote extra actions
+		// remove extra actions
 		if actualDeviceCount := len(summary.Mesh.MyDevices); actualDeviceCount < len(app.myDevicesList) {
 			for _, action := range app.myDevicesList[actualDeviceCount:] {
 				contextMenu.Actions().Remove(action)
@@ -243,7 +251,7 @@ func (app *osApp) render(summary *driver.Summary) {
 			network.SetVisible(true)
 			network.SetEnabled(len(n.Devices) != 0)
 		}
-		// remote extra actions
+		// remove extra actions
 		if actualDeviceCount := len(summary.Mesh.Networks); actualDeviceCount < len(app.myNetworksList) {
 			for _, action := range app.myNetworksList[actualDeviceCount:] {
 				contextMenu.Actions().Remove(action)

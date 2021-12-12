@@ -76,7 +76,7 @@ func (d *nodeDriver) mockSummarize() *Summary {
 
 	// Generate the mock device information randomly.
 	deviceStatus := []mesh.State{mesh.StatePending, mesh.StateRelay, mesh.StateP2P}
-	devCnt := rand.Intn(10)
+	devCnt := 3
 	for i := 0; i < devCnt; i++ {
 		meshSummary.MyDevices = append(meshSummary.MyDevices, mesh.Device{
 			Name:   fmt.Sprintf("mock-device-%d", i),
@@ -86,7 +86,7 @@ func (d *nodeDriver) mockSummarize() *Summary {
 	}
 
 	// Generate the mock network information randomly.
-	netCnt := rand.Intn(20)
+	netCnt := 5
 	for i := 0; i < netCnt; i++ {
 		network := mesh.Network{
 			ID:   uint64(i),

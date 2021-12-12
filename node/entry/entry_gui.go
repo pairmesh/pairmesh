@@ -26,12 +26,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"runtime"
 	"time"
 
-	"github.com/pairmesh/pairmesh/i18n"
-
 	"github.com/emersion/go-autostart"
+	"github.com/pairmesh/pairmesh/i18n"
 	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/node/api"
 	"github.com/pairmesh/pairmesh/node/config"
@@ -144,27 +142,20 @@ func Run() {
 		}
 	}()
 
+	zap.L().Info("Startup node successfully")
+
 	if err := app.Run(); err != nil {
 		zap.L().Fatal("Run application failed", zap.Error(err))
 	}
-
-	zap.L().Info("Startup node successfully")
 }
 
 func (app *osApp) Run() error {
-	runtime.LockOSThread()
-
 	zap.L().Info("Driver initialized successfully")
 
 	app.auto = &autostart.App{
 		Name:        "PairMesh",
 		DisplayName: "PairMesh Client",
 		Exec:        os.Args,
-	}
-
-	err := app.createTray()
-	if err != nil {
-		return err
 	}
 
 	// Refresh UI dynamically.
@@ -186,7 +177,7 @@ func (app *osApp) refreshTray() {
 
 	refresh := func() {
 		timer = time.After(3 * time.Second)
-		if app.cfg.IsGuest() {
+		if false && app.cfg.IsGuest() {
 			return
 		}
 
@@ -211,7 +202,10 @@ func (app *osApp) refreshTray() {
 }
 
 func (app *osApp) onQuit() {
+	zap.L().Info("Application ready to quit")
+
 	if app.cancel != nil {
+		zap.L().Info("Cancel all running operations")
 		app.cancel()
 	}
 
@@ -219,10 +213,16 @@ func (app *osApp) onQuit() {
 	if err != nil {
 		zap.L().Error("Close device failed", zap.Error(err))
 	}
+
+	zap.L().Info("Device closed")
+
 	err = app.dev.Down()
 	if err != nil {
 		zap.L().Error("Down device failed", zap.Error(err))
 	}
+
+	zap.L().Info("Device down")
+
 	app.driver.Terminate()
 	app.dispose()
 }
