@@ -16,6 +16,7 @@ package entry
 
 import (
 	"fmt"
+	"go.uber.org/atomic"
 
 	"github.com/atotto/clipboard"
 	"github.com/lxn/walk"
@@ -45,6 +46,14 @@ type osApp struct {
 
 	// Separators which are showed only when login status
 	seps []*walk.Action
+
+	myDevicesList  []*walk.Action
+	myNetworksList []*walk.Action
+	myDeviceSep    *walk.Action
+	myNetworkSep   *walk.Action
+
+	positionX atomic.Int64
+	positionY atomic.Int64
 }
 
 func newOSApp() *osApp {
@@ -95,14 +104,18 @@ func (app *osApp) createTray() error {
 	app.status = app.addAction(nil, i18n.L("tray.unknown"))
 	app.status.SetEnabled(false)
 	app.enable = app.addAction(nil, i18n.L("tray.enable"))
-
-	app.seps = append(app.seps, app.addSeparator())
-
 	app.console = app.addActionWithAction(nil, i18n.L("tray.profile.console"), app.onOpenConsole)
-	app.myDevices = app.addMenu(i18n.L("tray.my_devices"))
-	app.myNetworks = app.addMenu(i18n.L("tray.my_networks"))
 
 	app.seps = append(app.seps, app.addSeparator())
+
+	app.myDevices = app.addAction(nil, i18n.L("tray.my_devices"))
+	app.myDevices.SetEnabled(false)
+	app.myDeviceSep = app.addSeparator()
+	app.myNetworks = app.addAction(nil, i18n.L("tray.my_networks"))
+	app.myNetworks.SetEnabled(false)
+	app.myNetworkSep = app.addSeparator()
+
+	app.seps = append(app.seps, app.myDeviceSep, app.myNetworkSep)
 
 	// General menu item
 	app.start = app.addActionWithAction(nil, i18n.L("tray.autorun"), app.onAutoStart)
@@ -116,17 +129,17 @@ func (app *osApp) createTray() error {
 
 	app.exit = app.addActionWithAction(nil, i18n.L("tray.exit"), app.onQuit)
 
+	app.setMenuVisibility(app.cfg.IsGuest())
+
 	return tray.SetVisible(true)
 }
 
 // onShowTray refreshes the tray menu items when the tray button clicked.
 func (app *osApp) onShowTray(_, _ int, _ walk.MouseButton) {
-	app.render(app.driver.Summarize())
+	app.refreshEvent()
 }
 
-func (app *osApp) render(summary *driver.Summary) {
-	isGuest := app.cfg.IsGuest()
-
+func (app *osApp) setMenuVisibility(isGuest bool) {
 	// Guest status menu items
 	app.login.SetVisible(isGuest)
 
@@ -142,11 +155,25 @@ func (app *osApp) render(summary *driver.Summary) {
 	for _, sep := range app.seps {
 		sep.SetVisible(!isGuest)
 	}
+	for _, action := range app.myDevicesList {
+		action.SetVisible(!isGuest)
+	}
+	for _, action := range app.myNetworksList {
+		action.SetVisible(!isGuest)
+	}
+}
+
+// Only called by UI thread.
+func (app *osApp) render(summary *driver.Summary) {
+	isGuest := app.cfg.IsGuest()
+
+	app.setMenuVisibility(isGuest)
+
 	if !isGuest {
 		profile := summary.Profile
 
 		// Only keep the first handler.
-		app.device.SetText(i18n.L("tray.device", fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4)))
+		app.device.SetText(i18n.L("tray.device", fmt.Sprintf("%s\t%s", profile.Name, profile.IPv4)))
 		app.replaceHandler(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current device network status.
@@ -156,38 +183,48 @@ func (app *osApp) render(summary *driver.Summary) {
 		app.enable.SetChecked(summary.Enabled)
 		app.replaceHandler(app.enable, func() { app.switchDriverEnable(summary.Enabled) })
 
+		contextMenu := app.tray.ContextMenu()
+
 		// My devices list
-		app.myDevices.SetEnabled(len(summary.Mesh.MyDevices) != 0)
-		myDevicesMenu := app.myDevices.Menu()
-		deviceShowCount := myDevicesMenu.Actions().Len()
+		deviceShowCount := len(app.myDevicesList)
 		for i, d := range summary.Mesh.MyDevices {
-			deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
+			deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
+			var device *walk.Action
 			if i < deviceShowCount {
-				device := myDevicesMenu.Actions().At(i)
-				device.SetText(deviceName)
+				device = app.myDevicesList[i]
+				device.SetVisible(true)
 				app.replaceHandler(device, app.copyAddressToClipboard(d.Name, d.IPv4))
 			} else {
-				app.addAction(myDevicesMenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
+				device = walk.NewAction()
+				device.Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
+				contextMenu.Actions().Insert(contextMenu.Actions().Index(app.myDeviceSep), device)
+				app.myDevicesList = append(app.myDevicesList, device)
 			}
+			device.SetText(deviceName)
+			device.SetVisible(true)
 		}
-		app.removeExtraItem(myDevicesMenu, len(summary.Mesh.MyDevices))
+		// remote extra actions
+		if actualDeviceCount := len(summary.Mesh.MyDevices); actualDeviceCount < len(app.myDevicesList) {
+			for _, action := range app.myDevicesList[actualDeviceCount:] {
+				contextMenu.Actions().Remove(action)
+			}
+			app.myDevicesList = app.myDevicesList[:actualDeviceCount]
+		}
 
 		// My networks list
-		app.myNetworks.SetEnabled(len(summary.Mesh.Networks) != 0)
-		myNetworksMenu := app.myNetworks.Menu()
-		networksShowCount := myNetworksMenu.Actions().Len()
+		networksShowCount := len(app.myNetworksList)
 		for i, n := range summary.Mesh.Networks {
+			var network *walk.Action
 			if i < networksShowCount {
-				network := myNetworksMenu.Actions().At(i)
-				network.SetText(n.Name)
-				network.SetEnabled(len(n.Devices) != 0)
+				network = app.myNetworksList[i]
 				submenu := network.Menu()
 				deviceShowCount := submenu.Actions().Len()
 				for _, d := range n.Devices {
-					deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
+					deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
 					if i < deviceShowCount {
 						device := submenu.Actions().At(i)
 						device.SetText(deviceName)
+						device.SetVisible(true)
 						app.replaceHandler(device, app.copyAddressToClipboard(d.Name, d.IPv4))
 					} else {
 						app.addAction(submenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
@@ -199,17 +236,25 @@ func (app *osApp) render(summary *driver.Summary) {
 				if err != nil {
 					continue
 				}
-				sub := walk.NewMenuAction(submenu)
-				sub.SetText(n.Name)
-				myNetworksMenu.Actions().Add(sub)
-				sub.SetEnabled(len(n.Devices) != 0)
+				network = walk.NewMenuAction(submenu)
+				contextMenu.Actions().Insert(contextMenu.Actions().Index(app.myNetworkSep), network)
+				app.myNetworksList = append(app.myNetworksList, network)
 				for _, d := range n.Devices {
-					deviceName := i18n.L("tray.device", fmt.Sprintf("%s (%s)", d.Name, d.IPv4))
+					deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
 					app.addAction(submenu, deviceName).Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
 				}
 			}
+			network.SetText(n.Name)
+			network.SetVisible(true)
+			network.SetEnabled(len(n.Devices) != 0)
 		}
-		app.removeExtraItem(myNetworksMenu, len(summary.Mesh.Networks))
+		// remote extra actions
+		if actualDeviceCount := len(summary.Mesh.Networks); actualDeviceCount < len(app.myNetworksList) {
+			for _, action := range app.myNetworksList[actualDeviceCount:] {
+				contextMenu.Actions().Remove(action)
+			}
+			app.myNetworksList = app.myNetworksList[:actualDeviceCount]
+		}
 	}
 
 	app.start.SetChecked(app.auto.IsEnabled())
