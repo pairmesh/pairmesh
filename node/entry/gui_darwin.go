@@ -127,11 +127,12 @@ func (app *osApp) setMenuVisibility(isGuest bool) {
 	app.myNetworks.SetHidden(isGuest)
 	app.logout.SetHidden(isGuest)
 
+	// Change some separator visibility.
+	for _, sep := range app.seps {
+		sep.SetHidden(isGuest)
+	}
+
 	if isGuest {
-		// Hidden some separators
-		for _, sep := range app.seps {
-			sep.SetHidden(true)
-		}
 		for _, item := range app.myDevicesList {
 			item.SetHidden(true)
 		}
