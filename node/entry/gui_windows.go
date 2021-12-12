@@ -16,8 +16,6 @@ package entry
 
 import (
 	"fmt"
-	"go.uber.org/atomic"
-
 	"github.com/atotto/clipboard"
 	"github.com/lxn/walk"
 	"github.com/pairmesh/pairmesh/i18n"
@@ -49,11 +47,8 @@ type osApp struct {
 
 	myDevicesList  []*walk.Action
 	myNetworksList []*walk.Action
-	myDeviceSep    *walk.Action
-	myNetworkSep   *walk.Action
-
-	positionX atomic.Int64
-	positionY atomic.Int64
+	myDevicesSep   *walk.Action
+	myNetworksSep  *walk.Action
 }
 
 func newOSApp() *osApp {
@@ -110,12 +105,12 @@ func (app *osApp) createTray() error {
 
 	app.myDevices = app.addAction(nil, i18n.L("tray.my_devices"))
 	app.myDevices.SetEnabled(false)
-	app.myDeviceSep = app.addSeparator()
+	app.myDevicesSep = app.addSeparator()
 	app.myNetworks = app.addAction(nil, i18n.L("tray.my_networks"))
 	app.myNetworks.SetEnabled(false)
-	app.myNetworkSep = app.addSeparator()
+	app.myNetworksSep = app.addSeparator()
 
-	app.seps = append(app.seps, app.myDeviceSep, app.myNetworkSep)
+	app.seps = append(app.seps, app.myDevicesSep, app.myNetworksSep)
 
 	// General menu item
 	app.start = app.addActionWithAction(nil, i18n.L("tray.autorun"), app.onAutoStart)
@@ -197,7 +192,7 @@ func (app *osApp) render(summary *driver.Summary) {
 			} else {
 				device = walk.NewAction()
 				device.Triggered().Attach(app.copyAddressToClipboard(d.Name, d.IPv4))
-				contextMenu.Actions().Insert(contextMenu.Actions().Index(app.myDeviceSep), device)
+				contextMenu.Actions().Insert(contextMenu.Actions().Index(app.myDevicesSep), device)
 				app.myDevicesList = append(app.myDevicesList, device)
 			}
 			device.SetText(deviceName)
@@ -237,7 +232,7 @@ func (app *osApp) render(summary *driver.Summary) {
 					continue
 				}
 				network = walk.NewMenuAction(submenu)
-				contextMenu.Actions().Insert(contextMenu.Actions().Index(app.myNetworkSep), network)
+				contextMenu.Actions().Insert(contextMenu.Actions().Index(app.myNetworksSep), network)
 				app.myNetworksList = append(app.myNetworksList, network)
 				for _, d := range n.Devices {
 					deviceName := fmt.Sprintf("%s\t%s", d.Name, d.IPv4)
