@@ -15,6 +15,7 @@
 name: "zh_CN"
 desc: "中文简体"
 tray:
+  unknown: "未知"
   app:
     title_not_login: "请先登入PairMesh"
     title_disconnected: "连接已断开,请点击以重新连接"
@@ -32,7 +33,7 @@ tray:
     tips: "下线当前节点"
   admin:
     title: "管理后台"
-    tips: "登入meshstep管理后台"
+    tips: "登入PairMesh管理后台"
   login: "登入"
   profile:
     console: "管理后台"

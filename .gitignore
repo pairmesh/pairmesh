@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+.DS_Store
+bin
 
 # IDE directories
 .idea

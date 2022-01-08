@@ -70,6 +70,12 @@ func (s memoryStore) Get(ctx context.Context, key string) (interface{}, error) {
 	return nil, nil
 }
 
+type ledisStore struct{}
+
+func NewLedisStore() {
+
+}
+
 const refreshUUIDFormat = "%s.%d"
 
 type jwt struct {

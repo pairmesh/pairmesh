@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	stdjwt "github.com/dgrijalva/jwt-go"
-	"github.com/pairmesh/pairmesh/cmd/pairportal/db/models"
+	"github.com/pairmesh/pairmesh/portal/db/models"
 )
 
 // ExtractToken extract the token from the raw string

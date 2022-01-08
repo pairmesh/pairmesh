@@ -16,11 +16,13 @@ package jsonapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pairmesh/pairmesh/errcode"
 
@@ -60,7 +62,10 @@ func (c *Client) do(method, api string, reader io.Reader, res interface{}) error
 		zap.L().Debug("HTTP Request", zap.String("method", method), zap.String("url", url))
 	}
 
-	req, err := http.NewRequest(method, url, reader)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, method, url, reader)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -77,6 +82,10 @@ func (c *Client) do(method, api string, reader io.Reader, res interface{}) error
 	}
 
 	defer resp.Body.Close()
+
+	if logutil.IsEnablePortal() {
+		zap.L().Debug("HTTP response", zap.String("method", method), zap.String("url", url))
+	}
 
 	if resp.StatusCode == http.StatusOK {
 		return json.NewDecoder(resp.Body).Decode(res)

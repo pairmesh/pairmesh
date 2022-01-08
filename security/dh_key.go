@@ -57,7 +57,7 @@ func (k DHPrivate) B32() *[keySize]byte { return (*[keySize]byte)(&k) }
 // IsZero reports whether DHPublic p is the zero value.
 func (k DHPublic) IsZero() bool { return k == DHPublic{} }
 
-// ShortString returns the Meshstep conventional debug representation
+// ShortString returns the PairMesh conventional debug representation
 // of a public key: the first five base64 digits of the key, in square
 // brackets.
 func (k DHPublic) ShortString() string {
@@ -108,10 +108,10 @@ func NewDHPublic(s []byte) DHPublic {
 	return x
 }
 
-// DHKey a noise.DHkey wrapper for meshstep
+// DHKey a noise.DHkey wrapper for PairMesh
 type DHKey struct {
-	Public  DHPublic
-	Private DHPrivate
+	Public  DHPublic  `json:"public"`
+	Private DHPrivate `json:"private"`
 }
 
 // FromNoiseDHKey generate a DHKey from noise.DHKey

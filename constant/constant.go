@@ -51,8 +51,8 @@ const (
 )
 
 // DefaultAPIGateway represents the gateway's default address
-const DefaultAPIGateway = "https://api.peerly.cn"
-const DefaultMyGateway = "https://my.peerly.cn"
+const DefaultAPIGateway = "http://192.168.0.108:2823"
+const DefaultMyGateway = "http://192.168.0.108:8080"
 
 // Packet protocol constants
 
@@ -69,10 +69,6 @@ const (
 	FragmentHeaderSize   = 14
 )
 
-// WintunInterfaceDesc is the description attached to Meshstep
-// interfaces on Windows. This is set by our modified WinTun driver.
-const WintunInterfaceDesc = "Peerly Tunnel"
-
 // MaxBufferSize represents the max buffer size of read UDP packet
 const MaxBufferSize = 4096
 
@@ -84,17 +80,4 @@ const (
 	MaxSegmentSize = 2048 - 32      // largest possible UDP datagram
 	MaxMessageSize = MaxSegmentSize // maximum size of transport message
 )
-
-const (
-	DefaultNetMapSyncInterval    = 30
-	DefaultTrafficReportInterval = 300
-)
-
-const (
-	AlipayRedirectUrl    = DefaultMyGateway + "/payment/check/alipay"
-	AlipayNotifyUrl      = DefaultAPIGateway + "/api/v1/payment/alipay/notify"
-	WechatPayRedirectUrl = DefaultMyGateway + "/payment/check/wechat"
-	WechatNotifyUrl      = DefaultAPIGateway + "/api/v1/payment/wechat/notify"
-)
-
 const HeartbeatInterval = 30 * time.Second

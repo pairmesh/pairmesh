@@ -38,7 +38,9 @@ func TestEncode(t *testing.T) {
 	assert.Nil(t, err)
 
 	// The encrypt/decrypt cipher of tunnels are the same.
-	sharedKey := noise.DH25519.DH(key.Private, key.Public)
+	sharedKey, err := noise.DH25519.DH(key.Private, key.Public)
+	assert.Nil(t, err)
+
 	fixSizeKey := [32]byte{}
 	copy(fixSizeKey[:], sharedKey)
 	cipher := noise.CipherChaChaPoly.Cipher(fixSizeKey)
