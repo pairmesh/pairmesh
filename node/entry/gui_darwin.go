@@ -151,7 +151,7 @@ func (app *osApp) render(summary *driver.Summary) {
 		profile := summary.Profile
 
 		// Current device information.
-		app.device.SetTitle(i18n.L("tray.device", fmt.Sprintf("%s (%s)", profile.Name, profile.IPv4)))
+		app.device.SetTitle(i18n.L("tray.device", profile.Name))
 		app.device.SetAction(app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current network status.

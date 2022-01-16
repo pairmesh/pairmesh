@@ -176,7 +176,7 @@ func (app *osApp) render(summary *driver.Summary) {
 		profile := summary.Profile
 
 		// Only keep the first handler.
-		app.device.SetText(i18n.L("tray.device", fmt.Sprintf("%s\t%s", profile.Name, profile.IPv4)))
+		app.device.SetText(i18n.L("tray.device", profile.Name))
 		app.replaceHandler(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current device network status.
