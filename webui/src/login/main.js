@@ -20,6 +20,7 @@ import VueRouter from "vue-router";
 import Login from "@/login/components/login";
 import AuthCallback from "@/login/components/auth_callback";
 import AuthRedirect from "@/login/components/auth_redirect";
+import AuthSuccess from "@/login/components/auth_success";
 
 const router = new VueRouter({
     mode: 'history',
@@ -35,6 +36,10 @@ const router = new VueRouter({
         {
             path: '/login/auth/redirect',
             component: AuthRedirect,
+        },
+        {
+            path: '/login/auth/success',
+            component: AuthSuccess,
         }
     ],
 })

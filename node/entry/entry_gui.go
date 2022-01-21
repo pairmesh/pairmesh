@@ -318,5 +318,5 @@ func (app *osApp) onLoginCallback(w http.ResponseWriter, r *http.Request) {
 
 	app.refreshEvent()
 
-	_, _ = w.Write([]byte("Success"))
+	http.Redirect(w, r, fmt.Sprintf("%s/login/auth/success", config.MyGateway()), http.StatusPermanentRedirect)
 }

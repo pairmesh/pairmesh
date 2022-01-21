@@ -32,7 +32,7 @@ export default {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #3a74fa;
+  background: #6e90c4;
   animation: lds-grid 1.2s linear infinite;
 }
 
