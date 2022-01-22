@@ -3,7 +3,6 @@ module github.com/pairmesh/pairmesh
 go 1.17
 
 require (
-	github.com/BurntSushi/toml v0.4.1
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/atotto/clipboard v0.1.4
 	github.com/coreos/go-semver v0.3.0
@@ -37,7 +36,6 @@ require (
 )
 
 require (
-	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/cupcake/rdb v0.0.0-20161107195141-43ba34106c76 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect

@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name = "1a"
-region = "1"
-host = "127.0.0.1"
-port = 2328
-stun_port = 3478
+name: 1a
+region: '1'
+host: 127.0.0.1
+port: 2328
+stunPort: 3478
+portal:
+  key: my-testing-relay
+  url: 'http://127.0.0.1:2823'
 
-[portal]
-key = "my-testing-relay"
-url = "http://127.0.0.1:2823"

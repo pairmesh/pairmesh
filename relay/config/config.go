@@ -22,10 +22,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/BurntSushi/toml"
 	"github.com/flynn/noise"
 	"github.com/pairmesh/pairmesh/security"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 // Config represents the configuration of the relay server
@@ -34,31 +34,31 @@ type Config struct {
 	// It is not a host name.
 	// It's typically of the form "1b", "2a", "3b", etc. (region
 	// ID + suffix within that region)
-	Name string `json:"name" toml:"name"`
+	Name string `yaml:"name"`
 
 	// Region is the Region of the RelayRegion that this node
 	// is running in.
-	Region string `json:"region" toml:"region"`
+	Region string `yaml:"region"`
 
 	// Host describes the host information about the relay server.
-	Host string `json:"host,omitempty" toml:"host,omitempty"`
+	Host string `yaml:"host,omitempty"`
 
-	Port int `json:"port,omitempty" toml:"port,omitempty"`
+	Port int `yaml:"port,omitempty"`
 
 	// Port optionally specifies a STUN port to use.
 	// Zero means 3478.
 	// To disable STUN on this node, use -1.
 	// https://datatracker.ietf.org/doc/html/rfc5389#section-18.4
-	STUNPort int `json:"stun_port,omitempty" toml:"stun_port,omitempty"`
+	STUNPort int `yaml:"stunPort,omitempty"`
 
-	DHKey  *security.DHKey `toml:"dh_key"`
-	Portal *Portal         `toml:"portal"`
+	DHKey  *security.DHKey `yaml:"dhKey"`
+	Portal *Portal         `yaml:"portal"`
 }
 
 // Portal represents the gateway instance configuration
 type Portal struct {
-	Key string `toml:"key"`
-	URL string `toml:"url"`
+	Key string `yaml:"key"`
+	URL string `yaml:"url"`
 }
 
 // New returns a config instance with default value
@@ -79,7 +79,7 @@ func New() *Config {
 // FromReader returns the configuration instance from reader
 func FromReader(reader io.Reader) (*Config, error) {
 	c := New()
-	_, err := toml.NewDecoder(reader).Decode(c)
+	err := yaml.NewDecoder(reader).Decode(c)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func FromPath(path string) (*Config, error) {
 		}
 		defer file.Close()
 
-		err = toml.NewEncoder(file).Encode(cfg)
+		err = yaml.NewEncoder(file).Encode(cfg)
 		if err != nil {
 			return nil, err
 		}

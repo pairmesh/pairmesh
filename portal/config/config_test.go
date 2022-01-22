@@ -34,22 +34,22 @@ func TestNew(t *testing.T) {
 	a.Equal(cfg.TLSCert, "")
 	a.Equal(cfg.MySQL.Port, 3306)
 	a.Equal(cfg.MySQL.Password, "")
-	a.Equal(cfg.MySQL.DB, "zetagateway")
+	a.Equal(cfg.MySQL.DB, "pairportal")
 }
 
 func TestFromBytes(t *testing.T) {
 	data := []byte(`
 host: 0.0.0.0
 port: 2824
-tls-key: "/path/to/tls/key"
-tls-cert: "/path/to/tls/cert"
+tlsKey: "/path/to/tls/key"
+tlsCert: "/path/to/tls/cert"
 
 mysql:
   host: 127.0.0.1
   port: 4000
   user: root
   password: "password"
-  db: zetagateway
+  db: pairportal
 `)
 	cfg, err := config.FromBytes(data)
 
@@ -58,33 +58,27 @@ mysql:
 	a.Equal(cfg.TLSCert, "/path/to/tls/cert")
 	a.Equal(cfg.MySQL.Port, 4000)
 	a.Equal(cfg.MySQL.Password, "password")
-	a.Equal(cfg.MySQL.DB, "zetagateway")
+	a.Equal(cfg.MySQL.DB, "pairportal")
 }
 
 func TestFromPath(t *testing.T) {
 	path := filepath.Join(t.TempDir(), uuid.New().String())
 	err := ioutil.WriteFile(path, []byte(`
-host = "0.0.0.0"
-port = 2823
-tls_key = ""
-tls_cert = "/path/to/tls/cert"
-private_key = "/path/to/private-key"
-
-[relay]
-auth_key = "test"
-
-[features]
-disable_pay = true
-
-[sso]
-redirect = "http://192.168.0.101:8080"
-
-[mysql]
-host = "127.0.0.1"
-port = 3306
-user = "root"
-password = "123456"
-db = "pairportal"
+host: 0.0.0.0
+port: 2823
+tlsKey: ''
+tlsCert: /path/to/tls/cert
+privateKey: /path/to/private-key
+relay:
+  authKey: test
+sso:
+  redirect: 'http://192.168.0.101:8080'
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: '123456'
+  db: pairportal
 `), os.ModePerm)
 
 	a := assert.New(t)

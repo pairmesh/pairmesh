@@ -12,27 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-host = "0.0.0.0"
-port = 2823
-tls_key = ""
-tls_cert = ""
-concurrency = 32
-private_key = ""
-data_dir = "./cache/"
-
-[relay]
-auth_key = "my-testing-relay"
-
-[sso]
-redirect = "http://127.0.0.1:8080"
-
-[sso.github]
-clientID = "x"
-clientSecret = "x"
-
-[mysql]
-host = "127.0.0.1"
-port = 3306
-user = "root"
-password = "123456"
-db = "pairportal"
+host: 0.0.0.0
+port: 2823
+tlsKey: ''
+tlsCert: ''
+privateKey: ''
+dataDir: ./cache/
+relay:
+  authKey: my-testing-relay
+sso:
+  redirect: 'http://127.0.0.1:8080'
+  github:
+    clientID: x
+    clientSecret: x
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: '123456'
+  db: pairportal

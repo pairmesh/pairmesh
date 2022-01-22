@@ -30,15 +30,14 @@ func TestFromPath(t *testing.T) {
 	fileName := fmt.Sprintf("%s.toml", uuid.New().String())
 	path := filepath.Join(dir, fileName)
 	data := []byte(`
-name = "1a"
-region = "1"
-host = "127.0.0.1"
-port = 2328
-stun_port = 3478
-
-[portal]
-key = "my-testing-relay"
-url = "http://127.0.0.1:2823"
+name: 1a
+region: '1'
+host: 127.0.0.1
+port: 2328
+stunPort: 3478
+portal:
+  key: my-testing-relay
+  url: 'http://127.0.0.1:2823'
 `)
 	err := ioutil.WriteFile(path, data, os.ModePerm)
 	assert.Nil(t, err)
@@ -52,7 +51,7 @@ url = "http://127.0.0.1:2823"
 	data, err = ioutil.ReadFile(path)
 	assert.Nil(t, err)
 
-	assert.Contains(t, string(data), "dh_key")
+	assert.Contains(t, string(data), "dhKey")
 
 	// Double check
 	cfg2, err := FromPath(path)

@@ -19,61 +19,61 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v3"
 )
 
 // Config represents the configuration of the gateway server
 type Config struct {
 	// Basic configurations
-	Host       string `toml:"host"`
-	Port       int    `toml:"port"`
-	TLSKey     string `toml:"tls_key"`
-	TLSCert    string `toml:"tls_cert"`
-	PrivateKey string `toml:"private_key"`
-	DataDir    string `json:"data_dir"`
+	Host       string `yaml:"host"`
+	Port       int    `yaml:"port"`
+	TLSKey     string `yaml:"tlsKey"`
+	TLSCert    string `yaml:"tlsCert"`
+	PrivateKey string `yaml:"privateKey"`
+	DataDir    string `yaml:"dataDir"`
 
-	Relay *Relay `toml:"relay"`
-	MySQL *MySQL `toml:"mysql"`
-	JWT   *JWT   `toml:"jwt"`
-	SSO   *SSO   `toml:"sso"`
+	Relay *Relay `yaml:"relay"`
+	MySQL *MySQL `yaml:"mysql"`
+	JWT   *JWT   `yaml:"jwt"`
+	SSO   *SSO   `yaml:"sso"`
 }
 
 type Relay struct {
-	AuthKey string `toml:"auth_key"`
+	AuthKey string `yaml:"authKey"`
 }
 
 // GitHub represents the provider:github's configuration
 type GitHub struct {
-	ClientID     string `toml:"clientID"`
-	ClientSecret string `toml:"clientSecret"`
+	ClientID     string `yaml:"clientID"`
+	ClientSecret string `yaml:"clientSecret"`
 }
 
 // SSO represents the sso provider(s) configuration
 type SSO struct {
-	Redirect string `toml:"redirect"`
-	GitHub   GitHub `toml:"github"`
+	Redirect string `yaml:"redirect"`
+	GitHub   GitHub `yaml:"github"`
 }
 
 // MySQL represents the mysql connection configuration
 type MySQL struct {
-	Host     string `toml:"host"`
-	Port     int    `toml:"port"`
-	User     string `toml:"user"`
-	Password string `toml:"password"`
-	DB       string `toml:"db"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	DB       string `yaml:"db"`
 }
 
 // JWT represents the jwt configuration
 type JWT struct {
-	AccessSecret    string `toml:"accessSecret"`
-	RefreshSecret   string `toml:"refreshSecret"`
-	AccessTokenTTL  uint32 `toml:"accessTokenTtl"`
-	RefreshTokenTTL uint32 `toml:"refreshTokenTtl"`
+	AccessSecret    string `yaml:"accessSecret"`
+	RefreshSecret   string `yaml:"refreshSecret"`
+	AccessTokenTTL  uint32 `yaml:"accessTokenTtl"`
+	RefreshTokenTTL uint32 `yaml:"refreshTokenTtl"`
 }
 
 // Data represents the data configuration
 type Data struct {
-	IP2LocationDBPath string `toml:"ip2LocationDBPath"`
+	IP2LocationDBPath string `yaml:"locationDB"`
 }
 
 // New returns a config instance with default value
@@ -92,7 +92,7 @@ func New() *Config {
 			Port:     3306,
 			User:     "root",
 			Password: "",
-			DB:       "meshportal",
+			DB:       "pairportal",
 		},
 		JWT: &JWT{
 			AccessSecret:    "the_access_secret",
@@ -106,7 +106,7 @@ func New() *Config {
 // FromReader returns the configuration instance from reader
 func FromReader(reader io.Reader) (*Config, error) {
 	config := New()
-	_, err := toml.NewDecoder(reader).Decode(config)
+	err := yaml.NewDecoder(reader).Decode(config)
 	if err != nil {
 		return nil, err
 	}
