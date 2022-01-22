@@ -17,7 +17,7 @@ package api
 import (
 	"context"
 
-	"github.com/pairmesh/pairmesh/internal/jwt"
+	"github.com/pairmesh/pairmesh/pkg/jwt"
 	"github.com/pairmesh/pairmesh/portal/db"
 	"github.com/pairmesh/pairmesh/portal/db/models"
 

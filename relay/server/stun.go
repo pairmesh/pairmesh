@@ -22,8 +22,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/stun"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/relay/config"
 	"go.uber.org/zap"
 )

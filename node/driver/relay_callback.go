@@ -17,9 +17,9 @@ package driver
 import (
 	"fmt"
 
-	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"github.com/pkg/errors"

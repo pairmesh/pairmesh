@@ -15,9 +15,9 @@
 package server
 
 import (
-	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"

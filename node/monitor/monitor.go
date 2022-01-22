@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/pairmesh/pairmesh/constant"
-	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/stun"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"github.com/pkg/errors"

@@ -25,8 +25,8 @@ import (
 
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/message"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"go.uber.org/atomic"

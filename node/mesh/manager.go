@@ -19,13 +19,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pairmesh/pairmesh/internal/logutil"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/node/device"
 	"github.com/pairmesh/pairmesh/node/mesh/peer"
 	"github.com/pairmesh/pairmesh/node/mesh/tunnel"
 	"github.com/pairmesh/pairmesh/node/mesh/types"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"github.com/flynn/noise"

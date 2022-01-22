@@ -19,7 +19,7 @@ import (
 	"net"
 
 	"github.com/pairmesh/pairmesh/constant"
-	"github.com/pairmesh/pairmesh/internal/logutil"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"go.uber.org/zap"
 )
 

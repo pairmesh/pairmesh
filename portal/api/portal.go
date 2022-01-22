@@ -26,8 +26,8 @@ import (
 	"sync"
 
 	// grouped for init
-	"github.com/pairmesh/pairmesh/internal/fsutil"
-	"github.com/pairmesh/pairmesh/internal/jwt"
+	"github.com/pairmesh/pairmesh/pkg/fsutil"
+	"github.com/pairmesh/pairmesh/pkg/jwt"
 	"github.com/pairmesh/pairmesh/portal/config"
 	"github.com/pairmesh/pairmesh/portal/db"
 	"github.com/pairmesh/pairmesh/portal/sso"

@@ -27,7 +27,7 @@ import (
 	"github.com/pairmesh/pairmesh/errcode"
 
 	"github.com/pairmesh/pairmesh/constant"
-	"github.com/pairmesh/pairmesh/internal/logutil"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/version"
 	"github.com/pkg/errors"
 	"go.uber.org/atomic"

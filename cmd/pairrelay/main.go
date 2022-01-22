@@ -22,8 +22,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/pairmesh/pairmesh/internal/cmdutil"
-	"github.com/pairmesh/pairmesh/internal/logutil"
+	"github.com/pairmesh/pairmesh/pkg/cmdutil"
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/relay/config"
 	"github.com/pairmesh/pairmesh/relay/server"
 	"github.com/pairmesh/pairmesh/version"
