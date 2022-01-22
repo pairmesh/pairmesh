@@ -168,7 +168,7 @@ func (s *server) DeleteKey(ctx context.Context, r *http.Request) (*DeleteKeyResp
 
 func (s *server) ExchangeKey(ctx context.Context) (*ExchangeKeyResponse, error) {
 	machineID := jwt.MachineIDFromContext(ctx)
-	keyID := jwt.AuthKeyIDFromContext(ctx)
+	keyID := models.ID(jwt.AuthKeyIDFromContext(ctx))
 
 	// iOS Oneoff key
 	if keyID == 0 {

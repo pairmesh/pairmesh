@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	stdjwt "github.com/dgrijalva/jwt-go"
-	"github.com/pairmesh/pairmesh/portal/db/models"
 )
 
 // ExtractToken extract the token from the raw string
@@ -114,10 +113,10 @@ func ContextWithAuthKeyID(ctx context.Context, keyID uint64) context.Context {
 
 // AuthKeyIDFromContext returns the `auth key's id` previously associated with `ctx`,or
 // `0` if no such `key id` could be found.
-func AuthKeyIDFromContext(ctx context.Context) models.ID {
+func AuthKeyIDFromContext(ctx context.Context) uint64 {
 	val := ctx.Value(authKeyIDKey{})
 	if id, ok := val.(uint64); ok {
-		return models.ID(id)
+		return id
 	}
 	return 0
 }
