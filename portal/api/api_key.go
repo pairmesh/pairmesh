@@ -46,7 +46,7 @@ type (
 )
 
 func (s *server) KeyList(ctx context.Context) (*KeyListResponse, error) {
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 
 	var keys []models.AuthKey
 	err := db.Tx(func(tx *gorm.DB) error {
@@ -92,7 +92,7 @@ func (s *server) CreateKey(ctx context.Context, req *CreateKeyRequest) (*CreateK
 		return nil, errcode.ErrIllegalRequest
 	}
 
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	newKey := uuid.New()
 	key := &models.AuthKey{
 		UserID:    userID,
@@ -142,7 +142,7 @@ func (s *server) ChangeKey(ctx context.Context, r *http.Request, req *ChangeKeyR
 		return nil, nil
 	}
 
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	return &ChangeKeyResponse{}, db.Tx(func(tx *gorm.DB) error {
 		return models.NewAuthKeyQuerySet(tx).UserIDEq(userID).IDEq(keyId).GetUpdater().SetEnabled(req.Op == "enable").Update()
 	})
@@ -160,7 +160,7 @@ func (s *server) DeleteKey(ctx context.Context, r *http.Request) (*DeleteKeyResp
 		return nil, nil
 	}
 
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	return &DeleteKeyResponse{}, db.Tx(func(tx *gorm.DB) error {
 		return models.NewAuthKeyQuerySet(tx).UserIDEq(userID).IDEq(keyId).Delete()
 	})
@@ -172,7 +172,7 @@ func (s *server) ExchangeKey(ctx context.Context) (*ExchangeKeyResponse, error) 
 
 	// iOS Oneoff key
 	if keyID == 0 {
-		userID := jwt.UserIDFromContext(ctx)
+		userID := models.ID(jwt.UserIDFromContext(ctx))
 		accessToken, refreshToken, err := jwt.Shared().CreateTokenPair(uint64(userID), machineID, 0, uint64(keyID), true)
 		if err != nil {
 			return nil, err

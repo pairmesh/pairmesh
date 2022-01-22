@@ -86,7 +86,7 @@ func (s *server) UserDeviceList(r *http.Request) (*DeviceListResponse, error) {
 
 // DeviceList returns the device list associated to the user
 func (s *server) DeviceList(ctx context.Context) (*DeviceListResponse, error) {
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	return s.deviceList(userID)
 }
 
@@ -111,7 +111,7 @@ func (s *server) DeviceUpdate(ctx context.Context, r *http.Request, req *DeviceU
 	if deviceID == 0 {
 		return nil, errcode.ErrIllegalRequest
 	}
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	err := db.Tx(func(tx *gorm.DB) error {
 		return models.NewDeviceQuerySet(tx).
 			UserIDEq(userID).

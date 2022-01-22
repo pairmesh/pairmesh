@@ -37,7 +37,7 @@ import (
 
 // PeerGraph respond the peer graph of the device which send the request.
 func (s *server) PeerGraph(ctx context.Context) (*protocol.PeerGraphResponse, error) {
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 
 	var (
 		peers          []protocol.Peer
@@ -171,7 +171,7 @@ func (s *server) randomRelayServerID() models.ID {
 
 // Preflight returns the parameters for startup a node
 func (s *server) Preflight(ctx context.Context, r *http.Request, req *protocol.PreflightRequest) (*protocol.PreflightResponse, error) {
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	machineID := jwt.MachineIDFromContext(ctx)
 
 	device := &models.Device{}

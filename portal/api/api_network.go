@@ -52,7 +52,7 @@ type (
 func (s *server) CreateNetwork(ctx context.Context, req *NetworkRequest) (*NetworkResponse, error) {
 	var res *NetworkResponse
 	err := db.Tx(func(tx *gorm.DB) error {
-		userID := jwt.UserIDFromContext(ctx)
+		userID := models.ID(jwt.UserIDFromContext(ctx))
 
 		network := &models.Network{
 			Name:        req.Name,
@@ -139,7 +139,7 @@ type (
 
 // NetworkList returns the networks which the user or the device have group in
 func (s *server) NetworkList(ctx context.Context) (*NetworkInfoResponse, error) {
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 
 	res := &NetworkInfoResponse{}
 	err := db.Tx(func(tx *gorm.DB) error {
@@ -196,7 +196,7 @@ func (s *server) NetworkMembers(ctx context.Context, r *http.Request) (*NetworkM
 	if networkID == 0 {
 		return nil, errcode.ErrIllegalRequest
 	}
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 
 	var res *NetworkMemberResponse
 	err := db.Tx(func(tx *gorm.DB) error {
@@ -247,7 +247,7 @@ type (
 
 func (s *server) networkUserOperationCheck(ctx context.Context, networkID models.ID, allowRole models.RoleType) error {
 	return db.Tx(func(tx *gorm.DB) error {
-		userID := jwt.UserIDFromContext(ctx)
+		userID := models.ID(jwt.UserIDFromContext(ctx))
 		var networkUser models.NetworkUser
 		if err := models.NewNetworkUserQuerySet(tx).NetworkIDEq(networkID).UserIDEq(userID).One(&networkUser); err != nil {
 			return err
@@ -269,7 +269,7 @@ func (s *server) DeleteNetwork(ctx context.Context, r *http.Request) (*NetworkOp
 	if networkID == 0 {
 		return nil, errcode.ErrIllegalRequest
 	}
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 
 	var res *NetworkOperationResponse
 	err := db.Tx(func(tx *gorm.DB) error {
@@ -381,7 +381,7 @@ func (s *server) DeleteNetworkUser(ctx context.Context, r *http.Request) (*Delet
 
 	var res *DeleteNetworkUserResponse
 	err := db.Tx(func(tx *gorm.DB) error {
-		userID := jwt.UserIDFromContext(ctx)
+		userID := models.ID(jwt.UserIDFromContext(ctx))
 		var role string
 		if err := tx.Raw(`select role from network_users where network_id = ? and user_id = ?`, networkID, userID).Scan(&role).Error; err != nil {
 			return err
@@ -447,7 +447,7 @@ func (s *server) InviteMember(ctx context.Context, r *http.Request, req *InviteM
 		return nil, errcode.ErrIllegalRequest
 	}
 
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 
 	var res *InviteMemberResponse
 	err := db.Tx(func(tx *gorm.DB) error {

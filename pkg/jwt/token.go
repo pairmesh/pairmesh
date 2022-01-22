@@ -131,10 +131,10 @@ func ContextWithUserID(ctx context.Context, userID uint64) context.Context {
 
 // UserIDFromContext returns the `uid` previously associated with `ctx`, or
 // `0` if no such `uid` could be found.
-func UserIDFromContext(ctx context.Context) models.ID {
+func UserIDFromContext(ctx context.Context) uint64 {
 	val := ctx.Value(userIDKey{})
 	if uid, ok := val.(uint64); ok {
-		return models.ID(uid)
+		return uid
 	}
 	return 0
 }

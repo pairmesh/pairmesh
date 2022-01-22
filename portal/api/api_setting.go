@@ -45,7 +45,7 @@ func (s *server) UserProfileSetting(ctx context.Context, req *UserProfileSetting
 
 	var res *UserProfileSettingResponse
 	err := db.Tx(func(tx *gorm.DB) error {
-		userID := jwt.UserIDFromContext(ctx)
+		userID := models.ID(jwt.UserIDFromContext(ctx))
 		var user models.User
 		err := models.NewUserQuerySet(tx).IDEq(userID).One(&user)
 		if err != nil {

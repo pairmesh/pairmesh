@@ -45,7 +45,7 @@ type (
 
 // Invitations returns the invitation list associated to the user
 func (s *server) Invitations(ctx context.Context) (*InvitationListResponse, error) {
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	res := &InvitationListResponse{}
 	var invitations []models.Invitation
 	err := db.Tx(func(tx *gorm.DB) error {
@@ -96,7 +96,7 @@ func (s *server) HandleInvitation(ctx context.Context, raw *http.Request, req *H
 		return nil, errcode.ErrIllegalRequest
 	}
 
-	userID := jwt.UserIDFromContext(ctx)
+	userID := models.ID(jwt.UserIDFromContext(ctx))
 	var res *HandleInvitationResponse
 	err = db.Tx(func(tx *gorm.DB) error {
 		var invitation models.Invitation
