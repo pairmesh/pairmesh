@@ -51,8 +51,8 @@ const (
 )
 
 // DefaultAPIGateway represents the gateway's default address
-const DefaultAPIGateway = "http://192.168.0.108:2823"
-const DefaultMyGateway = "http://192.168.0.108:8080"
+const DefaultAPIGateway = "https://api.pairmesh.com"
+const DefaultMyGateway = "https://my.pairmesh.com"
 
 // Packet protocol constants
 

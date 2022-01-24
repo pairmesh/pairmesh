@@ -39,7 +39,7 @@ func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) error {
 	}
 
 	// Preflight the relay server
-	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
+	addr := fmt.Sprintf(":%d", cfg.Port)
 	server := relay.NewServer(addr, constant.HeartbeatInterval, cfg.DHKey.ToNoiseDHKey(), publicKey)
 
 	// Register the packet customized callback.
