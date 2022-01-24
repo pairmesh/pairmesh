@@ -24,63 +24,50 @@ import (
 
 const keySize = 32
 
+type DHKeyBytes [keySize]byte
+
 // DHPrivate represents a curve25519 private key.
-type DHPrivate [keySize]byte
+type DHPrivate struct{ DHKeyBytes }
 
 // DHPublic represents a curve25519 public key.
-type DHPublic [keySize]byte
-
-// IsZero reports whether the DHPrivate p is the zero value.
-func (k DHPrivate) IsZero() bool { return k == DHPrivate{} }
-func (k DHPrivate) String() string {
-	return base64.StdEncoding.EncodeToString(k[:])
-}
-func (k DHPrivate) ShortString() string {
-	return "[" + base64.StdEncoding.EncodeToString(k[:])[:5] + "]"
-}
-
-// NewDHPrivate returns a new private key.
-func NewDHPrivate(s []byte) DHPrivate {
-	if len(s) > keySize {
-		return DHPrivate{}
-	}
-	var x DHPrivate
-	copy(x[:], s)
-	return x
-}
+type DHPublic struct{ DHKeyBytes }
 
 // B32 returns k as the *[32]byte type that's used by the
 // golang.org/x/crypto packages. This allocates; it might
 // not be appropriate for performance-sensitive paths.
-func (k DHPrivate) B32() *[keySize]byte { return (*[keySize]byte)(&k) }
+func (k DHKeyBytes) B32() *[keySize]byte { return (*[keySize]byte)(&k) }
 
-// IsZero reports whether DHPublic p is the zero value.
-func (k DHPublic) IsZero() bool { return k == DHPublic{} }
+// IsZero reports whether the DHPrivate p is the zero value.
+func (k DHKeyBytes) IsZero() bool { return k == DHKeyBytes{} }
+func (k DHKeyBytes) String() string {
+	return base64.StdEncoding.EncodeToString(k[:])
+}
 
 // ShortString returns the PairMesh conventional debug representation
 // of a public key: the first five base64 digits of the key, in square
 // brackets.
-func (k DHPublic) ShortString() string {
+func (k DHKeyBytes) ShortString() string {
 	return "[" + base64.StdEncoding.EncodeToString(k[:])[:5] + "]"
 }
-func (k DHPublic) String() string {
-	return base64.StdEncoding.EncodeToString(k[:])
-}
 
-func (k DHPublic) MarshalText() ([]byte, error) {
+func (k DHKeyBytes) MarshalText() ([]byte, error) {
 	buf := make([]byte, base64.StdEncoding.EncodedLen(len(k)))
 	base64.StdEncoding.Encode(buf, k[:])
 	return buf, nil
 }
 
-func (k DHPublic) Bytes() []byte {
+func (k DHKeyBytes) Bytes() []byte {
 	b := make([]byte, keySize)
 	copy(b, k[:])
 	return b
 }
 
-func (k *DHPublic) UnmarshalText(txt []byte) error {
-	if *k != (DHPublic{}) {
+func (k DHKeyBytes) Len() int {
+	return len(k)
+}
+
+func (k *DHKeyBytes) UnmarshalText(txt []byte) error {
+	if *k != (DHKeyBytes{}) {
 		return errors.New("refusing to unmarshal into non-zero key.DHPublic")
 	}
 	n, err := base64.StdEncoding.Decode(k[:], txt)
@@ -93,19 +80,24 @@ func (k *DHPublic) UnmarshalText(txt []byte) error {
 	return nil
 }
 
-// B32 returns k as the *[32]byte type that's used by the
-// golang.org/x/crypto packages. This allocates; it might
-// not be appropriate for performance-sensitive paths.
-func (k DHPublic) B32() *[keySize]byte { return (*[keySize]byte)(&k) }
+// NewDHPrivate returns a new private key.
+func NewDHPrivate(s []byte) DHPrivate {
+	if len(s) > keySize {
+		return DHPrivate{}
+	}
+	var x DHKeyBytes
+	copy(x[:], s)
+	return DHPrivate{DHKeyBytes: x}
+}
 
 // NewDHPublic returns a new public key.
 func NewDHPublic(s []byte) DHPublic {
 	if len(s) > keySize {
 		return DHPublic{}
 	}
-	var x DHPublic
+	var x DHKeyBytes
 	copy(x[:], s)
-	return x
+	return DHPublic{DHKeyBytes: x}
 }
 
 // DHKey a noise.DHkey wrapper for PairMesh
@@ -121,6 +113,7 @@ func FromNoiseDHKey(nKey noise.DHKey) *DHKey {
 		Private: NewDHPrivate(nKey.Private),
 	}
 }
+
 func (k *DHKey) IsZero() bool {
 	return k.Public.IsZero()
 }
@@ -138,7 +131,7 @@ func (k *DHKey) Equals(k2 *DHKey) bool {
 // ToNoiseDHKey re-generate noise.DHKey from DHKey
 func (k *DHKey) ToNoiseDHKey() noise.DHKey {
 	return noise.DHKey{
-		Public:  k.Public[:],
-		Private: k.Private[:],
+		Public:  k.Public.DHKeyBytes[:],
+		Private: k.Private.DHKeyBytes[:],
 	}
 }

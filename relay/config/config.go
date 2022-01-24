@@ -104,7 +104,7 @@ func FromPath(path string) (*Config, error) {
 		return nil, err
 	}
 
-	if cfg.DHKey == nil || len(cfg.DHKey.Public) != noise.DH25519.DHLen() {
+	if cfg.DHKey == nil || cfg.DHKey.Public.Len() != noise.DH25519.DHLen() {
 		// Generate the static key for the current node.
 		staticKey, err := noise.DH25519.GenerateKeypair(rand.Reader)
 		if err != nil {

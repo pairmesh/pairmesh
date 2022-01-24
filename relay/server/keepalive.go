@@ -25,14 +25,13 @@ import (
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/relay/api"
 	"github.com/pairmesh/pairmesh/relay/config"
-	"github.com/pairmesh/pairmesh/security"
 	"go.uber.org/zap"
 )
 
 var startedAt = time.Now()
 
 func retrievePortalKey(apiClient *api.Client, cfg *config.Config) (*rsa.PublicKey, error) {
-	resp, err := apiClient.Keepalive(cfg, security.NewDHPublic(cfg.DHKey.ToNoiseDHKey().Public).String(), startedAt)
+	resp, err := apiClient.Keepalive(cfg, cfg.DHKey.Public.String(), startedAt)
 	if err != nil {
 		return nil, err
 	}
