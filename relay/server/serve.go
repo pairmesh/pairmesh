@@ -53,7 +53,7 @@ func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) error {
 	wg.Add(1)
 	go serveSTUN(ctx, cfg, wg)
 
-	zap.L().Error("Relay server ready to serve", zap.String("addr", addr))
+	zap.L().Info("Relay server ready to serve", zap.String("addr", addr))
 
 	return server.Serve(ctx)
 }
