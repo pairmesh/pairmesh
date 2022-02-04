@@ -116,11 +116,17 @@ func (s *Server) Serve(ctx context.Context) error {
 		return err
 	}
 
+	go func() {
+		<-ctx.Done()
+		zap.L().Info("Listener ready to close")
+		_ = listener.Close()
+	}()
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			zap.L().Error("Accept incoming connection failed", zap.Error(err))
-			continue
+			return err
 		}
 
 		// Create a Session to maintain the Session state.
