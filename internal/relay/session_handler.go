@@ -126,6 +126,7 @@ func (h *sessionHandler) onHandshake(s *Session, _ message.PacketType, msg proto
 	s.SetPeerID(peerID)
 	s.SetPublicKey(hs.PublicKey)
 	s.SetVAddress(ip)
+	s.SetIsPrimary(hs.IsPrimary)
 	s.callback.onHandshake(s)
 
 	// Construct the response message which is used to acknowledge handshake.

@@ -56,6 +56,8 @@ message PacketHandshake {
   // 1. Client fetch its primary server information from portal service.
   // 2. Client handshake with relay server and put the credentials into HandshakeMessage.
   bytes Message = 2;
+  // IsPrimary indicates whether is the destination relay server the primary server of client.
+  bool IsPrimary = 3;
 }
 
 message PacketHandshakeAck {

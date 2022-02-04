@@ -73,6 +73,8 @@ type (
 		// PublicKey represents the public key of DHKey pairs.
 		PublicKey string `json:"public_key"`
 
+		Peers []PeerID `json:"peers"`
+
 		// StartedAt represents the unix timestamp of relay server start time
 		StartedAt int64 `json:"started_at,omitempty"`
 	}
@@ -80,5 +82,12 @@ type (
 	RelayKeepaliveResponse struct {
 		// PublicKey represents the public key which is used to validate the credential
 		PublicKey string `json:"public_key,omitempty"`
+	}
+
+	RelayPeerOfflineRequest struct {
+		Peers []PeerID `json:"peers"`
+	}
+
+	RelayPeerOfflineResponse struct {
 	}
 )

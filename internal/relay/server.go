@@ -42,6 +42,7 @@ type Server struct {
 	wg                *sync.WaitGroup
 	heartbeatInterval time.Duration
 	handler           SessionHandler
+	events            chan Event
 	// sessions only contain Session which completed handshake.
 	// mscfg.PeerID -> *Session
 	sessions sync.Map
@@ -58,6 +59,7 @@ func NewServer(addr string, heartbeatInterval time.Duration, dhKey noise.DHKey, 
 		publicKey:         publicKey,
 		wg:                &sync.WaitGroup{},
 		heartbeatInterval: heartbeatInterval,
+		events:            make(chan Event, eventBufferSize),
 		sessions:          sync.Map{},
 	}
 	s.handler = NewSessionHandler(s)
@@ -94,6 +96,22 @@ func (s *Server) Session(peerID protocol.PeerID) *Session {
 		return nil
 	}
 	return v.(*Session)
+}
+
+func (s *Server) ForeachSession(fn func(*Session)) {
+	s.sessions.Range(func(_, value interface{}) bool {
+		fn(value.(*Session))
+		return true
+	})
+}
+
+func (m *Server) Events() <-chan Event {
+	return m.events
+}
+
+func (m *Server) event(e Event) {
+	// Is it ok to block connect thread?
+	m.events <- e
 }
 
 // Serve starts to serve the server process.
@@ -143,6 +161,13 @@ func (s *Server) onSessionHandshake(ses *Session) {
 		zap.L().Warn("Close old session", zap.Reflect("peerID", oldSes.peerID))
 		oldSes.Close()
 	}
+
+	s.event(Event{
+		Type: EventTypeSessionConnected,
+		Data: EventSessionConnected{
+			Session: ses,
+		},
+	})
 }
 
 func (s *Server) onSessionClosed(ses *Session) {
@@ -154,7 +179,12 @@ func (s *Server) onSessionClosed(ses *Session) {
 	if ses.peerID == 0 {
 		return
 	}
-
+	s.event(Event{
+		Type: EventTypeSessionClosed,
+		Data: EventSessionClosed{
+			Session: ses,
+		},
+	})
 	s.sessions.Delete(ses.peerID)
 }
 

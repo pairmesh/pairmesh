@@ -35,7 +35,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const eventBufferSize = 256
+const eventBufferSize = 1024
 
 type (
 	PacketCallback interface {
@@ -140,6 +140,7 @@ func (m *Manager) connect(ctx context.Context, r protocol.RelayServer) bool {
 	}
 
 	client := NewClient(r, m.credential.Load().([]byte), m.staticKey, security.NewDHPublic(publicKey))
+	client.SetIsPrimary(r.ID == m.PrimaryServerID())
 	if err := client.Connect(ctx); err != nil {
 		zap.L().Error("Connect to relay server failed", zap.String("vaddress", address), zap.Error(err))
 		return false

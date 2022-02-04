@@ -116,6 +116,7 @@ func route(server *server, ssoSrv *ssoServer) http.Handler {
 	// All HTTP APIs requested by the relayServer servers
 	relayAPI := fn.NewGroup().Plugin(relayAuthKeyValidator(server.relayAuthKey))
 	router.Handle(constant.URIRelay, relayAPI.Wrap(server.RelayKeepalive)).Methods(http.MethodPost)
+	router.Handle(constant.URIPeersOffline, relayAPI.Wrap(server.PeersOffline)).Methods(http.MethodPut)
 
 	// All HTTP APIs requested by the PairMesh peers
 	peerAPI := fn.NewGroup().Plugin(peerTokenValidator)

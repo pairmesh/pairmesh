@@ -331,6 +331,10 @@ func (s *server) RelayKeepalive(req *protocol.RelayKeepaliveRequest) (*protocol.
 	return res, nil
 }
 
+func (s *server) PeersOffline(req *protocol.RelayPeerOfflineRequest) (*protocol.RelayPeerOfflineResponse, error) {
+	return &protocol.RelayPeerOfflineResponse{}, nil
+}
+
 // RenewCredential handles the `RenewCredentialRequest` POST request.
 func (s *server) RenewCredential(req *protocol.RenewCredentialRequest) (*protocol.RenewCredentialResponse, error) {
 	credential, err := base64.RawStdEncoding.DecodeString(req.Credential)

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/pairmesh/pairmesh/internal/relay"
+	"github.com/pairmesh/pairmesh/protocol"
 	"github.com/pairmesh/pairmesh/relay/api"
 	"github.com/pairmesh/pairmesh/relay/config"
 	"go.uber.org/zap"
@@ -30,8 +31,8 @@ import (
 
 var startedAt = time.Now()
 
-func retrievePortalKey(apiClient *api.Client, cfg *config.Config) (*rsa.PublicKey, error) {
-	resp, err := apiClient.Keepalive(cfg, cfg.DHKey.Public.String(), startedAt)
+func keepaliveWithPortal(apiClient *api.Client, cfg *config.Config, peers []protocol.PeerID) (*rsa.PublicKey, error) {
+	resp, err := apiClient.Keepalive(cfg, peers, startedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +45,13 @@ func retrievePortalKey(apiClient *api.Client, cfg *config.Config) (*rsa.PublicKe
 
 func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, apiClient *api.Client, cfg *config.Config) {
 	defer wg.Done()
-
-	ticker := time.NewTicker(10 * time.Minute)
+	const (
+		tickerInterval = 5 * time.Minute
+		syncInterval   = 10 * time.Minute
+	)
+	ticker := time.NewTicker(tickerInterval)
+	events := server.Events()
+	var peers []protocol.PeerID
 	for {
 		select {
 		case <-ctx.Done():
@@ -53,11 +59,46 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 			ticker.Stop()
 			return
 
+		case e := <-events:
+			// Notify portal service if client closed.
+			var peers []protocol.PeerID
+			if e.Type == relay.EventTypeSessionClosed {
+				peers = append(peers, e.Data.(*relay.EventSessionClosed).Session.PeerID())
+			}
+			// Batch all session closed events
+			if size := len(events); size > 0 {
+				for i := 0; i < size; i++ {
+					e := <-events
+					if e.Type == relay.EventTypeSessionClosed {
+						peers = append(peers, e.Data.(*relay.EventSessionClosed).Session.PeerID())
+					}
+				}
+			}
+			err := apiClient.PeersOffline(peers)
+			if err != nil {
+				zap.L().Error("Notify portal service peers offline failed", zap.Error(err))
+				continue
+			}
+
 		case <-ticker.C:
-			publicKey, err := retrievePortalKey(apiClient, cfg)
+			peers = peers[:0]
+			server.ForeachSession(func(s *relay.Session) {
+				if s.IsPrimary() && time.Since(s.SyncAt()) > syncInterval {
+					peers = append(peers, s.PeerID())
+				}
+			})
+			publicKey, err := keepaliveWithPortal(apiClient, cfg, peers)
 			if err != nil {
 				zap.L().Error("Retrieve the latest portal server information failed", zap.Error(err))
 				continue
+			}
+			now := time.Now()
+			for _, peerId := range peers {
+				s := server.Session(peerId)
+				if s == nil {
+					continue
+				}
+				s.SetSyncAt(now)
 			}
 			server.SetRSAPublicKey(publicKey)
 		}
