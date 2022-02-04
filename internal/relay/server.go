@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"github.com/flynn/noise"
@@ -141,6 +142,10 @@ func (s *Server) onSessionHandshake(ses *Session) {
 	// Handshake session always has a non-zero peerID.
 	if ses.peerID == 0 {
 		return
+	}
+
+	if logutil.IsEnablePeer() {
+		zap.L().Debug("New session handshake successfully", zap.Reflect("peerId", ses.PeerID()), zap.Bool("isPrimary", ses.IsPrimary()))
 	}
 
 	// Close the old session if new connection established.

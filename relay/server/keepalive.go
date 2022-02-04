@@ -61,6 +61,7 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 		case <-ticker.C:
 			peers = peers[:0]
 			server.ForeachSession(func(s *relay.Session) {
+				zap.L().Info("--->", zap.Bool("isPrimary", s.IsPrimary()))
 				if s.IsPrimary() && time.Since(s.SyncAt()) > cfg.Portal.SyncInterval {
 					peers = append(peers, s.PeerID())
 				}

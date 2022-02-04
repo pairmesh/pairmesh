@@ -58,10 +58,6 @@ func (c *Client) SetToken(token string) {
 func (c *Client) do(method, api string, reader io.Reader, res interface{}) error {
 	url := fmt.Sprintf("%s/%s", strings.TrimSuffix(c.server, "/"), strings.TrimPrefix(api, "/"))
 
-	if logutil.IsEnablePortal() {
-		zap.L().Debug("HTTP Request", zap.String("method", method), zap.String("url", url))
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
@@ -106,6 +102,9 @@ func (c *Client) do(method, api string, reader io.Reader, res interface{}) error
 
 // Get is used to send the GET request
 func (c *Client) Get(api string, res interface{}) error {
+	if logutil.IsEnablePortal() {
+		zap.L().Debug("HTTP Request", zap.String("method", "GET"), zap.String("url", api))
+	}
 	return c.do(http.MethodGet, api, nil, res)
 }
 
@@ -116,7 +115,9 @@ func (c *Client) Post(api string, req, res interface{}) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
+	if logutil.IsEnablePortal() {
+		zap.L().Debug("HTTP Request", zap.String("method", "POST"), zap.String("url", api), zap.String("data", buffer.String()))
+	}
 	return c.do(http.MethodPost, api, buffer, res)
 }
 
@@ -127,6 +128,8 @@ func (c *Client) Put(api string, req, res interface{}) error {
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
+	if logutil.IsEnablePortal() {
+		zap.L().Debug("HTTP Request", zap.String("method", "PUT"), zap.String("url", api), zap.String("data", buffer.String()))
+	}
 	return c.do(http.MethodPut, api, buffer, res)
 }
