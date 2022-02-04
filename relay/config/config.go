@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/flynn/noise"
 	"github.com/pairmesh/pairmesh/security"
@@ -59,6 +60,10 @@ type Config struct {
 type Portal struct {
 	Key string `yaml:"key"`
 	URL string `yaml:"url"`
+	// Keepalive interval between portal/relay services.
+	KeepaliveInterval time.Duration `yaml:"keepaliveInterval,omitempty"`
+	// Sync peer online status after a sync interval.
+	SyncInterval time.Duration `yaml:"syncInterval,omitempty"`
 }
 
 // New returns a config instance with default value
@@ -70,8 +75,10 @@ func New() *Config {
 		STUNPort: 3478,
 
 		Portal: &Portal{
-			Key: "testing-relay-server",
-			URL: "http://127.0.0.1:2823",
+			Key:               "testing-relay-server",
+			URL:               "http://127.0.0.1:2823",
+			KeepaliveInterval: 5 * time.Minute,
+			SyncInterval:      5 * time.Minute,
 		},
 	}
 }

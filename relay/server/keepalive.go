@@ -49,11 +49,7 @@ func keepaliveWithPortal(apiClient *api.Client, cfg *config.Config, peers []prot
 
 func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, apiClient *api.Client, cfg *config.Config) {
 	defer wg.Done()
-	const (
-		tickerInterval = 5 * time.Minute
-		syncInterval   = 10 * time.Minute
-	)
-	ticker := time.NewTicker(tickerInterval)
+	ticker := time.NewTicker(cfg.Portal.KeepaliveInterval)
 	events := server.Events()
 	var peers []protocol.PeerID
 	for {
@@ -87,7 +83,7 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 		case <-ticker.C:
 			peers = peers[:0]
 			server.ForeachSession(func(s *relay.Session) {
-				if s.IsPrimary() && time.Since(s.SyncAt()) > syncInterval {
+				if s.IsPrimary() && time.Since(s.SyncAt()) > cfg.Portal.SyncInterval {
 					peers = append(peers, s.PeerID())
 				}
 			})
