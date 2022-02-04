@@ -81,7 +81,8 @@ type (
 
 	RelayKeepaliveResponse struct {
 		// PublicKey represents the public key which is used to validate the credential
-		PublicKey string `json:"public_key,omitempty"`
+		PublicKey  string `json:"public_key,omitempty"`
+		SyncFailed bool   `json:"sync_failed"`
 	}
 
 	RelayPeerOfflineRequest struct {

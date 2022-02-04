@@ -31,16 +31,20 @@ import (
 
 var startedAt = time.Now()
 
-func keepaliveWithPortal(apiClient *api.Client, cfg *config.Config, peers []protocol.PeerID) (*rsa.PublicKey, error) {
+func keepaliveWithPortal(apiClient *api.Client, cfg *config.Config, peers []protocol.PeerID) (*rsa.PublicKey, bool, error) {
 	resp, err := apiClient.Keepalive(cfg, peers, startedAt)
 	if err != nil {
-		return nil, err
+		return nil, true, err
 	}
 	rawbytes, err := base64.RawStdEncoding.DecodeString(resp.PublicKey)
 	if err != nil {
-		return nil, err
+		return nil, resp.SyncFailed, err
 	}
-	return x509.ParsePKCS1PublicKey(rawbytes)
+	key, err := x509.ParsePKCS1PublicKey(rawbytes)
+	if err != nil {
+		return nil, resp.SyncFailed, err
+	}
+	return key, resp.SyncFailed, nil
 }
 
 func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, apiClient *api.Client, cfg *config.Config) {
@@ -87,9 +91,14 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 					peers = append(peers, s.PeerID())
 				}
 			})
-			publicKey, err := keepaliveWithPortal(apiClient, cfg, peers)
+			publicKey, syncFailed, err := keepaliveWithPortal(apiClient, cfg, peers)
 			if err != nil {
 				zap.L().Error("Retrieve the latest portal server information failed", zap.Error(err))
+				continue
+			}
+			server.SetRSAPublicKey(publicKey)
+			if syncFailed {
+				zap.L().Error("Portal service sync peers failed")
 				continue
 			}
 			now := time.Now()
@@ -100,7 +109,6 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 				}
 				s.SetSyncAt(now)
 			}
-			server.SetRSAPublicKey(publicKey)
 		}
 	}
 }
