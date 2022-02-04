@@ -50,7 +50,6 @@ func keepaliveWithPortal(apiClient *api.Client, cfg *config.Config, peers []prot
 func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, apiClient *api.Client, cfg *config.Config) {
 	defer wg.Done()
 	ticker := time.NewTicker(cfg.Portal.KeepaliveInterval)
-	events := server.Events()
 	var peers []protocol.PeerID
 	for {
 		select {
@@ -58,27 +57,6 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 			zap.L().Info("The keepalive with portal is over")
 			ticker.Stop()
 			return
-
-		case e := <-events:
-			// Notify portal service if client closed.
-			var peers []protocol.PeerID
-			if e.Type == relay.EventTypeSessionClosed {
-				peers = append(peers, e.Data.(*relay.EventSessionClosed).Session.PeerID())
-			}
-			// Batch all session closed events
-			if size := len(events); size > 0 {
-				for i := 0; i < size; i++ {
-					e := <-events
-					if e.Type == relay.EventTypeSessionClosed {
-						peers = append(peers, e.Data.(*relay.EventSessionClosed).Session.PeerID())
-					}
-				}
-			}
-			err := apiClient.PeersOffline(peers)
-			if err != nil {
-				zap.L().Error("Notify portal service peers offline failed", zap.Error(err))
-				continue
-			}
 
 		case <-ticker.C:
 			peers = peers[:0]

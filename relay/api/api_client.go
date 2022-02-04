@@ -56,10 +56,3 @@ func (c *Client) Keepalive(node *config.Config, peers []protocol.PeerID, started
 
 	return res, nil
 }
-
-func (c *Client) PeersOffline(peers []protocol.PeerID) error {
-	req := &protocol.RelayPeerOfflineRequest{
-		Peers: peers,
-	}
-	return c.restful.Put(constant.URIPeersOffline, req, &protocol.RelayPeerOfflineResponse{})
-}

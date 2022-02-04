@@ -30,7 +30,6 @@ const (
 	URIDevicePeerGraph = "/api/v1/device/peers"
 	URIDevicePreflight = "/api/v1/device/preflight"
 	URIRelay           = "/api/v1/relay"
-	URIPeersOffline    = "/api/v1/relay/peers"
 	URILogout          = "/api/v1/logout"
 	URLKeyExchange     = "/api/v1/key/exchange"
 	URIRenewCredential = "/api/v1/credential/renew"

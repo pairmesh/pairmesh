@@ -328,11 +328,22 @@ func (s *server) RelayKeepalive(req *protocol.RelayKeepaliveRequest) (*protocol.
 		PublicKey: s.publicKey.base64,
 	}
 
-	return res, nil
-}
+	err := db.Tx(func(tx *gorm.DB) error {
+		var devices []models.ID
+		for _, peerId := range req.Peers {
+			devices = append(devices, models.ID(peerId))
+		}
+		return models.NewDeviceQuerySet(tx).
+			IDIn(devices...).
+			GetUpdater().
+			SetLastSeen(time.Now()).
+			Update()
+	})
+	if err != nil {
+		res.SyncFailed = true
+	}
 
-func (s *server) PeersOffline(req *protocol.RelayPeerOfflineRequest) (*protocol.RelayPeerOfflineResponse, error) {
-	return &protocol.RelayPeerOfflineResponse{}, nil
+	return res, nil
 }
 
 // RenewCredential handles the `RenewCredentialRequest` POST request.
