@@ -22,6 +22,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"github.com/flynn/noise"
@@ -96,6 +97,13 @@ func (s *Server) Session(peerID protocol.PeerID) *Session {
 	return v.(*Session)
 }
 
+func (s *Server) ForeachSession(fn func(*Session)) {
+	s.sessions.Range(func(_, value interface{}) bool {
+		fn(value.(*Session))
+		return true
+	})
+}
+
 // Serve starts to serve the server process.
 func (s *Server) Serve(ctx context.Context) error {
 	if s.running.Swap(true) {
@@ -108,11 +116,17 @@ func (s *Server) Serve(ctx context.Context) error {
 		return err
 	}
 
+	go func() {
+		<-ctx.Done()
+		zap.L().Info("Listener ready to close")
+		_ = listener.Close()
+	}()
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			zap.L().Error("Accept incoming connection failed", zap.Error(err))
-			continue
+			return err
 		}
 
 		// Create a Session to maintain the Session state.
@@ -136,6 +150,10 @@ func (s *Server) onSessionHandshake(ses *Session) {
 		return
 	}
 
+	if logutil.IsEnablePeer() {
+		zap.L().Debug("New session handshake successfully", zap.Reflect("peerId", ses.PeerID()), zap.Bool("isPrimary", ses.IsPrimary()))
+	}
+
 	// Close the old session if new connection established.
 	old, exists := s.sessions.LoadOrStore(ses.peerID, ses)
 	if exists {
@@ -154,7 +172,6 @@ func (s *Server) onSessionClosed(ses *Session) {
 	if ses.peerID == 0 {
 		return
 	}
-
 	s.sessions.Delete(ses.peerID)
 }
 

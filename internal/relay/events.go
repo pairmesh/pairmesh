@@ -19,8 +19,8 @@ import "github.com/pairmesh/pairmesh/protocol"
 type EventType byte
 
 const (
-	EventTypeClientClosed    EventType = iota + 1
-	EventTypeClientConnected EventType = iota + 1
+	EventTypeClientClosed EventType = iota
+	EventTypeClientConnected
 )
 
 type (

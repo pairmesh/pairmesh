@@ -27,13 +27,12 @@ const EnvLogLevel = "PAIRMESH_LOG_VERBOSE"
 
 // API path group
 const (
-	URIDevicePeerGraph    = "/api/v1/device/peers"
-	URIDevicePreflight    = "/api/v1/device/preflight"
-	URIDeviceStatsTraffic = "/api/v1/device/statistics/traffic"
-	URIRelay              = "/api/v1/relay"
-	URILogout             = "/api/v1/logout"
-	URLKeyExchange        = "/api/v1/key/exchange"
-	URIRenewCredential    = "/api/v1/credential/renew"
+	URIDevicePeerGraph = "/api/v1/device/peers"
+	URIDevicePreflight = "/api/v1/device/preflight"
+	URIRelay           = "/api/v1/relay"
+	URILogout          = "/api/v1/logout"
+	URLKeyExchange     = "/api/v1/key/exchange"
+	URIRenewCredential = "/api/v1/credential/renew"
 )
 
 // HTTP header constants

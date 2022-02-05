@@ -44,12 +44,14 @@ const (
 
 // Session maintains the connection Session between relay server/client.
 type Session struct {
+	// Read-only fields for concurrent safe.
 	userID            protocol.UserID
 	peerID            protocol.PeerID
 	dhKey             noise.DHKey
 	cipher            noise.Cipher
 	publicKey         []byte // DH public key
 	vaddress          net.IP // Virtual address allocated by Peerly
+	isPrimary         bool
 	conn              net.Conn
 	state             SessionState
 	codec             *codec.RelayCodec
@@ -58,13 +60,13 @@ type Session struct {
 	handler           SessionHandler
 	chWrite           chan Packet
 	heartbeatInterval time.Duration
-	lastHeartbeatAt   time.Time
 	callback          struct {
 		onHandshake func(ses *Session)
 		onClosed    func(ses *Session)
 	}
 
-	userData sync.Map
+	lastHeartbeatAt time.Time // Update to the latest heartbeat time periodically.
+	lastSyncAt      time.Time // Update the latest sync time while keepalive with portal service successfully.
 }
 
 // newSession returns a Session.
@@ -79,16 +81,6 @@ func newSession(conn net.Conn, heartbeatInterval time.Duration, handler SessionH
 		heartbeatInterval: heartbeatInterval,
 		handler:           handler,
 	}
-}
-
-// Set sets the user data associated with the current session.
-func (s *Session) Set(key, val interface{}) {
-	s.userData.Store(key, val)
-}
-
-// Get gets the user data associated with the current session.
-func (s *Session) Get(key interface{}) (interface{}, bool) {
-	return s.userData.Load(key)
 }
 
 // State returns the current session state.
@@ -153,6 +145,22 @@ func (s *Session) SetVAddress(addr net.IP) {
 
 func (s *Session) SetHeartbeatAt(t time.Time) {
 	s.lastHeartbeatAt = t
+}
+
+func (s *Session) IsPrimary() bool {
+	return s.isPrimary
+}
+
+func (s *Session) SetIsPrimary(is bool) {
+	s.isPrimary = is
+}
+
+func (s *Session) SyncAt() time.Time {
+	return s.lastSyncAt
+}
+
+func (s *Session) SetSyncAt(t time.Time) {
+	s.lastSyncAt = t
 }
 
 // Send sends message to the pairmesh client-side via the client session.

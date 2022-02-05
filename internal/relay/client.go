@@ -49,6 +49,7 @@ type Client struct {
 	cipher         noise.Cipher
 	codec          *codec.RelayCodec
 	handler        ClientHandler
+	isPrimary      bool
 
 	heartbeatInterval time.Duration
 	lastHeartbeatAt   time.Time
@@ -111,6 +112,10 @@ func (c *Client) SetLastMeasuredLat(lat time.Duration) {
 	c.lastMeasuredLat = lat
 }
 
+func (c *Client) SetIsPrimary(is bool) {
+	c.isPrimary = is
+}
+
 // HandshakeState returns the handshake state of noise protocol.
 func (c *Client) HandshakeState() *noise.HandshakeState {
 	return c.handshakeState
@@ -171,6 +176,7 @@ func (c *Client) Connect(ctx context.Context) error {
 	msg := &message.PacketHandshake{
 		PublicKey: c.nodeDHKey.Public,
 		Message:   out,
+		IsPrimary: c.isPrimary,
 	}
 
 	// Start handshake procedure.

@@ -33,7 +33,7 @@ func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) error {
 	apiClient := api.NewClient(cfg.Portal.URL, cfg.Portal.Key)
 
 	// Start first keepalive ticker to retrieve the latest information of portal service.
-	publicKey, err := retrievePortalKey(apiClient, cfg)
+	publicKey, _, err := keepaliveWithPortal(apiClient, cfg, nil)
 	if err != nil {
 		return err
 	}

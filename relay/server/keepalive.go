@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/pairmesh/pairmesh/internal/relay"
+	"github.com/pairmesh/pairmesh/protocol"
 	"github.com/pairmesh/pairmesh/relay/api"
 	"github.com/pairmesh/pairmesh/relay/config"
 	"go.uber.org/zap"
@@ -30,22 +31,26 @@ import (
 
 var startedAt = time.Now()
 
-func retrievePortalKey(apiClient *api.Client, cfg *config.Config) (*rsa.PublicKey, error) {
-	resp, err := apiClient.Keepalive(cfg, cfg.DHKey.Public.String(), startedAt)
+func keepaliveWithPortal(apiClient *api.Client, cfg *config.Config, peers []protocol.PeerID) (*rsa.PublicKey, bool, error) {
+	resp, err := apiClient.Keepalive(cfg, peers, startedAt)
 	if err != nil {
-		return nil, err
+		return nil, true, err
 	}
 	rawbytes, err := base64.RawStdEncoding.DecodeString(resp.PublicKey)
 	if err != nil {
-		return nil, err
+		return nil, resp.SyncFailed, err
 	}
-	return x509.ParsePKCS1PublicKey(rawbytes)
+	key, err := x509.ParsePKCS1PublicKey(rawbytes)
+	if err != nil {
+		return nil, resp.SyncFailed, err
+	}
+	return key, resp.SyncFailed, nil
 }
 
 func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, apiClient *api.Client, cfg *config.Config) {
 	defer wg.Done()
-
-	ticker := time.NewTicker(10 * time.Minute)
+	ticker := time.NewTicker(cfg.Portal.KeepaliveInterval)
+	var peers []protocol.PeerID
 	for {
 		select {
 		case <-ctx.Done():
@@ -54,12 +59,31 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 			return
 
 		case <-ticker.C:
-			publicKey, err := retrievePortalKey(apiClient, cfg)
+			peers = peers[:0]
+			server.ForeachSession(func(s *relay.Session) {
+				zap.L().Info("--->", zap.Bool("isPrimary", s.IsPrimary()))
+				if s.IsPrimary() && time.Since(s.SyncAt()) > cfg.Portal.SyncInterval {
+					peers = append(peers, s.PeerID())
+				}
+			})
+			publicKey, syncFailed, err := keepaliveWithPortal(apiClient, cfg, peers)
 			if err != nil {
 				zap.L().Error("Retrieve the latest portal server information failed", zap.Error(err))
 				continue
 			}
 			server.SetRSAPublicKey(publicKey)
+			if syncFailed {
+				zap.L().Error("Portal service sync peers failed")
+				continue
+			}
+			now := time.Now()
+			for _, peerId := range peers {
+				s := server.Session(peerId)
+				if s == nil {
+					continue
+				}
+				s.SetSyncAt(now)
+			}
 		}
 	}
 }

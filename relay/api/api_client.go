@@ -37,14 +37,15 @@ func NewClient(server string, authKey string) *Client {
 }
 
 // Keepalive request the portal server to keepalive
-func (c *Client) Keepalive(node *config.Config, publicKey string, startedAt time.Time) (*protocol.RelayKeepaliveResponse, error) {
+func (c *Client) Keepalive(node *config.Config, peers []protocol.PeerID, startedAt time.Time) (*protocol.RelayKeepaliveResponse, error) {
 	req := &protocol.RelayKeepaliveRequest{
 		Name:      node.Name,
 		Region:    node.Region,
 		Host:      node.Host,
 		Port:      node.Port,
 		STUNPort:  node.STUNPort,
-		PublicKey: publicKey,
+		PublicKey: node.DHKey.Public.String(),
+		Peers:     peers,
 		StartedAt: startedAt.UnixNano(),
 	}
 

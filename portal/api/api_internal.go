@@ -328,6 +328,21 @@ func (s *server) RelayKeepalive(req *protocol.RelayKeepaliveRequest) (*protocol.
 		PublicKey: s.publicKey.base64,
 	}
 
+	err := db.Tx(func(tx *gorm.DB) error {
+		var devices []models.ID
+		for _, peerId := range req.Peers {
+			devices = append(devices, models.ID(peerId))
+		}
+		return models.NewDeviceQuerySet(tx).
+			IDIn(devices...).
+			GetUpdater().
+			SetLastSeen(time.Now()).
+			Update()
+	})
+	if err != nil {
+		res.SyncFailed = true
+	}
+
 	return res, nil
 }
 
