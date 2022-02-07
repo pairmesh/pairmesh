@@ -371,7 +371,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
 	peerID := protocol.PeerID(syncPeer.Peer.PeerID)
 	p, ok := m.peers[peerID]
 	if !ok {
-		p := peer.New(protocol.Peer{
+		p = peer.New(protocol.Peer{
 			ID:       protocol.PeerID(peerInfo.PeerID),
 			UserID:   protocol.UserID(peerInfo.UserID),
 			Name:     peerInfo.Name,
