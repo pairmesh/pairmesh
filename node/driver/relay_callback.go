@@ -66,7 +66,7 @@ func (d *NodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto
 	if protocol.PeerID(syncPeer.DstPeerID) != d.peerID {
 		return errors.Errorf("destination peer id %d not match", syncPeer.DstPeerID)
 	}
-	zap.L().Debug("On sync peer", zap.Stringer("purpose", syncPeer.Purpose), zap.Stringer("msg", syncPeer))
+	zap.L().Debug("On sync peer", zap.Stringer("msg", syncPeer))
 
 	switch syncPeer.Purpose {
 	case message.PacketSyncPeer_Catchup:
