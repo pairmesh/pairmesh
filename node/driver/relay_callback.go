@@ -63,13 +63,10 @@ func (d *nodeDriver) OnForward(_ *relay.Client, typ message.PacketType, msg prot
 
 func (d *nodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
 	syncPeer := msg.(*message.PacketSyncPeer)
-	if logutil.IsEnableRelay() {
-		zap.L().Debug("On peer sync endpoints", zap.Stringer("msg", syncPeer))
-	}
-
 	if protocol.PeerID(syncPeer.DstPeerID) != d.peerID {
 		return errors.Errorf("destination peer id %d not match", syncPeer.DstPeerID)
 	}
+	zap.L().Debug("On sync peer", zap.Stringer("purpose", syncPeer.Purpose), zap.Stringer("msg", syncPeer))
 
 	switch syncPeer.Purpose {
 	case message.PacketSyncPeer_Catchup:
@@ -141,10 +138,8 @@ func (d *nodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto
 
 func (d *nodeDriver) OnProbeResponse(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
 	probe := msg.(*message.PacketProbeResponse)
-	if logutil.IsEnableRelay() {
-		zap.L().Debug("On probe result", zap.Stringer("msg", probe))
-	}
 
+	zap.L().Debug("On probe result", zap.Stringer("msg", probe))
 	d.mm.ProbeResult(probe)
 	return nil
 }
