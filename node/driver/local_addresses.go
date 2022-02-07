@@ -84,6 +84,7 @@ func (d *NodeDriver) localAddresses() []string {
 
 			ip, ok := netaddr.FromStdIP(v.IP)
 			if !ok {
+				zap.L().Info("====>", zap.Reflect("ip", v.IP))
 				continue
 			}
 
@@ -106,7 +107,8 @@ func (d *NodeDriver) localAddresses() []string {
 	// Deduplicate
 	var addresses []string
 	for _, a := range localAddresses {
-		if addr := a.String(); len(addresses) > 0 && addresses[len(addresses)-1] != addr {
+		addr := a.String()
+		if len(addresses) == 0 || (len(addresses) > 0 && addresses[len(addresses)-1] != addr) {
 			addresses = append(addresses, addr)
 		}
 	}
