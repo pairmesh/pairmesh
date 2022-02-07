@@ -16,6 +16,7 @@ package mesh
 
 import (
 	"net"
+	"sort"
 	"sync"
 	"time"
 
@@ -43,6 +44,7 @@ type Manager struct {
 	router    device.Router
 	callback  tunnel.FragmentCallback
 	networks  atomic.Value // An atomic value of: []protocol.Network
+	endpoints atomic.Value // An atomic value of: []string
 
 	// Peers table.
 	mu    sync.RWMutex
@@ -413,8 +415,11 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	cipher := noise.CipherChaChaPoly.Cipher(fixSizeKey)
 	rcGetter := m.relayClientGetter(protocol.ServerID(peerInfo.PrimaryServer.ID))
 
-	p.SetCatchupAt(time.Now())
 	p.SetTunnel(tunnel.New(rcGetter, m.dialer, m.localPeer, protocol.PeerID(peerInfo.PeerID), m.callback, cipher))
+	p.SetCatchupAt(time.Now())
+	if cached := m.endpoints.Load(); cached != nil {
+		p.Tunnel().SetLocalEndpoints(cached.([]string))
+	}
 
 	// Add to router if the peer is newly added.
 	if len(routerCfg.Routes) > 0 {
@@ -476,6 +481,9 @@ func (m *Manager) PeerCatchupAck(syncPeer *message.PacketSyncPeer) {
 
 	p.SetTunnel(tunnel.New(rcGetter, m.dialer, m.localPeer, protocol.PeerID(peerInfo.PeerID), m.callback, cipher))
 	p.SetCatchupAt(time.Now())
+	if cached := m.endpoints.Load(); cached != nil {
+		p.Tunnel().SetLocalEndpoints(cached.([]string))
+	}
 }
 
 func (m *Manager) PeerEndpoints(syncPeer *message.PacketSyncPeer) {
@@ -505,6 +513,30 @@ func (m *Manager) PeerEndpoints(syncPeer *message.PacketSyncPeer) {
 // SyncEndpoints synchronize the latest endpoints to the remote peers which had established
 // P2P connection with the local peer.
 func (m *Manager) SyncEndpoints(endpoints []string) {
+	// Sort the endpoints in increasing order.
+	sort.Strings(endpoints)
+
+	// Check whether the endpoints changed.
+	cached := m.endpoints.Load()
+	if cached != nil {
+		cachedEndpoints := cached.([]string)
+		if len(cachedEndpoints) == len(endpoints) {
+			noChanged := true
+			for i := range cachedEndpoints {
+				if cachedEndpoints[i] != endpoints[i] {
+					noChanged = false
+				}
+			}
+			if noChanged {
+				return
+			}
+		}
+	}
+	m.endpoints.Store(endpoints)
+
+	zap.L().Info("Local endpoints changed", zap.Strings("endpoints", endpoints))
+
+	// Notify all other peers.
 	var needSyncPeers []*peer.Peer
 
 	m.mu.RLock()
