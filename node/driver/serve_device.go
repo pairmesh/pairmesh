@@ -107,7 +107,7 @@ func (d *nodeDriver) serveDevWrite(ctx context.Context) {
 					zap.L().Warn("Parse IPv4 header failed", zap.ByteString("data", data))
 					continue
 				}
-				zap.L().Debug("Write packet into device", zap.Stringer("to", dst))
+				zap.L().Debug("Writing packet into device", zap.Stringer("to", dst))
 			}
 
 			_, err := d.device.Write(data)

@@ -17,10 +17,11 @@ package api
 import (
 	"context"
 	"errors"
-	"github.com/pairmesh/pairmesh/internal/ledis"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/pairmesh/pairmesh/internal/ledis"
 
 	"github.com/coreos/go-semver/semver"
 	"github.com/pairmesh/pairmesh/constant"
@@ -37,7 +38,7 @@ import (
 
 type versionKey struct{}
 
-// setupMiddleware is used to setting up all middlewares, e.g:
+// setupMiddleware sets up all middlewares, e.g:
 // 1. Load all plugins
 // 2. Set the error encoder
 // 3. set the response encoder

@@ -72,7 +72,7 @@ func TestCredentialIPv6(t *testing.T) {
 	a.Equal(ip2, ip)
 }
 
-func TestCredential2(t *testing.T) {
+func TestCredentialExpired(t *testing.T) {
 	a := assert.New(t)
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 512)
@@ -87,6 +87,32 @@ func TestCredential2(t *testing.T) {
 	credential, err := security.Credential(privateKey, userID, peerID, ip, -time.Second*10)
 	a.Nil(err)
 	a.NotNil(credential)
+
+	userID2, peerID2, ip2, valid := security.VerifyCredential(&privateKey.PublicKey, credential)
+	a.False(valid)
+	a.Zero(peerID2)
+	a.Zero(userID2)
+	a.Nil(ip2)
+}
+
+func TestCredentialCompromised(t *testing.T) {
+	a := assert.New(t)
+
+	privateKey, err := rsa.GenerateKey(rand.Reader, 512)
+	a.Nil(err)
+
+	var (
+		userID = protocol.UserID(88888)
+		peerID = protocol.PeerID(12345678)
+		ip     = net.IP{0x01, 0x02, 0x03, 0x04}
+	)
+
+	credential, err := security.Credential(privateKey, userID, peerID, ip, time.Second*10)
+	a.Nil(err)
+	a.NotNil(credential)
+
+	// Compromise and change one bit in credential
+	credential[0] = credential[0] + 1
 
 	userID2, peerID2, ip2, valid := security.VerifyCredential(&privateKey.PublicKey, credential)
 	a.False(valid)

@@ -48,7 +48,7 @@ func main() {
 
 	rootCmd := &cobra.Command{
 		Use: fmt.Sprintf("pairrelay -c %s [flags]", cmdutil.Underline("<CONFIG>")),
-		Long: fmt.Sprintf(`PairRelay will relay traffics when peer cannot communication to each other in direction.
+		Long: fmt.Sprintf(`PairRelay will relay traffics when peer cannot communicate to each other directly.
 And the relay server(s) is responsible to peer discovery. 
 
 - The parameter '-c %[1]s' or '--config %[1]s' is required.
