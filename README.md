@@ -21,10 +21,6 @@ By setting up a security P2P virtual private LAN network among multiple devices 
     - The TCP connections between PairMesh and Relay servers will be verified the signature of node information in the handshake phase, and only the node information signed by Control Plane can be used for subsequent communication. a
     - All nodes use different keys, and any two nodes of the whole topology network use unique keys to avoid key leakage affecting the security of the whole network.
 
-* **Cross Platform**
-
-    Support mainstream platforms including: Windows/MacOS/Linux/iOS(WIP)/Android(WIP). Provide unified user interface for all of them.
-
 ## Quick Start
 
 - **Use [PairMesh](https://pairmesh.com) managed control plane service.**
