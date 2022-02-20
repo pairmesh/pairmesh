@@ -19,11 +19,12 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"fmt"
-	"github.com/pairmesh/pairmesh/internal/ledis"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"sync"
+
+	"github.com/pairmesh/pairmesh/internal/ledis"
 
 	// grouped for init
 	"github.com/pairmesh/pairmesh/pkg/fsutil"
@@ -70,7 +71,7 @@ func serveHTTP(cfg *config.Config) (*http.Server, error) {
 	if cfg.PrivateKey == "" {
 		path := "pairportal.private.pem"
 		if fsutil.IsExists(path) {
-			zap.L().Info("Private privateKey path does not specified, find default path", zap.String("path", path))
+			zap.L().Info("Private privateKey path is not specified, but found in default path", zap.String("path", path))
 			data, err := ioutil.ReadFile(path)
 			if err != nil {
 				return nil, fmt.Errorf("read private key is failed: %w", err)
@@ -81,7 +82,7 @@ func serveHTTP(cfg *config.Config) (*http.Server, error) {
 			}
 
 		} else {
-			zap.L().Info("Private privateKey path does not specified, generated automatically", zap.String("path", path))
+			zap.L().Info("Private privateKey path is not specified, generated automatically", zap.String("path", path))
 			priv, err := rsa.GenerateKey(rand.Reader, 512)
 			if err != nil {
 				return nil, fmt.Errorf("generate private key is failed: %w", err)
@@ -117,6 +118,7 @@ func serveHTTP(cfg *config.Config) (*http.Server, error) {
 		l, err := net.Listen("tcp", address)
 		if err != nil {
 			zap.L().Fatal("Listen local HTTP server failed", zap.Error(err))
+			return
 		}
 
 		if cfg.TLSCert == "" {

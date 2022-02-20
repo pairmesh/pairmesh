@@ -38,7 +38,7 @@ const (
 // |   PeerID    |  PeerID    |  Expiration  |  IPLen  |    IP     |
 // |  8 bytes    | 8 bytes    |    8 bytes   |  1 byte |  Variant  |
 // The credential delivered to the client will be encrypted by secret key.
-// The secret key is a private key only hold by the gateway.
+// The secret key is a private key only held by the gateway.
 func Credential(privateKey *rsa.PrivateKey, userID protocol.UserID, peerID protocol.PeerID, ip net.IP, lease time.Duration) ([]byte, error) {
 	data := make([]byte, credentialValidationHeaderSize+len(ip))
 	binary.BigEndian.PutUint64(data[:8], uint64(userID))

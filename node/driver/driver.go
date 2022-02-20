@@ -72,7 +72,7 @@ type Driver interface {
 // nodeDriver is mainly used to control the overall procedure of
 // peerly application.
 // 1. Initialize all resources in the Initialize function.
-// 2. Som long-run routines:
+// 2. Some long-running routines:
 //    - Renew credential goroutine will keep the credential up to date.
 //    - Read tunnel device data goroutine will read the data from tunnel device.
 //    - Write tunnel device data goroutine will write the data to the tunnel device.
@@ -100,7 +100,7 @@ type nodeDriver struct {
 
 	// Driver will keep updating local endpoints to the primary relay server.
 	// The field primaryServerConnected is used to indicate the status
-	// of connecting to the primary relay server.
+	// of connection to the primary relay server.
 	// Note: It is only accessed by update endpoints thread.
 	primaryServerConnected bool
 
@@ -134,7 +134,7 @@ func (d *nodeDriver) Preflight() error {
 		return err
 	}
 
-	zap.L().Info("Preflight request successfully")
+	zap.L().Info("Preflight request successful")
 
 	// We use a customized dialer to make sure all the traffic from
 	// the current node has the same local address (host:port).
@@ -173,7 +173,7 @@ func (d *nodeDriver) Preflight() error {
 
 	zap.L().Info("Set virtual device address finished", zap.String("address", res.IPv4))
 
-	// Preflight the monitor service which is used to discovery external address.
+	// Preflight the monitor service which is used to discover external address.
 	d.mon = monitor.New(d.dialer, res.PrimaryServer)
 
 	// Register all relay clients into the relay manager

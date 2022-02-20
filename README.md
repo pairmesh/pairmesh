@@ -11,15 +11,15 @@ By setting up a security P2P virtual private LAN network among multiple devices 
 
 * **Blazing Fast**
 
-    PairMesh automatically forms P2P networks with other PairMesh nodes after obtaining network topology information from the PairMesh Control Plane. The network traffic will bypass a central service to trassmission to peer nodes directly, making communication between networks formed by PairMesh extremely fast.
+    PairMesh automatically forms P2P networks with other PairMesh nodes after obtaining network topology information from the PairMesh Control Plane. The network traffic will bypass a central service and transmit to peer nodes directly, making communication between networks formed by PairMesh extremely fast.
 
 * **Security**
 
     Using the latest security framework [Noise Protocol](https://noiseprotocol.org/noise.html) and the latest cryptography technologies, multiple security mechanisms are included in the communication between Pairmesh and Control Plane as well as between PairMesh nodes to ensure data integrity, security, and speed of traffic between PairMesh networks while having the best encryption and decryption performance.
 
     - All requests from PairMesh nodes and Control Plane need to verify the Token bound with machine information to ensure that illegal nodes can be prevented from joining the network even if the Token is leaked.
-    - The TCP connections between PairMesh and Relay servers will be verified the signature of node information in the handshake phase, and only the node information signed by Control Plane can be used for subsequent communication. a
-    - All nodes use different keys, and any two nodes of the whole topology network use unique keys to avoid key leakage affecting the security of the whole network.
+    - The TCP connections between PairMesh and Relay servers will be verified with the signature of node information in the handshake phase, and only those nodes whose information is signed by Control Plane can be used for subsequent communication.
+    - All nodes use different keys, and each node pair of the whole topology network uses a unique key to avoid key leakage affecting the security of the whole network.
 
 ## Quick Start
 

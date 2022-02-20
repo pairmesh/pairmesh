@@ -49,7 +49,7 @@ func Serve(ctx context.Context, wg *sync.WaitGroup, cfg *config.Config) error {
 	wg.Add(1)
 	go keepalive(ctx, wg, server, apiClient, cfg)
 
-	// Start serve STUN service to assist the PairMesh node detect their external address.
+	// Start serving STUN service to assist the PairMesh nodes to detect their external addresses.
 	wg.Add(1)
 	go serveSTUN(ctx, cfg, wg)
 

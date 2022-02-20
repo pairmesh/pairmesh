@@ -53,7 +53,7 @@ func init() {
 type Type byte
 
 const (
-	// DebugPortalLevel indicates HTTP the request between node and gateway
+	// DebugPortalLevel indicates HTTP request between node and gateway
 	DebugPortalLevel Type = 0
 	// DebugRelayPacket indicates UDP packet message between node and gateway
 	DebugRelayPacket Type = 1
