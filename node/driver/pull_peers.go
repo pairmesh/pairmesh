@@ -23,7 +23,7 @@ import (
 )
 
 // pullPeerGraph updates peers graph from portal service periodically.
-func (d *nodeDriver) pullPeerGraph(ctx context.Context) {
+func (d *NodeDriver) pullPeerGraph(ctx context.Context) {
 	defer d.wg.Done()
 
 	pullInterval := 1800 * time.Second
@@ -52,13 +52,10 @@ func (d *nodeDriver) pullPeerGraph(ctx context.Context) {
 			// Update the latest unique hash.
 			uniqHash = res.UniqueHash
 
-			var primaryServerID protocol.ServerID
-			for _, p := range res.Peers {
-				if p.ID == d.peerID {
-					primaryServerID = p.ServerID
-					break
-				}
-			}
+			// Since response is already formatted so that res.Peers is sorted by peerID,
+			// using binary search to find the serverID by matching peerID.
+			primaryServerID := d.FindServerIDWithPeerID(res)
+
 			if primaryServerID == 0 {
 				zap.L().Error("Illegal peer graph response, cannot find primary server id")
 				continue
@@ -92,4 +89,36 @@ func (d *nodeDriver) pullPeerGraph(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (d *NodeDriver) FindServerIDWithPeerID(res *protocol.PeerGraphResponse) protocol.ServerID {
+	var serverID protocol.ServerID
+
+	if len(res.Peers) == 0 {
+		return serverID
+	}
+
+	leftIndex := 0
+	rightIndex := len(res.Peers) - 1
+	var midIndex int
+	var currPeer protocol.Peer
+
+	for leftIndex <= rightIndex {
+		midIndex = (leftIndex + rightIndex) / 2
+		currPeer = res.Peers[midIndex]
+		if currPeer.ID < d.peerID {
+			leftIndex = midIndex + 1
+		} else if currPeer.ID > d.peerID {
+			rightIndex = midIndex - 1
+		} else {
+			serverID = currPeer.ServerID
+			break
+		}
+	}
+
+	return serverID
+}
+
+func (d *NodeDriver) SetPeerID(id protocol.PeerID) {
+	d.peerID = id
 }

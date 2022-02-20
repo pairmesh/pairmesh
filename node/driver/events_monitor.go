@@ -25,7 +25,7 @@ import (
 )
 
 // eventsMonitor updates the local endpoints to the primary relay server periodically.
-func (d *nodeDriver) eventsMonitor(ctx context.Context) {
+func (d *NodeDriver) eventsMonitor(ctx context.Context) {
 	defer d.wg.Done()
 
 	for {

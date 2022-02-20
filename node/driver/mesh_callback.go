@@ -15,6 +15,6 @@
 package driver
 
 // OnFragment implements the mesh.PacketCallback
-func (d *nodeDriver) OnFragment(data []byte) {
+func (d *NodeDriver) OnFragment(data []byte) {
 	d.chDevWrite <- data
 }
