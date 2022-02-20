@@ -27,7 +27,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (d *nodeDriver) OnForward(_ *relay.Client, typ message.PacketType, msg proto.Message) error {
+func (d *NodeDriver) OnForward(_ *relay.Client, typ message.PacketType, msg proto.Message) error {
 	forward := msg.(*message.PacketForward)
 
 	if logutil.IsEnablePeer() {
@@ -61,7 +61,7 @@ func (d *nodeDriver) OnForward(_ *relay.Client, typ message.PacketType, msg prot
 	return nil
 }
 
-func (d *nodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
+func (d *NodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
 	syncPeer := msg.(*message.PacketSyncPeer)
 	if protocol.PeerID(syncPeer.DstPeerID) != d.peerID {
 		return errors.Errorf("destination peer id %d not match", syncPeer.DstPeerID)
@@ -136,7 +136,7 @@ func (d *nodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto
 	return nil
 }
 
-func (d *nodeDriver) OnProbeResponse(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
+func (d *NodeDriver) OnProbeResponse(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
 	probe := msg.(*message.PacketProbeResponse)
 
 	zap.L().Debug("On probe result", zap.Stringer("msg", probe))
