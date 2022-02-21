@@ -180,12 +180,17 @@ func (d *NodeDriver) Preflight() error {
 	d.rm = relay.NewManager(d.config.DHKey, d)
 	d.rm.SetCredential(cred)
 
+	vIPV4Addr, err := netaddr.ParseIP(res.IPv4)
+	if err != nil {
+		return errors.WithMessage(err, "parse ipv4 address")
+	}
+
 	nodeInfo := types.LocalPeer{
 		Name:   res.Name,
 		UserID: res.UserID,
 		PeerID: res.ID,
 		Key:    d.config.DHKey,
-		VIPv4:  netaddr.MustParseIP(res.IPv4),
+		VIPv4:  vIPV4Addr,
 	}
 	d.mm = mesh.NewManager(d.dialer, nodeInfo, d, d.rm, d.device.Router())
 

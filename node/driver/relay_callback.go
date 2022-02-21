@@ -83,7 +83,11 @@ func (d *NodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto
 			}
 			d.rm.AddServer(relayServer)
 		}
-		d.mm.PeerCatchup(syncPeer)
+		err := d.mm.PeerCatchup(syncPeer)
+		if err != nil {
+			zap.L().Error("Peer catchup failed", zap.Error(err))
+			return err
+		}
 
 	case message.PacketSyncPeer_CatchupAck:
 		d.mm.PeerCatchupAck(syncPeer)
