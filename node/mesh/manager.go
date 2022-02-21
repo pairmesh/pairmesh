@@ -428,30 +428,28 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 		if n := m.networks.Load(); n != nil {
 			networks = n.([]protocol.Network)
 		}
-		// FIXME: use a optimized algorithm to reduce the complexity.
-		peerID := protocol.PeerID(peerInfo.PeerID)
-		for _, network := range peerInfo.Networks {
-			var foundNetwork bool
-			for _, exist := range networks {
-				if protocol.NetworkID(network.ID) == exist.ID {
-					var existing bool
-					for _, pid := range exist.Peers {
-						if peerID == pid {
-							existing = true
-							break
-						}
-					}
-					if !existing {
-						// Add peer to exist network
-						exist.Peers = append(exist.Peers, peerID)
-					}
-					foundNetwork = true
-					break
-				}
-			}
 
-			// Add a new network.
-			if !foundNetwork {
+		// Put local networks in a Hashmap for network ID matching
+		localNwkMap := make(map[protocol.NetworkID]protocol.Network)
+		for _, localNwk := range networks {
+			localNwkMap[localNwk.ID] = localNwk
+		}
+		// Start network and peer matching
+		for _, network := range peerInfo.Networks {
+			exist, ok := localNwkMap[protocol.NetworkID(network.ID)]
+			if ok {
+				var peerFound bool
+				for _, pid := range exist.Peers {
+					if peerID == pid {
+						peerFound = true
+						break
+					}
+				}
+				if !peerFound {
+					// Add peer to existing network
+					exist.Peers = append(exist.Peers, peerID)
+				}
+			} else {
 				networks = append(networks, protocol.Network{
 					ID:    protocol.NetworkID(network.ID),
 					Name:  network.Name,
