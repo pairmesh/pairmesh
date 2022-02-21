@@ -430,9 +430,9 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 		}
 
 		// Put local networks in a Hashmap for network ID matching
-		localNwkMap := make(map[protocol.NetworkID]protocol.Network)
+		localNwkMap := make(map[protocol.NetworkID]*protocol.Network)
 		for _, localNwk := range networks {
-			localNwkMap[localNwk.ID] = localNwk
+			localNwkMap[localNwk.ID] = &localNwk
 		}
 		// Start network and peer matching
 		for _, network := range peerInfo.Networks {
