@@ -29,6 +29,7 @@ import (
 	"github.com/pairmesh/pairmesh/protocol"
 
 	"github.com/flynn/noise"
+	"github.com/pkg/errors"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"inet.af/netaddr"
@@ -165,7 +166,7 @@ func (m *Manager) Tick() {
 }
 
 // Update updates the latest networks and peers information.
-func (m *Manager) Update(latestNetworks []protocol.Network, latestPeers []protocol.Peer) {
+func (m *Manager) Update(latestNetworks []protocol.Network, latestPeers []protocol.Peer) error {
 	if logutil.IsEnableRelay() {
 		zap.L().Debug("Update peers", zap.Any("peers", latestPeers))
 	}
@@ -201,7 +202,11 @@ func (m *Manager) Update(latestNetworks []protocol.Network, latestPeers []protoc
 
 		// Skip the current device.
 		if p.ID() != m.self.PeerID {
-			prefix := netaddr.IPPrefixFrom(netaddr.MustParseIP(latestPeer.IPv4), 32)
+			addr, err := netaddr.ParseIP(latestPeer.IPv4)
+			if err != nil {
+				return errors.WithMessage(err, "parse ipv4 address in Update")
+			}
+			prefix := netaddr.IPPrefixFrom(addr, 32)
 			routerCfg.Routes = append(routerCfg.Routes, prefix)
 		}
 	}
@@ -230,6 +235,8 @@ func (m *Manager) Update(latestNetworks []protocol.Network, latestPeers []protoc
 	m.markChanged()
 
 	m.probePeers()
+
+	return nil
 }
 
 func (m *Manager) probePeers() {
@@ -358,17 +365,19 @@ func (m *Manager) ProbeResult(probe *message.PacketProbeResponse) {
 	}
 }
 
-func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
+func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	peerInfo := syncPeer.Peer
 	if peerInfo == nil {
-		return
+		// This is tolerable scenario. We just return early
+		zap.L().Debug("Received request to do PeerCatchup but peerInfo in packet is empty")
+		return nil
 	}
 
 	routerCfg := &device.Config{LocalAddress: m.self.VIPv4}
 
 	// Update the latest peer information.
 	m.mu.Lock()
-	peerID := protocol.PeerID(syncPeer.Peer.PeerID)
+	peerID := protocol.PeerID(peerInfo.PeerID)
 	p, ok := m.peers[peerID]
 	if !ok {
 		p = peer.New(protocol.Peer{
@@ -379,7 +388,11 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
 			ServerID: protocol.ServerID(peerInfo.PrimaryServer.ID),
 			Active:   true,
 		})
-		prefix := netaddr.IPPrefixFrom(netaddr.MustParseIP(peerInfo.IPv4), 32)
+		addr, err := netaddr.ParseIP(peerInfo.IPv4)
+		if err != nil {
+			return errors.WithMessage(err, "parse ipv4 address in PeerCatchup")
+		}
+		prefix := netaddr.IPPrefixFrom(addr, 32)
 		routerCfg.Routes = append(routerCfg.Routes, prefix)
 		m.peers[peerID] = p
 		m.index[peerInfo.IPv4] = p
@@ -393,7 +406,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
 	sharedKey, err := noise.DH25519.DH(m.self.Key.Private, peerInfo.PublicKey)
 	if err != nil {
 		zap.L().Error("Exchange shared key failed", zap.Error(err))
-		return
+		return err
 	}
 	fixSizeKey := [32]byte{}
 	copy(fixSizeKey[:], sharedKey)
@@ -415,30 +428,28 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
 		if n := m.networks.Load(); n != nil {
 			networks = n.([]protocol.Network)
 		}
-		// FIXME: use a optimized algorithm to reduce the complexity.
-		peerID := protocol.PeerID(peerInfo.PeerID)
-		for _, network := range peerInfo.Networks {
-			var foundNetwork bool
-			for _, exist := range networks {
-				if protocol.NetworkID(network.ID) == exist.ID {
-					var existing bool
-					for _, pid := range exist.Peers {
-						if peerID == pid {
-							existing = true
-							break
-						}
-					}
-					if !existing {
-						// Add peer to exist network
-						exist.Peers = append(exist.Peers, peerID)
-					}
-					foundNetwork = true
-					break
-				}
-			}
 
-			// Add a new network.
-			if !foundNetwork {
+		// Put local networks in a Hashmap for network ID matching
+		localNwkMap := make(map[protocol.NetworkID]protocol.Network)
+		for _, localNwk := range networks {
+			localNwkMap[localNwk.ID] = localNwk
+		}
+		// Start network and peer matching
+		for _, network := range peerInfo.Networks {
+			exist, ok := localNwkMap[protocol.NetworkID(network.ID)]
+			if ok {
+				var peerFound bool
+				for _, pid := range exist.Peers {
+					if peerID == pid {
+						peerFound = true
+						break
+					}
+				}
+				if !peerFound {
+					// Add peer to existing network
+					exist.Peers = append(exist.Peers, peerID)
+				}
+			} else {
 				networks = append(networks, protocol.Network{
 					ID:    protocol.NetworkID(network.ID),
 					Name:  network.Name,
@@ -452,7 +463,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
 	relayClient := m.rm.RelayServerClient(protocol.ServerID(peerInfo.PrimaryServer.ID))
 	if relayClient == nil {
 		zap.L().Error("The remote peer primary relay server doesn't connect", zap.Any("peer_id", peerID))
-		return
+		return err
 	}
 
 	ack := &message.PacketSyncPeer{
@@ -466,7 +477,10 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) {
 	err = relayClient.Send(message.PacketType_SyncPeer, ack)
 	if err != nil {
 		zap.L().Error("Response catchup ack failed", zap.Error(err))
+		return err
 	}
+
+	return nil
 }
 
 func (m *Manager) PeerCatchupAck(syncPeer *message.PacketSyncPeer) {
