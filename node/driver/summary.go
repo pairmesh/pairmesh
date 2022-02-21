@@ -68,7 +68,7 @@ func (s *Summary) Equal(rhs *Summary) bool {
 }
 
 // mockSummarize returns a mock summary for testing.
-func (d *nodeDriver) mockSummarize() *Summary {
+func (d *NodeDriver) mockSummarize() *Summary {
 	networkStatus := []string{"connecting", "connected"}
 	meshSummary := &mesh.Summary{
 		LastChangedAt: time.Now(),
