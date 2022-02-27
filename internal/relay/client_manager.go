@@ -111,7 +111,7 @@ func (m *Manager) RelayServerClient(id protocol.ServerID) *Client {
 	return v.(*Client)
 }
 
-// Events returns a channel which will recording clients connected/closed event.
+// Events returns a channel which will track clients connected/closed event.
 // Some events will be dropped if the channel is full.
 func (m *Manager) Events() <-chan Event {
 	return m.events

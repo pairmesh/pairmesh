@@ -422,43 +422,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	}
 
 	// Update the network topology information.
-	// FIXME: remove peer from existing network if the peerInfo.Network is empty/nil.
-	if len(peerInfo.Networks) > 0 {
-		var networks []protocol.Network
-		if n := m.networks.Load(); n != nil {
-			networks = n.([]protocol.Network)
-		}
-
-		// Put local networks in a Hashmap for network ID matching
-		localNwkMap := make(map[protocol.NetworkID]*protocol.Network)
-		for _, localNwk := range networks {
-			localNwkMap[localNwk.ID] = &localNwk
-		}
-		// Start network and peer matching
-		for _, network := range peerInfo.Networks {
-			exist, ok := localNwkMap[protocol.NetworkID(network.ID)]
-			if ok {
-				var peerFound bool
-				for _, pid := range exist.Peers {
-					if peerID == pid {
-						peerFound = true
-						break
-					}
-				}
-				if !peerFound {
-					// Add peer to existing network
-					exist.Peers = append(exist.Peers, peerID)
-				}
-			} else {
-				networks = append(networks, protocol.Network{
-					ID:    protocol.NetworkID(network.ID),
-					Name:  network.Name,
-					Peers: []protocol.PeerID{peerID},
-				})
-			}
-		}
-		m.networks.Store(networks)
-	}
+	m.updateNetworkTopologyWithPeer(peerInfo)
 
 	relayClient := m.rm.RelayServerClient(protocol.ServerID(peerInfo.PrimaryServer.ID))
 	if relayClient == nil {
@@ -593,4 +557,70 @@ func (m *Manager) relayClientGetter(serverID protocol.ServerID) tunnel.RelayClie
 		}
 		return relayClient
 	}
+}
+
+func (m *Manager) updateNetworkTopologyWithPeer(peerInfo *message.PacketSyncPeer_PeerInfo) {
+	peerID := protocol.PeerID(peerInfo.PeerID)
+
+	var networks []protocol.Network
+	if n := m.networks.Load(); n != nil {
+		networks = n.([]protocol.Network)
+	}
+
+	// Put local networks in a Hashmap for network ID matching
+	localNwkMap := map[protocol.NetworkID]*protocol.Network{}
+	for index := range networks {
+		localNwk := &networks[index]
+		localNwkMap[localNwk.ID] = localNwk
+	}
+	// Network and peer matching step 1: adding peer to existing network
+	// where it belongs
+	for _, network := range peerInfo.Networks {
+		exist, ok := localNwkMap[protocol.NetworkID(network.ID)]
+		if ok {
+			var peerFound bool
+			for _, pid := range exist.Peers {
+				if peerID == pid {
+					peerFound = true
+					break
+				}
+			}
+			if !peerFound {
+				// Add peer to existing network
+				exist.Peers = append(exist.Peers, peerID)
+			}
+		} else {
+			networks = append(networks, protocol.Network{
+				ID:    protocol.NetworkID(network.ID),
+				Name:  network.Name,
+				Peers: []protocol.PeerID{peerID},
+			})
+		}
+	}
+
+	// Network and peer matching step 2: removing peer to existing network
+	// where it does not belong
+	peerNwkSet := map[protocol.NetworkID]bool{}
+	for _, peerNwk := range peerInfo.Networks {
+		peerNwkSet[protocol.NetworkID(peerNwk.ID)] = true
+	}
+	for index := range networks {
+		localNwk := &networks[index]
+		_, ok := peerNwkSet[localNwk.ID]
+		// If peer does not exist in some networks, then try removing it.
+		if !ok {
+			removeIndex := -1
+			for index, currPeerID := range localNwk.Peers {
+				if currPeerID == protocol.PeerID(peerInfo.PeerID) {
+					removeIndex = index
+					break
+				}
+			}
+			if removeIndex >= 0 {
+				newPeers := append(localNwk.Peers[:removeIndex], localNwk.Peers[removeIndex+1:]...)
+				localNwk.Peers = newPeers
+			}
+		}
+	}
+	m.networks.Store(networks)
 }
