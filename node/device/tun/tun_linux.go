@@ -87,9 +87,10 @@ func NewTUN(name string) (Device, error) {
 		return nil, err
 	}
 
+	fname := fmt.Sprintf("pairmeshDeviceFile/%d", nfd)
 	dev := &generalDevice{
 		name:            name,
-		ReadWriteCloser: os.NewFile(uintptr(nfd), "cloneDevicePath"),
+		ReadWriteCloser: os.NewFile(uintptr(nfd), fname),
 	}
 
 	return dev, nil

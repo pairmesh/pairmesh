@@ -37,12 +37,12 @@ import (
 
 // Manager is used to manage all tunnels connected to the current node.
 type Manager struct {
-	dialer   *net.Dialer
-	self     types.LocalPeer
-	rm       *relay.Manager
-	router   device.Router
-	callback tunnel.FragmentCallback
-	networks atomic.Value // An atomic value of: []protocol.Network
+	dialer    *net.Dialer
+	localPeer types.LocalPeer
+	rm        *relay.Manager
+	router    device.Router
+	callback  tunnel.FragmentCallback
+	networks  atomic.Value // An atomic value of: []protocol.Network
 
 	// Peers table.
 	mu    sync.RWMutex
@@ -54,13 +54,13 @@ type Manager struct {
 	cachedSummary *Summary
 }
 
-func NewManager(dialer *net.Dialer, self types.LocalPeer, callback tunnel.FragmentCallback, rm *relay.Manager, router device.Router) *Manager {
+func NewManager(dialer *net.Dialer, localPeer types.LocalPeer, callback tunnel.FragmentCallback, rm *relay.Manager, router device.Router) *Manager {
 	m := &Manager{
-		dialer:   dialer,
-		self:     self,
-		rm:       rm,
-		router:   router,
-		callback: callback,
+		dialer:    dialer,
+		localPeer: localPeer,
+		rm:        rm,
+		router:    router,
+		callback:  callback,
 
 		index: map[string]*peer.Peer{},
 		peers: map[protocol.PeerID]*peer.Peer{},
@@ -102,7 +102,7 @@ func (m *Manager) Summarize() *Summary {
 	}
 
 	var myDevices []Device
-	selfUserID := m.self.UserID
+	selfUserID := m.localPeer.UserID
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -181,9 +181,9 @@ func (m *Manager) Update(latestNetworks []protocol.Network, latestPeers []protoc
 	}
 
 	m.networks.Store(latestNetworks)
-	m.self.Networks = selfNetworks
+	m.localPeer.Networks = selfNetworks
 
-	routerCfg := &device.Config{LocalAddress: m.self.VIPv4}
+	routerCfg := &device.Config{LocalAddress: m.localPeer.VIPv4}
 
 	// NOTE: We must merge the peer information before sending probe request to
 	// the relay server because we may receive the probe response when the `Update`
@@ -201,7 +201,7 @@ func (m *Manager) Update(latestNetworks []protocol.Network, latestPeers []protoc
 		peers[latestPeer.ID] = p
 
 		// Skip the current device.
-		if p.ID() != m.self.PeerID {
+		if p.ID() != m.localPeer.PeerID {
 			addr, err := netaddr.ParseIP(latestPeer.IPv4)
 			if err != nil {
 				return errors.WithMessage(err, "parse ipv4 address in Update")
@@ -245,7 +245,7 @@ func (m *Manager) probePeers() {
 	probeGroup := map[protocol.ServerID][]uint64{}
 	for _, p := range m.peers {
 		// Skip the current device.
-		if p.ID() == m.self.PeerID {
+		if p.ID() == m.localPeer.PeerID {
 			continue
 		}
 		// Skip the peers recently probed.
@@ -328,11 +328,11 @@ func (m *Manager) ProbeResult(probe *message.PacketProbeResponse) {
 
 	rs := pc.RelayServer()
 	peerInfo := &message.PacketSyncPeer_PeerInfo{
-		UserID:    uint64(m.self.UserID),
-		PeerID:    uint64(m.self.PeerID),
-		IPv4:      m.self.VIPv4.String(),
-		Name:      m.self.Name,
-		PublicKey: m.self.Key.Public,
+		UserID:    uint64(m.localPeer.UserID),
+		PeerID:    uint64(m.localPeer.PeerID),
+		IPv4:      m.localPeer.VIPv4.String(),
+		Name:      m.localPeer.Name,
+		PublicKey: m.localPeer.Key.Public,
 		PrimaryServer: &message.PacketSyncPeer_RelayServer{
 			ID:        uint64(rs.ID),
 			Name:      rs.Name,
@@ -341,7 +341,7 @@ func (m *Manager) ProbeResult(probe *message.PacketProbeResponse) {
 			Port:      uint32(rs.Port),
 			PublicKey: rs.PublicKey,
 		},
-		Networks: m.self.Networks,
+		Networks: m.localPeer.Networks,
 	}
 
 	for _, catchupPeer := range catchupPeers {
@@ -373,7 +373,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 		return nil
 	}
 
-	routerCfg := &device.Config{LocalAddress: m.self.VIPv4}
+	routerCfg := &device.Config{LocalAddress: m.localPeer.VIPv4}
 
 	// Update the latest peer information.
 	m.mu.Lock()
@@ -403,7 +403,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	m.mu.Unlock()
 
 	// The encrypt/decrypt cipher of tunnels are the same.
-	sharedKey, err := noise.DH25519.DH(m.self.Key.Private, peerInfo.PublicKey)
+	sharedKey, err := noise.DH25519.DH(m.localPeer.Key.Private, peerInfo.PublicKey)
 	if err != nil {
 		zap.L().Error("Exchange shared key failed", zap.Error(err))
 		return err
@@ -414,7 +414,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	rcGetter := m.relayClientGetter(protocol.ServerID(peerInfo.PrimaryServer.ID))
 
 	p.SetCatchupAt(time.Now())
-	p.SetTunnel(tunnel.New(rcGetter, m.dialer, m.self, protocol.PeerID(peerInfo.PeerID), m.callback, cipher))
+	p.SetTunnel(tunnel.New(rcGetter, m.dialer, m.localPeer, protocol.PeerID(peerInfo.PeerID), m.callback, cipher))
 
 	// Add to router if the peer is newly added.
 	if len(routerCfg.Routes) > 0 {
@@ -434,8 +434,8 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 		DstPeerID: uint64(peerID),
 		Purpose:   message.PacketSyncPeer_CatchupAck,
 		Peer: &message.PacketSyncPeer_PeerInfo{
-			PeerID:    uint64(m.self.PeerID),
-			PublicKey: m.self.Key.Public,
+			PeerID:    uint64(m.localPeer.PeerID),
+			PublicKey: m.localPeer.Key.Public,
 		},
 	}
 	err = relayClient.Send(message.PacketType_SyncPeer, ack)
@@ -464,7 +464,7 @@ func (m *Manager) PeerCatchupAck(syncPeer *message.PacketSyncPeer) {
 	}
 
 	// The encrypt/decrypt cipher of tunnels are the same.
-	sharedKey, err := noise.DH25519.DH(m.self.Key.Private, peerInfo.PublicKey)
+	sharedKey, err := noise.DH25519.DH(m.localPeer.Key.Private, peerInfo.PublicKey)
 	if err != nil {
 		zap.L().Error("Exchange shared key failed", zap.Error(err))
 		return
@@ -474,7 +474,7 @@ func (m *Manager) PeerCatchupAck(syncPeer *message.PacketSyncPeer) {
 	cipher := noise.CipherChaChaPoly.Cipher(fixSizeKey)
 	rcGetter := m.relayClientGetter(p.PrimaryServerID())
 
-	p.SetTunnel(tunnel.New(rcGetter, m.dialer, m.self, protocol.PeerID(peerInfo.PeerID), m.callback, cipher))
+	p.SetTunnel(tunnel.New(rcGetter, m.dialer, m.localPeer, protocol.PeerID(peerInfo.PeerID), m.callback, cipher))
 	p.SetCatchupAt(time.Now())
 }
 
@@ -536,7 +536,7 @@ func (m *Manager) SyncEndpoints(endpoints []string) {
 		syncPeer := &message.PacketSyncPeer{
 			DstPeerID: uint64(p.ID()),
 			Purpose:   message.PacketSyncPeer_EndpointsChanged,
-			Peer:      &message.PacketSyncPeer_PeerInfo{PeerID: uint64(m.self.PeerID)},
+			Peer:      &message.PacketSyncPeer_PeerInfo{PeerID: uint64(m.localPeer.PeerID)},
 			Endpoints: endpoints,
 		}
 
