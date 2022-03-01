@@ -155,12 +155,15 @@ func (s *Server) onSessionHandshake(ses *Session) {
 	}
 
 	// Close the old session if new connection established.
-	old, exists := s.sessions.LoadOrStore(ses.peerID, ses)
+	old, exists := s.sessions.Load(ses.peerID)
 	if exists {
 		oldSes := old.(*Session)
 		zap.L().Warn("Close old session", zap.Reflect("peerID", oldSes.peerID))
 		oldSes.Close()
 	}
+
+	// Add or update with the new session.
+	s.sessions.Store(ses.peerID, ses)
 }
 
 func (s *Server) onSessionClosed(ses *Session) {
