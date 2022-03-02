@@ -43,12 +43,12 @@ type (
 	// Tunnel represents the remote conn and maintain the conn state.
 	Tunnel struct {
 		// Read-only fields
-		rcGetter RelayClientGetter
-		dialer   *net.Dialer
-		callback FragmentCallback
-		local    types.LocalPeer
-		peerID   protocol.PeerID
-		cipher   noise.Cipher
+		rcGetter  RelayClientGetter
+		dialer    *net.Dialer
+		callback  FragmentCallback
+		localPeer types.LocalPeer
+		peerID    protocol.PeerID
+		cipher    noise.Cipher
 
 		disco          atomic.Bool
 		closed         atomic.Bool
@@ -64,12 +64,12 @@ type (
 	}
 )
 
-func New(rcGetter RelayClientGetter, dialer *net.Dialer, nodeInfo types.LocalPeer, peerID protocol.PeerID, callback FragmentCallback, cipher noise.Cipher) *Tunnel {
+func New(rcGetter RelayClientGetter, dialer *net.Dialer, localPeer types.LocalPeer, peerID protocol.PeerID, callback FragmentCallback, cipher noise.Cipher) *Tunnel {
 	t := &Tunnel{
 		rcGetter:    rcGetter,
 		dialer:      dialer,
 		callback:    callback,
-		local:       nodeInfo,
+		localPeer:   localPeer,
 		peerID:      peerID,
 		cipher:      cipher,
 		endpointsCh: make(chan []string, 2),
@@ -100,14 +100,14 @@ func (t *Tunnel) SetRemoteEndpoints(endpoints []string) {
 
 func (t *Tunnel) Write(data []byte) {
 	if logutil.IsEnablePeer() {
-		zap.L().Debug("Send fragment", zap.Any("peer", t.local.PeerID))
+		zap.L().Debug("Send fragment", zap.Any("peer", t.localPeer.PeerID))
 	}
 
 	t.lastSendAt = time.Now()
 
 	endpoint := t.ReachableEndpoint()
 	if endpoint != nil {
-		encoded := codec.Encode(message.PacketType_Fragment, t.cipher, t.local.PeerID, data)
+		encoded := codec.Encode(message.PacketType_Fragment, t.cipher, t.localPeer.PeerID, data)
 		endpoint.Write(encoded)
 		return
 	}
@@ -127,7 +127,7 @@ func (t *Tunnel) Write(data []byte) {
 	}
 
 	packet := &message.PacketForward{
-		SrcPeerID: uint64(t.local.PeerID),
+		SrcPeerID: uint64(t.localPeer.PeerID),
 		DstPeerID: uint64(t.peerID),
 		Nonce:     nonce,
 		Fragment:  encrypted,
@@ -155,7 +155,7 @@ func (t *Tunnel) Write(data []byte) {
 		syncPeer := &message.PacketSyncPeer{
 			DstPeerID: uint64(t.peerID),
 			Purpose:   message.PacketSyncPeer_PairRequest,
-			Peer:      &message.PacketSyncPeer_PeerInfo{PeerID: uint64(t.local.PeerID)},
+			Peer:      &message.PacketSyncPeer_PeerInfo{PeerID: uint64(t.localPeer.PeerID)},
 			Endpoints: endpoints,
 		}
 
@@ -270,7 +270,7 @@ func (t *Tunnel) discovery() {
 	defer t.disco.Store(false)
 
 	// The duration will be reset according to the current state of this connection
-	discoveryTimer := time.After(0)
+	nextDiscoTick := time.After(0)
 
 	var currentEndpoints []string
 
@@ -278,23 +278,23 @@ func (t *Tunnel) discovery() {
 		select {
 		case eps := <-t.endpointsCh:
 			currentEndpoints = eps
-			discoveryTimer = time.After(0)
+			nextDiscoTick = time.After(0)
 
-		case <-discoveryTimer:
-			discoveryTimer = time.After(constant.DiscoveryDuration)
+		case <-nextDiscoTick:
+			nextDiscoTick = time.After(constant.DiscoveryDuration)
 			if len(currentEndpoints) < 1 {
 				continue
 			}
 
 			endpoints := t.cloneEndpoints()
-			epsByAddress := map[string]*Endpoint{}
+			byAddress := map[string]*Endpoint{}
 			for _, e := range endpoints {
-				epsByAddress[e.address] = e
+				byAddress[e.address] = e
 			}
 
 			// onDiscovery P2P connection via UDP address.
 			for _, addr := range currentEndpoints {
-				endpoint, found := epsByAddress[addr]
+				endpoint, found := byAddress[addr]
 				if !found {
 					conn, err := t.dialer.Dial("udp", addr)
 					if err != nil {
@@ -306,13 +306,13 @@ func (t *Tunnel) discovery() {
 					endpoints = append(endpoints, endpoint)
 				}
 				t.discoveryEndpoint(endpoint.udpConn)
-				// Delete the address from the epsByAddress and make sure the remains should be pruned
-				delete(epsByAddress, addr)
+				// Delete the address from the byAddress and make sure the remains should be pruned
+				delete(byAddress, addr)
 			}
 			t.storeEndpoints(endpoints)
 
 			// Prune the endpoints which are not belong to the current tunnel.
-			for _, ep := range epsByAddress {
+			for _, ep := range byAddress {
 				ep.cancelFn()
 			}
 
@@ -324,10 +324,10 @@ func (t *Tunnel) discovery() {
 
 func (t *Tunnel) discoveryEndpoint(udpConn *net.UDPConn) {
 	msg := &message.PacketDiscovery{
-		SenderPeerID: uint64(t.local.PeerID),
+		SenderPeerID: uint64(t.localPeer.PeerID),
 		Timestamp:    time.Now().UnixMicro(),
 	}
-	encoded, err := codec.EncodeMessage(message.PacketType_Discovery, t.cipher, t.local.PeerID, msg)
+	encoded, err := codec.EncodeMessage(message.PacketType_Discovery, t.cipher, t.localPeer.PeerID, msg)
 	if err != nil {
 		zap.L().Error("Encode discovery message failed", zap.Error(err))
 		return
@@ -350,9 +350,9 @@ func (t *Tunnel) onDiscovery(udpConn *net.UDPConn, discovery *message.PacketDisc
 
 	// onDiscovery message sent by self.
 
-	if protocol.PeerID(discovery.SenderPeerID) != t.local.PeerID {
+	if protocol.PeerID(discovery.SenderPeerID) != t.localPeer.PeerID {
 		// Echo the discovery packet to the sender peer.
-		data, err := codec.EncodeMessage(message.PacketType_Discovery, t.cipher, t.local.PeerID, discovery)
+		data, err := codec.EncodeMessage(message.PacketType_Discovery, t.cipher, t.localPeer.PeerID, discovery)
 		if err != nil {
 			zap.L().Error("Encode discovery echo message failed", zap.Error(err))
 			return
