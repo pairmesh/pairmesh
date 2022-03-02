@@ -84,7 +84,6 @@ func (d *NodeDriver) localAddresses() []string {
 
 			ip, ok := netaddr.FromStdIP(v.IP)
 			if !ok {
-				zap.L().Info("====>", zap.Reflect("ip", v.IP))
 				continue
 			}
 
