@@ -6,13 +6,14 @@ import (
 	"inet.af/netaddr"
 )
 
-func (r *router) add(devName string, _ netaddr.IP, target netaddr.IPPrefix) error {
+func (r *router) add(devName string, localAddress netaddr.IP, target netaddr.IPPrefix) error {
 	args := []string{
 		"ip",
 		"route",
 		"add",
 		target.Masked().String(),
-		devName,
+		"via",
+		localAddress.String(),
 	}
 	return runner.Run(args)
 }
@@ -23,7 +24,8 @@ func (r *router) del(devName string, localAddress netaddr.IP, target netaddr.IPP
 		"route",
 		"del",
 		target.Masked().String(),
-		devName,
+		"via",
+		localAddress.String(),
 	}
 	return runner.Run(args)
 }
