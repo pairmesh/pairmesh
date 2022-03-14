@@ -130,17 +130,36 @@ func (s *Server) Serve(ctx context.Context) error {
 		}
 
 		// Create a Session to maintain the Session state.
-		ses := newSession(conn, s.heartbeatInterval, s.handler)
-		ses.callback.onHandshake = s.onSessionHandshake
-		ses.callback.onClosed = s.onSessionClosed
+		trs := newTransporter(s.wg, conn, s.heartbeatInterval)
+		ses := newSession(trs, s, s.handler)
 
-		s.wg.Add(2)
-		go ses.read(ctx, s.wg)
-		go ses.write(ctx, s.wg)
+		s.wg.Add(3)
+		go trs.Read(ctx)
+		go trs.Write(ctx)
+		go ses.Serve(ctx, s.wg)
 	}
 }
 
-func (s *Server) onSessionHandshake(ses *Session) {
+func (s *Server) Close() error {
+	if s.closed.Swap(true) {
+		return errors.New("close a closed server")
+	}
+
+	s.sessions.Range(func(key, value interface{}) bool {
+		ses := value.(*Session)
+		if err := ses.Close(); err != nil {
+			zap.L().Error("Close Session failed", zap.Error(err), zap.Stringer("session", ses))
+		}
+		return true
+	})
+
+	s.wg.Wait()
+
+	return nil
+}
+
+// OnSessionHandshake implements the SessionLifetimeHook interface
+func (s *Server) OnSessionHandshake(ses *Session) {
 	if s.closed.Load() {
 		return
 	}
@@ -166,7 +185,8 @@ func (s *Server) onSessionHandshake(ses *Session) {
 	s.sessions.Store(ses.peerID, ses)
 }
 
-func (s *Server) onSessionClosed(ses *Session) {
+// OnSessionClosed implements the SessionLifetimeHook interface
+func (s *Server) OnSessionClosed(ses *Session) {
 	if s.closed.Load() {
 		return
 	}
@@ -176,22 +196,4 @@ func (s *Server) onSessionClosed(ses *Session) {
 		return
 	}
 	s.sessions.Delete(ses.peerID)
-}
-
-func (s *Server) Close() error {
-	if s.closed.Swap(true) {
-		return errors.New("close a closed server")
-	}
-
-	s.sessions.Range(func(key, value interface{}) bool {
-		ses := value.(*Session)
-		if err := ses.Close(); err != nil {
-			zap.L().Error("Close Session failed", zap.Error(err), zap.Stringer("session", ses))
-		}
-		return true
-	})
-
-	s.wg.Wait()
-
-	return nil
 }

@@ -39,6 +39,11 @@ type (
 		Handle(s *Client, packet codec.RawPacket) error
 	}
 
+	SessionLifetimeHook interface {
+		OnSessionHandshake(ses *Session)
+		OnSessionClosed(ses *Session)
+	}
+
 	SessionManager interface {
 		HeartbeatInterval() time.Duration
 		DHKey() noise.DHKey
