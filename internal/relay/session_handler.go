@@ -127,7 +127,7 @@ func (h *sessionHandler) onHandshake(s *Session, _ message.PacketType, msg proto
 	s.SetPublicKey(hs.PublicKey)
 	s.SetVAddress(ip)
 	s.SetIsPrimary(hs.IsPrimary)
-	s.callback.onHandshake(s)
+	s.LifetimeHook().OnSessionHandshake(s)
 
 	// Construct the response message which is used to acknowledge handshake.
 	res := &message.PacketHandshakeAck{Message: out}

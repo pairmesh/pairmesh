@@ -22,15 +22,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pairmesh/pairmesh/protocol"
-
-	"github.com/pairmesh/pairmesh/codec"
 	"github.com/pairmesh/pairmesh/message"
-
-	"github.com/flynn/noise"
-	"go.uber.org/atomic"
+	"github.com/pairmesh/pairmesh/protocol"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"
+
+	"go.uber.org/atomic"
 )
 
 const bufferSize = 512
@@ -44,42 +41,29 @@ const (
 
 // Session maintains the connection Session between relay server/client.
 type Session struct {
-	// Read-only fields for concurrent safe.
-	userID            protocol.UserID
-	peerID            protocol.PeerID
-	dhKey             noise.DHKey
-	cipher            noise.Cipher
-	publicKey         []byte // DH public key
-	vaddress          net.IP // Virtual address allocated by Peerly
-	isPrimary         bool
-	conn              net.Conn
-	state             SessionState
-	codec             *codec.RelayCodec
-	closed            *atomic.Bool
-	die               chan struct{}
-	handler           SessionHandler
-	chWrite           chan Packet
-	heartbeatInterval time.Duration
-	callback          struct {
-		onHandshake func(ses *Session)
-		onClosed    func(ses *Session)
-	}
+	SessionTransporter
 
+	// Read-only fields for concurrent safe.
+	userID          protocol.UserID
+	peerID          protocol.PeerID
+	vaddress        net.IP // Virtual address allocated by Peerly
+	isPrimary       bool
+	state           SessionState
+	closed          *atomic.Bool
+	lifetimeHook    SessionLifetimeHook
+	handler         SessionHandler
 	lastHeartbeatAt time.Time // Update to the latest heartbeat time periodically.
 	lastSyncAt      time.Time // Update the latest sync time while keepalive with portal service successfully.
 }
 
 // newSession returns a Session.
-func newSession(conn net.Conn, heartbeatInterval time.Duration, handler SessionHandler) *Session {
+func newSession(transporter SessionTransporter, lifetimeHook SessionLifetimeHook, handler SessionHandler) *Session {
 	return &Session{
-		conn:              conn,
-		state:             SessionStateInit,
-		codec:             codec.NewCodec(),
-		closed:            atomic.NewBool(false),
-		die:               make(chan struct{}, 1),
-		chWrite:           make(chan Packet, 64),
-		heartbeatInterval: heartbeatInterval,
-		handler:           handler,
+		SessionTransporter: transporter,
+		state:              SessionStateInit,
+		lifetimeHook:       lifetimeHook,
+		handler:            handler,
+		closed:             atomic.NewBool(false),
 	}
 }
 
@@ -111,24 +95,6 @@ func (s *Session) PeerID() protocol.PeerID {
 // SetPeerID sets the session peerID
 func (s *Session) SetPeerID(peerID protocol.PeerID) {
 	s.peerID = peerID
-}
-
-// Cipher returns the current session cipher.
-func (s *Session) Cipher() noise.Cipher {
-	return s.cipher
-}
-
-// SetCipher sets the session cipher
-func (s *Session) SetCipher(cipher noise.Cipher) {
-	s.cipher = cipher
-}
-
-func (s *Session) PublicKey() []byte {
-	return s.publicKey
-}
-
-func (s *Session) SetPublicKey(pk []byte) {
-	s.publicKey = pk
 }
 
 // VAddress returns the virtual address allocated by portal service.
@@ -163,6 +129,10 @@ func (s *Session) SetSyncAt(t time.Time) {
 	s.lastSyncAt = t
 }
 
+func (s *Session) LifetimeHook() SessionLifetimeHook {
+	return s.lifetimeHook
+}
+
 // Send sends message to the pairmesh client-side via the client session.
 func (s *Session) Send(typ message.PacketType, msg proto.Message) error {
 	if s.closed.Load() {
@@ -170,10 +140,31 @@ func (s *Session) Send(typ message.PacketType, msg proto.Message) error {
 	}
 
 	select {
-	case s.chWrite <- Packet{Type: typ, Message: msg}:
+	case s.WriteQueue() <- Packet{Type: typ, Message: msg}:
 		return nil
 	default:
-		return fmt.Errorf("write buffer exceed: %s", s.conn.RemoteAddr())
+		return fmt.Errorf("write buffer exceed: %d", s.peerID)
+	}
+}
+
+func (s *Session) Serve(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case p, ok := <-s.ReadQueue():
+			if !ok {
+				return
+			}
+			err := s.handler.Handle(s, p)
+			if err != nil {
+				zap.L().Error("Handle message failed", zap.Stringer("type", p.Type), zap.Error(err))
+				continue
+			}
+
+		}
 	}
 }
 
@@ -182,72 +173,14 @@ func (s *Session) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed Session")
 	}
-
-	close(s.die)
-	s.callback.onClosed(s)
-
-	return s.conn.Close()
+	if err := s.SessionTransporter.Close(); err != nil {
+		return err
+	}
+	s.lifetimeHook.OnSessionClosed(s)
+	return nil
 }
 
 // String implements the fmt.Stringer interface.
 func (s *Session) String() string {
 	return fmt.Sprintf("State=%v", s.state)
-}
-
-func (s *Session) read(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			s.Close()
-		case <-s.die:
-		}
-	}()
-
-	defer s.Close()
-
-	buffer := make([]byte, bufferSize)
-	for {
-		_ = s.conn.SetReadDeadline(time.Now().Add(2 * s.heartbeatInterval))
-		n, err := s.conn.Read(buffer)
-		if err != nil {
-			zap.L().Error("Read connection failed", zap.Error(err))
-			return
-		}
-
-		output, err := s.codec.Decode(buffer[:n])
-		if err != nil {
-			zap.L().Error("Decode packet failed", zap.Error(err))
-			return
-		}
-
-		for _, p := range output {
-			err := s.handler.Handle(s, p)
-			if err != nil {
-				zap.L().Error("Handle message failed", zap.Stringer("type", p.Type), zap.Error(err))
-				continue
-			}
-		}
-	}
-}
-
-func (s *Session) write(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer close(s.chWrite)
-
-	for {
-		select {
-		case wp := <-s.chWrite:
-			err := writePacketHelper(s.conn, wp, s.cipher, s.codec, s.heartbeatInterval)
-			if err != nil {
-				zap.L().Error("Write message failed", zap.Error(err))
-				_ = s.Close()
-				return
-			}
-
-		case <-ctx.Done():
-			return
-		}
-	}
 }
