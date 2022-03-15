@@ -84,7 +84,9 @@ func TestRelay(t *testing.T) {
 		Host: "127.0.0.1",
 		Port: port,
 	}
-	client := relay.NewClient(relayServer, credentials, clientDHKey, security.NewDHPublic(serverDHKey.Public))
+	trs := relay.NewClientTransporter(relayServer, credentials, clientDHKey, security.NewDHPublic(serverDHKey.Public))
+	client := relay.NewClient(trs)
+	go client.Serve(ctx)
 
 	const iter = 5
 	var counter = 0

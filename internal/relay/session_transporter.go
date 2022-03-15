@@ -57,7 +57,7 @@ type sessionTransporterImpl struct {
 	closed            *atomic.Bool
 }
 
-func newTransporter(wg *sync.WaitGroup, conn net.Conn, heartbeatInterval time.Duration) *sessionTransporterImpl {
+func newSessionTransporter(wg *sync.WaitGroup, conn net.Conn, heartbeatInterval time.Duration) *sessionTransporterImpl {
 	return &sessionTransporterImpl{
 		wg:                wg,
 		conn:              conn,

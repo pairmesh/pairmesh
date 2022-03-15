@@ -139,8 +139,10 @@ func (m *Manager) connect(ctx context.Context, r protocol.RelayServer) bool {
 		return false
 	}
 
-	client := NewClient(r, m.credential.Load().([]byte), m.staticKey, security.NewDHPublic(publicKey))
+	trs := NewClientTransporter(r, m.credential.Load().([]byte), m.staticKey, security.NewDHPublic(publicKey))
+	client := NewClient(trs)
 	client.SetIsPrimary(r.ID == m.PrimaryServerID())
+	go client.Serve(ctx)
 	if err := client.Connect(ctx); err != nil {
 		zap.L().Error("Connect to relay server failed", zap.String("vaddress", address), zap.Error(err))
 		return false
