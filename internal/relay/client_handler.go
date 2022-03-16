@@ -49,7 +49,7 @@ func (h *clientHandler) On(typ message.PacketType, cb ClientCallback) {
 // Handle implements the SessionHandler interface
 func (h *clientHandler) Handle(c *Client, packet codec.RawPacket) error {
 	typ := packet.Type
-	if c.State() == ClientStateConnecting && typ != message.PacketType_HandshakeAck {
+	if c.State() == ClientTransporterStateConnecting && typ != message.PacketType_HandshakeAck {
 		return fmt.Errorf("only handshake message valid when connecting status but got: %s", typ)
 	}
 
@@ -59,7 +59,7 @@ func (h *clientHandler) Handle(c *Client, packet codec.RawPacket) error {
 	}
 
 	cipher := c.Cipher()
-	if c.State() == ClientStateConnected && cipher == nil {
+	if c.State() == ClientTransporterStateConnected && cipher == nil {
 		return errors.New("cipher shouldn't be empty when running state")
 	}
 
@@ -97,7 +97,7 @@ func (h *clientHandler) onHandshakeAck(c *Client, _ message.PacketType, msg prot
 	}
 
 	c.SetCipher(es.Cipher())
-	c.SetState(ClientStateConnected)
+	c.SetState(ClientTransporterStateConnected)
 	c.SetHeartbeatInterval(parsed)
 
 	zap.L().Info("Relay client noise protocol handshake is finished")

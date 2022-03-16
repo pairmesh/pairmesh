@@ -130,7 +130,7 @@ func (s *Server) Serve(ctx context.Context) error {
 		}
 
 		// Create a Session to maintain the Session state.
-		trs := newTransporter(s.wg, conn, s.heartbeatInterval)
+		trs := newSessionTransporter(s.wg, conn, s.heartbeatInterval)
 		ses := newSession(trs, s, s.handler)
 
 		s.wg.Add(3)
