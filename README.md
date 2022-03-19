@@ -23,7 +23,7 @@ By setting up a security P2P virtual private LAN network among multiple devices 
 
 ## Quick Start
 
-- **Use [PairMesh](https://pairmesh.com) managed control plane service.**
+- **Use [PairMesh](https://www.pairmesh.com) managed control plane service.**
 - Self-hosted PairMesh control plane.
 
 ## Community
