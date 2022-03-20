@@ -37,6 +37,7 @@ type SessionTransporter interface {
 	SetPublicKey(pk []byte)
 	ReadQueue() <-chan codec.RawPacket
 	WriteQueue() chan<- Packet
+	TerminationQueue() <-chan struct{}
 	Read(ctx context.Context)
 	Write(ctx context.Context)
 	Close() error
@@ -48,7 +49,7 @@ type sessionTransporterImpl struct {
 	codec             *codec.RelayCodec
 	chRead            chan codec.RawPacket
 	chWrite           chan Packet
-	die               chan struct{}
+	chTermination     chan struct{}
 	cipher            noise.Cipher
 	dhKey             noise.DHKey
 	publicKey         []byte // DH public key
@@ -64,7 +65,7 @@ func newSessionTransporter(wg *sync.WaitGroup, conn net.Conn, heartbeatInterval 
 		codec:             codec.NewCodec(),
 		chRead:            make(chan codec.RawPacket, 128),
 		chWrite:           make(chan Packet, 128),
-		die:               make(chan struct{}, 1),
+		chTermination:     make(chan struct{}, 1),
 		heartbeatInterval: heartbeatInterval,
 		closed:            atomic.NewBool(false),
 	}
@@ -96,6 +97,10 @@ func (s *sessionTransporterImpl) WriteQueue() chan<- Packet {
 	return s.chWrite
 }
 
+func (s *sessionTransporterImpl) TerminationQueue() <-chan struct{} {
+	return s.chTermination
+}
+
 func (s *sessionTransporterImpl) Read(ctx context.Context) {
 	defer s.wg.Done()
 	defer close(s.chRead)
@@ -104,7 +109,7 @@ func (s *sessionTransporterImpl) Read(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			s.Close()
-		case <-s.die:
+		case <-s.chTermination:
 		}
 	}()
 
@@ -155,6 +160,6 @@ func (s *sessionTransporterImpl) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed session transporter")
 	}
-	close(s.die)
+	close(s.chTermination)
 	return s.conn.Close()
 }

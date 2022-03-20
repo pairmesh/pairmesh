@@ -150,6 +150,12 @@ func (s *Session) Send(typ message.PacketType, msg proto.Message) error {
 func (s *Session) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	// Monitor the status of the transporter.
+	go func() {
+		<-s.TerminationQueue()
+		s.Close()
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -173,10 +179,10 @@ func (s *Session) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed Session")
 	}
+	s.lifetimeHook.OnSessionClosed(s)
 	if err := s.SessionTransporter.Close(); err != nil {
 		return err
 	}
-	s.lifetimeHook.OnSessionClosed(s)
 	return nil
 }
 
