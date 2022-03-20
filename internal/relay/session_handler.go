@@ -124,7 +124,6 @@ func (h *sessionHandler) onHandshake(s *Session, _ message.PacketType, msg proto
 	s.SetState(SessionStateRunning)
 	s.SetUserID(userID)
 	s.SetPeerID(peerID)
-	s.SetPublicKey(hs.PublicKey)
 	s.SetVAddress(ip)
 	s.SetIsPrimary(hs.IsPrimary)
 	s.LifetimeHook().OnSessionHandshake(s)
