@@ -37,7 +37,6 @@ type SessionTransporter interface {
 	SetPublicKey(pk []byte)
 	ReadQueue() <-chan codec.RawPacket
 	WriteQueue() chan<- Packet
-	TerminationQueue() <-chan struct{}
 	Read(ctx context.Context)
 	Write(ctx context.Context)
 	Close() error
@@ -97,23 +96,18 @@ func (s *sessionTransporterImpl) WriteQueue() chan<- Packet {
 	return s.chWrite
 }
 
-func (s *sessionTransporterImpl) TerminationQueue() <-chan struct{} {
-	return s.chTermination
-}
-
-func (s *sessionTransporterImpl) Read(ctx context.Context) {
-	defer s.wg.Done()
-	defer close(s.chRead)
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			s.Close()
-		case <-s.chTermination:
+// Read implements the SessionTransporter interface.
+// We assume that the ctx is same as Write function, so we can ignore it.
+func (s *sessionTransporterImpl) Read(_ context.Context) {
+	defer func() {
+		if e := recover(); e != nil {
+			zap.L().Error("Read thread panicked", zap.Reflect("error", e))
 		}
-	}()
 
-	defer s.Close()
+		s.wg.Done()
+		_ = s.Close()
+		close(s.chRead)
+	}()
 
 	buffer := make([]byte, bufferSize)
 	for {
@@ -137,8 +131,15 @@ func (s *sessionTransporterImpl) Read(ctx context.Context) {
 }
 
 func (s *sessionTransporterImpl) Write(ctx context.Context) {
-	defer s.wg.Done()
-	defer close(s.chWrite)
+	defer func() {
+		if e := recover(); e != nil {
+			zap.L().Error("Write thread panicked", zap.Reflect("error", e))
+		}
+
+		s.wg.Done()
+		_ = s.Close()
+		close(s.chWrite)
+	}()
 
 	for {
 		select {
@@ -146,10 +147,11 @@ func (s *sessionTransporterImpl) Write(ctx context.Context) {
 			err := writePacketHelper(s.conn, wp, s.cipher, s.codec, s.heartbeatInterval)
 			if err != nil {
 				zap.L().Error("Write message failed", zap.Error(err))
-				_ = s.Close()
 				return
 			}
 
+		case <-s.chTermination:
+			return
 		case <-ctx.Done():
 			return
 		}
