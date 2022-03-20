@@ -59,14 +59,11 @@ type ClientTransporter interface {
 }
 
 type clientTransporterImpl struct {
+	securityTransporter
+
 	relayServer       protocol.RelayServer
 	credentials       []byte
-	conn              net.Conn
-	codec             *codec.RelayCodec
-	chRead            chan codec.RawPacket
-	chWrite           chan Packet
 	die               chan struct{}
-	cipher            noise.Cipher
 	nodeDHKey         noise.DHKey
 	srvPubKey         security.DHPublic // of the relay server; not a machine or node key
 	state             ClientTransporterState
@@ -79,17 +76,15 @@ type clientTransporterImpl struct {
 
 func NewClientTransporter(server protocol.RelayServer, credentials []byte, nodeDHKey noise.DHKey, srvPubKey security.DHPublic) *clientTransporterImpl {
 	return &clientTransporterImpl{
-		relayServer: server,
-		credentials: credentials,
-		codec:       codec.NewCodec(),
-		chRead:      make(chan codec.RawPacket, 64),
-		chWrite:     make(chan Packet, 64),
-		die:         make(chan struct{}, 1),
-		nodeDHKey:   nodeDHKey,
-		srvPubKey:   srvPubKey,
-		state:       ClientTransporterStateInit,
-		closed:      atomic.NewBool(false),
-		hsSignal:    make(chan struct{}, 1),
+		securityTransporter: newSecurityTransporter(nil),
+		relayServer:         server,
+		credentials:         credentials,
+		die:                 make(chan struct{}, 1),
+		nodeDHKey:           nodeDHKey,
+		srvPubKey:           srvPubKey,
+		state:               ClientTransporterStateInit,
+		closed:              atomic.NewBool(false),
+		hsSignal:            make(chan struct{}, 1),
 	}
 }
 
@@ -110,16 +105,6 @@ func (c *clientTransporterImpl) SetState(s ClientTransporterState) {
 	c.state = s
 }
 
-// Cipher returns the current client cipher.
-func (c *clientTransporterImpl) Cipher() noise.Cipher {
-	return c.cipher
-}
-
-// SetCipher sets the client cipher
-func (c *clientTransporterImpl) SetCipher(cipher noise.Cipher) {
-	c.cipher = cipher
-}
-
 func (c *clientTransporterImpl) SetHeartbeatInterval(interval time.Duration) {
 	c.heartbeatInterval = interval
 }
@@ -130,14 +115,6 @@ func (c *clientTransporterImpl) SetIsPrimary(is bool) {
 
 func (c *clientTransporterImpl) HandshakeState() *noise.HandshakeState {
 	return c.handshakeState
-}
-
-func (c *clientTransporterImpl) ReadQueue() <-chan codec.RawPacket {
-	return c.chRead
-}
-
-func (c *clientTransporterImpl) WriteQueue() chan<- Packet {
-	return c.chWrite
 }
 
 // Connect connects to the relay server.
@@ -178,7 +155,6 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 	}
 
 	msg := &message.PacketHandshake{
-		PublicKey: c.nodeDHKey.Public,
 		Message:   out,
 		IsPrimary: c.isPrimary,
 	}

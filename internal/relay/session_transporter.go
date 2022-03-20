@@ -33,8 +33,6 @@ import (
 type SessionTransporter interface {
 	Cipher() noise.Cipher
 	SetCipher(cipher noise.Cipher)
-	PublicKey() []byte
-	SetPublicKey(pk []byte)
 	ReadQueue() <-chan codec.RawPacket
 	WriteQueue() chan<- Packet
 	Read(ctx context.Context)
@@ -43,15 +41,10 @@ type SessionTransporter interface {
 }
 
 type sessionTransporterImpl struct {
+	securityTransporter
+
 	wg                *sync.WaitGroup
-	conn              net.Conn
-	codec             *codec.RelayCodec
-	chRead            chan codec.RawPacket
-	chWrite           chan Packet
 	chTermination     chan struct{}
-	cipher            noise.Cipher
-	dhKey             noise.DHKey
-	publicKey         []byte // DH public key
 	heartbeatInterval time.Duration
 	lifetimeHook      SessionLifetimeHook
 	closed            *atomic.Bool
@@ -59,41 +52,12 @@ type sessionTransporterImpl struct {
 
 func newSessionTransporter(wg *sync.WaitGroup, conn net.Conn, heartbeatInterval time.Duration) *sessionTransporterImpl {
 	return &sessionTransporterImpl{
-		wg:                wg,
-		conn:              conn,
-		codec:             codec.NewCodec(),
-		chRead:            make(chan codec.RawPacket, 128),
-		chWrite:           make(chan Packet, 128),
-		chTermination:     make(chan struct{}, 1),
-		heartbeatInterval: heartbeatInterval,
-		closed:            atomic.NewBool(false),
+		wg:                  wg,
+		securityTransporter: newSecurityTransporter(conn),
+		chTermination:       make(chan struct{}, 1),
+		heartbeatInterval:   heartbeatInterval,
+		closed:              atomic.NewBool(false),
 	}
-}
-
-// Cipher returns the current session cipher.
-func (s *sessionTransporterImpl) Cipher() noise.Cipher {
-	return s.cipher
-}
-
-// SetCipher sets the session cipher
-func (s *sessionTransporterImpl) SetCipher(cipher noise.Cipher) {
-	s.cipher = cipher
-}
-
-func (s *sessionTransporterImpl) PublicKey() []byte {
-	return s.publicKey
-}
-
-func (s *sessionTransporterImpl) SetPublicKey(pk []byte) {
-	s.publicKey = pk
-}
-
-func (s *sessionTransporterImpl) ReadQueue() <-chan codec.RawPacket {
-	return s.chRead
-}
-
-func (s *sessionTransporterImpl) WriteQueue() chan<- Packet {
-	return s.chWrite
 }
 
 // Read implements the SessionTransporter interface.

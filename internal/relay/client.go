@@ -29,10 +29,9 @@ import (
 // Client represents the relay server client which is used to interactive with relay server.
 type Client struct {
 	ClientTransporter
-	handler         ClientHandler
-	lastHeartbeatAt time.Time
-	lastMeasuredLat time.Duration
 
+	handler  ClientHandler
+	latency  time.Duration
 	closed   *atomic.Bool
 	onClosed func() // Callback function
 }
@@ -47,12 +46,8 @@ func NewClient(transporter ClientTransporter) *Client {
 	return c
 }
 
-func (c *Client) SetLastHeartbeatAt(t time.Time) {
-	c.lastHeartbeatAt = t
-}
-
-func (c *Client) SetLastMeasuredLat(lat time.Duration) {
-	c.lastMeasuredLat = lat
+func (c *Client) SetLatency(lat time.Duration) {
+	c.latency = lat
 }
 
 func (c *Client) Handler() ClientHandler {

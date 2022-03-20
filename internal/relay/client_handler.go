@@ -108,7 +108,6 @@ func (h *clientHandler) onHeartbeat(c *Client, _ message.PacketType, msg proto.M
 	heartbeat := msg.(*message.PacketHeartbeat)
 	ts := heartbeat.Timestamp
 	t := time.Unix(ts/int64(time.Second), ts%int64(time.Second))
-	c.SetLastHeartbeatAt(t)
-	c.SetLastMeasuredLat(time.Since(t) / 2)
+	c.SetLatency(time.Since(t) / 2)
 	return nil
 }
