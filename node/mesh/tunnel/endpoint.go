@@ -28,12 +28,11 @@ import (
 
 // Endpoint represents the record of discovering peerinfo via message.PacketType_Discovery.
 type Endpoint struct {
-	served atomic.Bool
-
-	latency  time.Duration
-	lastSeen time.Time
+	served   atomic.Bool
 	address  string
 	udpConn  *net.UDPConn
+	latency  time.Duration
+	lastSeen time.Time
 	callback UDPPacketCallback
 	cancelFn context.CancelFunc
 	chWrite  chan []byte
@@ -41,10 +40,10 @@ type Endpoint struct {
 
 func newEndpoint(udpConn *net.UDPConn, latency time.Duration, lastSeen time.Time, callback UDPPacketCallback) *Endpoint {
 	return &Endpoint{
-		latency:  latency,
-		lastSeen: lastSeen,
 		address:  udpConn.RemoteAddr().String(),
 		udpConn:  udpConn,
+		latency:  latency,
+		lastSeen: lastSeen,
 		callback: callback,
 		chWrite:  make(chan []byte, 128),
 	}
