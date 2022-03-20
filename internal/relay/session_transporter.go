@@ -45,7 +45,6 @@ type sessionTransporterImpl struct {
 
 	wg                *sync.WaitGroup
 	chTermination     chan struct{}
-	dhKey             noise.DHKey
 	heartbeatInterval time.Duration
 	lifetimeHook      SessionLifetimeHook
 	closed            *atomic.Bool
