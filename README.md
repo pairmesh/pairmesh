@@ -55,7 +55,7 @@ Any other question? Reach out to the [PairMesh Discussion](https://github.com/pa
 
 The following diagram shows the overall architecture of PairMesh, where the PairMesh node is an application installed on the end device, responsible for managing the local virtual NIC device and discovering information about other nodes from the Control Plane service, as well as establishing P2P communication connections with other nodes, encrypting and decrypting data and processing traffic data in the network.
 
-![Architecture](./docs/images/archtecture.svg)
+![Architecture](./docs/images/architecture.svg)
 ## License
 
 PairMesh is under the Apache 2.0 license. See the [LICENSE](./LICENSE) file for details.

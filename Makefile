@@ -70,4 +70,7 @@ tools/bin/golangci-lint: tools/check/go.mod
 	cd tools/check; \
 	$(GO) build -o ../bin/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
 
+clean:
+	rm -rf ./bin
+
 .PHONY: build package
