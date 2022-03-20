@@ -48,7 +48,7 @@ type sessionTransporterImpl struct {
 	codec             *codec.RelayCodec
 	chRead            chan codec.RawPacket
 	chWrite           chan Packet
-	die               chan struct{}
+	chTermination     chan struct{}
 	cipher            noise.Cipher
 	dhKey             noise.DHKey
 	publicKey         []byte // DH public key
@@ -64,7 +64,7 @@ func newSessionTransporter(wg *sync.WaitGroup, conn net.Conn, heartbeatInterval 
 		codec:             codec.NewCodec(),
 		chRead:            make(chan codec.RawPacket, 128),
 		chWrite:           make(chan Packet, 128),
-		die:               make(chan struct{}, 1),
+		chTermination:     make(chan struct{}, 1),
 		heartbeatInterval: heartbeatInterval,
 		closed:            atomic.NewBool(false),
 	}
@@ -96,19 +96,18 @@ func (s *sessionTransporterImpl) WriteQueue() chan<- Packet {
 	return s.chWrite
 }
 
-func (s *sessionTransporterImpl) Read(ctx context.Context) {
-	defer s.wg.Done()
-	defer close(s.chRead)
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			s.Close()
-		case <-s.die:
+// Read implements the SessionTransporter interface.
+// We assume that the ctx is same as Write function, so we can ignore it.
+func (s *sessionTransporterImpl) Read(_ context.Context) {
+	defer func() {
+		if e := recover(); e != nil {
+			zap.L().Error("Read thread panicked", zap.Reflect("error", e))
 		}
-	}()
 
-	defer s.Close()
+		s.wg.Done()
+		_ = s.Close()
+		close(s.chRead)
+	}()
 
 	buffer := make([]byte, bufferSize)
 	for {
@@ -132,8 +131,15 @@ func (s *sessionTransporterImpl) Read(ctx context.Context) {
 }
 
 func (s *sessionTransporterImpl) Write(ctx context.Context) {
-	defer s.wg.Done()
-	defer close(s.chWrite)
+	defer func() {
+		if e := recover(); e != nil {
+			zap.L().Error("Write thread panicked", zap.Reflect("error", e))
+		}
+
+		s.wg.Done()
+		_ = s.Close()
+		close(s.chWrite)
+	}()
 
 	for {
 		select {
@@ -141,10 +147,11 @@ func (s *sessionTransporterImpl) Write(ctx context.Context) {
 			err := writePacketHelper(s.conn, wp, s.cipher, s.codec, s.heartbeatInterval)
 			if err != nil {
 				zap.L().Error("Write message failed", zap.Error(err))
-				_ = s.Close()
 				return
 			}
 
+		case <-s.chTermination:
+			return
 		case <-ctx.Done():
 			return
 		}
@@ -155,6 +162,6 @@ func (s *sessionTransporterImpl) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed session transporter")
 	}
-	close(s.die)
+	close(s.chTermination)
 	return s.conn.Close()
 }

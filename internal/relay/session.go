@@ -148,7 +148,14 @@ func (s *Session) Send(typ message.PacketType, msg proto.Message) error {
 }
 
 func (s *Session) Serve(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		if e := recover(); e != nil {
+			zap.L().Error("Session serving thread panicked", zap.Reflect("error", e))
+		}
+
+		wg.Done()
+		_ = s.Close()
+	}()
 
 	for {
 		select {
@@ -163,7 +170,6 @@ func (s *Session) Serve(ctx context.Context, wg *sync.WaitGroup) {
 				zap.L().Error("Handle message failed", zap.Stringer("type", p.Type), zap.Error(err))
 				continue
 			}
-
 		}
 	}
 }
@@ -173,10 +179,10 @@ func (s *Session) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed Session")
 	}
+	s.lifetimeHook.OnSessionClosed(s)
 	if err := s.SessionTransporter.Close(); err != nil {
 		return err
 	}
-	s.lifetimeHook.OnSessionClosed(s)
 	return nil
 }
 
