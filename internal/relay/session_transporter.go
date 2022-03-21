@@ -126,6 +126,9 @@ func (s *sessionTransporterImpl) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed session transporter")
 	}
+
+	zap.L().Warn("Session connection transporter terminated", zap.Stringer("addr", s.conn.RemoteAddr()))
+
 	close(s.chTermination)
 	return s.conn.Close()
 }

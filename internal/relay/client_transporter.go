@@ -159,13 +159,12 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 		IsPrimary: c.isPrimary,
 	}
 
-	c.chWrite <- Packet{
-		Type:    message.PacketType_Handshake,
-		Message: msg,
-	}
-
 	select {
 	case <-c.hsSignal:
+		c.chWrite <- Packet{
+			Type:    message.PacketType_Handshake,
+			Message: msg,
+		}
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
@@ -174,17 +173,12 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 
 func (c *clientTransporterImpl) Read(ctx context.Context) {
 	defer func() {
-		c.Close()
-		zap.L().Warn("Client connection terminated",
-			zap.String("addr", fmt.Sprintf("%s:%d", c.relayServer.Host, c.relayServer.Port)))
-	}()
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			c.Close()
-		case <-c.die:
+		if e := recover(); e != nil {
+			zap.L().Error("Read thread panicked", zap.Reflect("error", e))
 		}
+
+		_ = c.Close()
+		close(c.chRead)
 	}()
 
 	buffer := make([]byte, bufferSize)
@@ -207,7 +201,14 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 }
 
 func (c *clientTransporterImpl) Write(ctx context.Context) {
-	defer close(c.chWrite)
+	defer func() {
+		if e := recover(); e != nil {
+			zap.L().Error("Write thread panicked", zap.Reflect("error", e))
+		}
+
+		_ = c.Close()
+		close(c.chWrite)
+	}()
 
 	// Default to 1 second
 	heartbeatTimer := time.After(time.Second)
@@ -217,7 +218,6 @@ func (c *clientTransporterImpl) Write(ctx context.Context) {
 			err := writePacketHelper(c.conn, wp, c.cipher, c.codec, 5*time.Second)
 			if err != nil {
 				zap.L().Error("Write message failed", zap.Error(err))
-				_ = c.Close()
 				return
 			}
 
@@ -250,6 +250,9 @@ func (c *clientTransporterImpl) Close() error {
 	if c.closed.Swap(true) {
 		return errors.New("close a closed client")
 	}
+
+	zap.L().Warn("Client connection transporter terminated", zap.Stringer("addr", c.conn.RemoteAddr()))
+
 	close(c.die)
 	return c.conn.Close()
 }
