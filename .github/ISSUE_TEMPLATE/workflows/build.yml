@@ -18,26 +18,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: '1.17.2'
-
       - name: Build
         run: make
+
   build-windows:
     name: Build on Windows
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: '1.17.2'
-
       - name: Build
         run: go build -o bin/PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
 
