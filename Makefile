@@ -42,7 +42,26 @@ test:
 
 integration_test:
 
-check: vet fmt check-static # TODO: enable lint
+# Check
+# Lint tools
+check: fmt vet check-static lint
+
+lint: tools/bin/revive
+	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(FILES)
+
+vet:
+	$(GO) vet $$(go list ./... | grep -vE "wintun|tools|systray")
+
+check-static: tools/bin/golangci-lint
+	tools/bin/golangci-lint run --timeout 5m ./...
+
+tools/bin/revive: tools/check/go.mod
+	cd tools/check; \
+	$(GO) build -o ../bin/revive github.com/mgechev/revive
+
+tools/bin/golangci-lint: tools/check/go.mod
+	cd tools/check; \
+	$(GO) build -o ../bin/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
 
 clean:
 	rm -rf ./bin
