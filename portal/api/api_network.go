@@ -381,13 +381,13 @@ func (s *server) DeleteNetworkUser(ctx context.Context, r *http.Request) (*Delet
 
 	var res *DeleteNetworkUserResponse
 	err := db.Tx(func(tx *gorm.DB) error {
-		userID := models.ID(jwt.UserIDFromContext(ctx))
+		userIDFromJwt := models.ID(jwt.UserIDFromContext(ctx))
 		var role string
 		if err := tx.Raw(`select role from network_users where network_id = ? and user_id = ?`, networkID, userID).Scan(&role).Error; err != nil {
 			return err
 		}
 		requestUserRole := models.RoleType(role) // Request user role
-		if userID == userID {                    //delete self
+		if userID == userIDFromJwt {             //delete self
 			if requestUserRole == models.RoleTypeOwner {
 				return errors.New("owner can not delete self from the network")
 			}

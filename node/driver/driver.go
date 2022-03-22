@@ -105,7 +105,7 @@ type NodeDriver struct {
 	primaryServerConnected bool
 
 	// mu is used to protect the following fields.
-	mu         sync.Mutex
+	mu         sync.Mutex //nolint ; should be used somewhere
 	credential credential
 }
 

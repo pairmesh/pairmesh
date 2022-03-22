@@ -141,7 +141,7 @@ P2P traffic are encrypted by %[1]s. Every tunnel has different secret key.
 			zap.L().Info("Driver initialized successfully")
 
 			sc := make(chan os.Signal, 1)
-			signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGQUIT)
+			signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 			sg := <-sc
 			zap.L().Info("Got signal and prepare to terminate", zap.Stringer("signal", sg))

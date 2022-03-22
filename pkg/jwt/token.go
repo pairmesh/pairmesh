@@ -47,7 +47,7 @@ func tokenValid(tokenStr, accessSecret string) (*stdjwt.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, ok := token.Claims.(stdjwt.Claims); !ok || !token.Valid {
+	if _, ok := token.Claims.(stdjwt.Claims); !ok || !token.Valid { //nolint
 		return nil, err
 	}
 	return token, nil

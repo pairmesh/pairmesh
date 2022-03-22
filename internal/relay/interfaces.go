@@ -23,7 +23,6 @@ import (
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/protocol"
 	"google.golang.org/protobuf/proto"
-	"inet.af/netaddr"
 )
 
 type (
@@ -55,27 +54,6 @@ type (
 		AddMERPPeerRoute(protocol.PeerID, string, *Client)
 		RemoveMERPPeerRoute(protocol.PeerID, string, *Client)
 	}
-
-	WriteRequest struct {
-		b      []byte // copied; ownership passed to receiver
-		addr   netaddr.IPPort
-		peerID protocol.PeerID
-	}
-
-	// ReadResult is the type sent by runMERPClient to receiveIPv4
-	// when a MERP packet is available.
-	ReadResult struct {
-		region string
-		n      int // length of data received
-		src    protocol.PeerID
-
-		// copyBuf is called to copy the data to dst.  It returns how
-		// much data was copied, which will be n if dst is large
-		// enough. copyBuf can only be called once.
-		// If copyBuf is nil, that's a signal from the sender to ignore
-		// this message.
-		copyBuf func(dst []byte) int
-	}
 )
 
 // MaxPacketSize is the maximum size of a packet sent over MERP.
@@ -87,6 +65,4 @@ const (
 	// ProtocolVersion is bumped whenever there's a wire-incompatible change.
 	//   * version 1: received packets have src addrs in frameRecvPacket at beginning
 	ProtocolVersion = 1
-
-	keepAlive = 60 * time.Second
 )

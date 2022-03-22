@@ -75,7 +75,7 @@ And the relay server(s) is responsible to peer discovery.
 
 			go func() {
 				sc := make(chan os.Signal, 1)
-				signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGQUIT)
+				signal.Notify(sc, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 				sg := <-sc
 				zap.L().Info("The relay is terminating due to signal", zap.Stringer("signal", sg))
 				cancel()
