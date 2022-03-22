@@ -31,7 +31,7 @@ By setting up a security P2P virtual private LAN network among multiple devices 
   # Windows PowerShell
   go build -o bin/PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
   ```
-- **Use [PairMesh](https://www.pairmesh.com) managed control plane service.**
+- Use **[PairMesh](https://www.pairmesh.com)** managed control plane service (Chinese Only).
 - Self-hosted PairMesh control plane.
 
 ## Community
