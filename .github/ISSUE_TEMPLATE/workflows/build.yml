@@ -1,4 +1,4 @@
-name: build
+name: Build
 on:
   push:
     branches:
@@ -6,8 +6,11 @@ on:
     paths-ignore:
       - '**.md'
   pull_request:
+    branches:
+       - master
     paths-ignore:
       - '**.md'
+
 jobs:
   build-unix:
     name: Build on Unix
