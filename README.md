@@ -1,4 +1,14 @@
 ![](docs/images/logo.svg)
+
+[![LICENSE](https://img.shields.io/github/license/pairmesh/pairmesh.svg)](https://github.com/pairmesh/pairmesh/blob/master/LICENSE)
+[![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
+[![Build Status](https://github.com/pairmesh/pairmesh/actions/workflows/build.yml/badge.svg)](https://github.com/pairmesh/pairmesh/actions/workflows/build.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pairmesh/pairmesh)](https://goreportcard.com/report/github.com/pairmesh/pairmesh)
+[![GitHub release](https://img.shields.io/github/tag/pairmesh/pairmesh.svg?label=release)](https://github.com/pairmesh/pairmesh/releases)
+[![GitHub release date](https://img.shields.io/github/release-date/pairmesh/pairmesh)](https://github.com/pairmesh/pairmesh/releases)
+[![Coverage Status](https://codecov.io/gh/pairmesh/pairmesh/branch/master/graph/badge.svg)](https://codecov.io/gh/pairmesh/pairmesh)
+[![GoDoc](https://img.shields.io/badge/Godoc-reference-blue.svg)](https://godoc.org/github.com/pairmesh/pairmesh)
+
 ## What is PairMesh?
 
 __The mission of PairMesh is to provide network infrastructure for remote collaboration and work__.
