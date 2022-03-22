@@ -18,11 +18,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pairmesh/pairmesh/internal/ledis"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/pairmesh/pairmesh/internal/ledis"
 
 	"github.com/pairmesh/pairmesh/portal/config"
 	"github.com/pairmesh/pairmesh/portal/db"
@@ -128,7 +129,10 @@ func (gh *github) UserInfo(token *sso.Token) (*models.User, bool, error) {
 		// Create new user if not existing.
 		newUser = err == gorm.ErrRecordNotFound
 		if newUser {
-			user = models.BuildUser()
+			user, err := models.BuildUser()
+			if err != nil {
+				return err
+			}
 			user.Origin = sso.GitHub.String()
 			user.Name = ghUser.Login
 			user.Avatar = ghUser.AvatarURL

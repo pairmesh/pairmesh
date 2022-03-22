@@ -42,13 +42,16 @@ func CreateUser(tx *gorm.DB, user *User, ssoUser interface{}) error {
 }
 
 // BuildUser generate a stub user for sso
-func BuildUser() User {
+func BuildUser() (User, error) {
 	secretKey := [32]byte{}
-	rand.Read(secretKey[:])
+	_, err := rand.Read(secretKey[:])
+	if err != nil {
+		return User{}, err
+	}
 	salt := uuid.New().String()
 	return User{
 		Salt:      salt,
 		Hash:      security.Hash(uuid.New().String(), salt),
 		SecretKey: base64.RawStdEncoding.EncodeToString(secretKey[:]),
-	}
+	}, nil
 }

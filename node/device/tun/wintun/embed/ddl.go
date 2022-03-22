@@ -15,6 +15,7 @@
 package embed
 
 // DLLBytes returns the ddl content bytes embeded in the binary distribution.
+//nolint
 func DLLBytes() []byte {
 	return ddlContent
 }

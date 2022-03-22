@@ -126,9 +126,12 @@ func WithName(name Vendor) Provider {
 	return gMgr.provider(name)
 }
 
-// Register register a provider with the name
+// Register registers a provider with the name
 func Register(name Vendor, p Provider) {
-	gMgr.register(name, p)
+	err := gMgr.register(name, p)
+	if err != nil {
+		zap.L().Error("Error registering a provider")
+	}
 }
 
 // Initialize  init the provider(s) successfully, if not, crash it

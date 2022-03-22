@@ -15,10 +15,12 @@
 package api
 
 import (
+	"sort"
+
 	"github.com/pairmesh/pairmesh/constant"
 	"github.com/pairmesh/pairmesh/jsonapi"
 	"github.com/pairmesh/pairmesh/protocol"
-	"sort"
+	"go.uber.org/zap"
 )
 
 // Client is used to access with the remote gateway
@@ -40,7 +42,10 @@ func (c *Client) SetToken(key string) {
 
 // Logout logout the current  node
 func (c *Client) Logout() {
-	c.restful.Get(constant.URILogout, nil)
+	err := c.restful.Get(constant.URILogout, nil)
+	if err != nil {
+		zap.L().Error("Error sending logout message")
+	}
 }
 
 // Preflight request the prerequisite for bootup the current node

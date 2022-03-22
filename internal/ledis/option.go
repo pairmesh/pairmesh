@@ -25,18 +25,6 @@ type options struct {
 	db       int
 }
 
-func newOptions(opts ...Option) options {
-	opt := options{
-		timeout: time.Second * 3,
-	}
-
-	for _, o := range opts {
-		o(&opt)
-	}
-
-	return opt
-}
-
 // Timeout returns the option which changes the default dial timeout
 func Timeout(seconds uint32) Option {
 	return func(o *options) {

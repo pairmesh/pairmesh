@@ -1,6 +1,6 @@
 package systray
 
-import "C"
+import "C" //nolint
 import (
 	"fmt"
 	"runtime"

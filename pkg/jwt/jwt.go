@@ -70,12 +70,6 @@ func (s memoryStore) Get(ctx context.Context, key string) (interface{}, error) {
 	return nil, nil
 }
 
-type ledisStore struct{}
-
-func NewLedisStore() {
-
-}
-
 const refreshUUIDFormat = "%s.%d"
 
 type jwt struct {
@@ -169,7 +163,7 @@ func (s *jwt) RefreshToken(refreshToken string) (map[string]string, error) {
 		return nil, ErrUnauthorized
 	}
 	//is token valid?
-	if _, ok := token.Claims.(stdjwt.Claims); !ok && !token.Valid {
+	if _, ok := token.Claims.(stdjwt.Claims); !ok && !token.Valid { //nolint
 		zap.L().Error("the token is invalid", zap.String("refresh_token", refreshToken))
 		return nil, ErrUnauthorized
 	}

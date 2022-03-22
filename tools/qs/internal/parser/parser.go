@@ -71,7 +71,7 @@ func (p Structs) ParseFile(ctx context.Context, filePath string) (*Result, error
 	}
 
 	pkgs, err := packages.Load(&packages.Config{
-		Mode:    packages.LoadAllSyntax,
+		Mode:    packages.LoadAllSyntax, //nolint
 		Context: ctx,
 		Tests:   false,
 	}, inPkgName)
@@ -109,7 +109,7 @@ func (p Structs) buildParsedStructs(pkg *packages.Package, neededStructs structN
 		if parsedStruct != nil {
 			parsedStruct.TypeName = name
 			ret[name] = *parsedStruct
-		} else {
+		} else { //nolint
 			// TODO
 		}
 	}
