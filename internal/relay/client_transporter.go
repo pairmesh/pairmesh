@@ -159,12 +159,13 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 		IsPrimary: c.isPrimary,
 	}
 
+	c.chWrite <- Packet{
+		Type:    message.PacketType_Handshake,
+		Message: msg,
+	}
+
 	select {
 	case <-c.hsSignal:
-		c.chWrite <- Packet{
-			Type:    message.PacketType_Handshake,
-			Message: msg,
-		}
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
