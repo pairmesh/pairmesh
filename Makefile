@@ -23,16 +23,9 @@ FILES     := $$(find . -name "*.go")
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)
 
+include build/*.mk
+
 default: fmt pairmesh pairportal pairrelay
-
-fmt:
-	@echo "gofmt (simplify)"
-	@gofmt -s -l -w $(FILES) 2>&1
-
-proto:
-	@cd message/protos; \
-    protoc --go_out=. *.proto; \
-    protoc --go-grpc_out=. *.proto
 
 pairmesh:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairmesh ./cmd/pairmesh
@@ -43,32 +36,7 @@ pairportal:
 pairrelay:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairrelay ./cmd/pairrelay
 
-queryset:
-	go run ./tools/qs/main.go -in ./portal/db/models/models.go -out ./portal/db/models/autogen_query.go
-
-cloc:
-	cloc . --exclude-dir=node_modules,vendor
-
-# Check
-# Lint tools
 check: vet fmt check-static # TODO: enable lint
-
-lint: tools/bin/revive
-	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(FILES)
-
-vet:
-	$(GO) vet ./...
-
-check-static: tools/bin/golangci-lint
-	tools/bin/golangci-lint run --timeout 5m ./...
-
-tools/bin/revive: tools/check/go.mod
-	cd tools/check; \
-	$(GO) build -o ../bin/revive github.com/mgechev/revive
-
-tools/bin/golangci-lint: tools/check/go.mod
-	cd tools/check; \
-	$(GO) build -o ../bin/golangci-lint github.com/golangci/golangci-lint/cmd/golangci-lint
 
 clean:
 	rm -rf ./bin
