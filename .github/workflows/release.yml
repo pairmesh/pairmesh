@@ -15,7 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -34,7 +36,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -53,7 +57,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -66,6 +72,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: distributions
+          retention-days: 1
           path: |
             dist
   release:
@@ -83,6 +90,7 @@ jobs:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
+          prerelease: true
+          automatic_release_tag: "latest"
           files: |
             distributions/*
