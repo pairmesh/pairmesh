@@ -1,0 +1,78 @@
+name: Build
+on:
+  push:
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - master
+
+# OS and Arch reference: https://gist.github.com/asukakenji/f15ba7e588ac42795f421b48b8aede63
+
+jobs:
+  build-linux:
+    name: Build on Unix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.2'
+      - name: Build and Package
+        run: |
+          # Support more CPU architectures
+          mkdir dist
+          make pairmesh
+          tar -czf "dist/pairmesh_$(git describe --tags --abbrev=0)_linux_amd64.tar.gz" -C bin pairmesh
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: distributions
+          path: |
+            dist
+
+  build-macos:
+    name: Build on Unix
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.2'
+      - name: Build and Package
+        run: |
+          mkdir dist
+          make pairmesh
+          tar -czf "dist/pairmesh_$(git describe --tags --abbrev=0)_macos_amd64.tar.gz" -C bin pairmesh
+          GOARCH=arm64 make pairmesh
+          tar -czf "dist/pairmesh_$(git describe --tags --abbrev=0)_macos_arm64.tar.gz" -C bin pairmesh
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: distributions
+          path: |
+            dist
+
+  build-windows:
+    name: Build on Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.2'
+      - name: Build
+        run: |
+          go build -o bin/PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: distributions
+          path: |
+            dist
