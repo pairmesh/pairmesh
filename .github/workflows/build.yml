@@ -14,10 +14,7 @@ on:
 jobs:
   build-unix:
     name: Build on Unix
-    runs-on: ${{ matrix.operating-system }}
-    strategy:
-      matrix:
-        operating-system: [ubuntu-latest, macos-latest]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,7 +24,34 @@ jobs:
           go-version: '1.17.2'
       - name: Build
         run: |
-          GOARCH=arm64 make
+          # PairMesh
+          for arch in  "arm" "arm64" "386" "amd64"
+          do
+            echo "Building $arch for Linux"
+            GOARCH=$arch make pairmesh
+          done
+          
+          # PairPortal/PairRelay
+          make pairportal
+          make pairrelay
+
+  build-macos:
+    name: Build on Unix
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.17.2'
+      - name: Build
+        run: |
+          for arch in "arm64" "amd64"
+          do
+            echo "Building $arch for MacOS"
+            GOARCH=$arch make pairmesh
+          done
 
   build-windows:
     name: Build on Windows
