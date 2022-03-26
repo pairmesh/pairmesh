@@ -177,6 +177,11 @@ const infoPlistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 		<key>CFBundleIconFile</key>
 		<string>{{ .IconFile }}</string>
 		{{- end }}
+		<key>SMPrivilegedExecutables</key>
+		 <dict>
+			 <key>com.smjobblesssample.installer</key>
+			 <string>identifier "com.smjobblesssample.installer" and anchor apple generic and certificate leaf[subject.CN] = "Apple Development: 972008514@qq.com (DK8DU26S32)" and certificate 1[field.1.2.840.113635.100.6.2.1] /* exists */</string>
+		 </dict>
 	</dict>
 </plist>
 `
