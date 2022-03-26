@@ -71,9 +71,15 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs:
+      - build-windows
+      - build-linux
+      - build-macos
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
+      - name: Check artifacts
+        run: tree
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
