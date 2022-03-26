@@ -60,8 +60,9 @@ jobs:
           go-version: '1.17.2'
       - name: Build
         run: |
-          go build -o dist/PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
+          go build -o PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
           tar -czf dist/"pairmesh_$(git describe --tags --abbrev=0)_windows_amd64.tar.gz" -C dist pairmesh
+          Compress-Archive -Path .\PairMesh.exe dist/"pairmesh_$(git describe --tags --abbrev=0)_windows_amd64.tar.gz"
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3
         with:
