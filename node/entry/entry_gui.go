@@ -29,8 +29,6 @@ import (
 	"runtime"
 	"time"
 
-	"go.uber.org/atomic"
-
 	"github.com/emersion/go-autostart"
 	"github.com/pairmesh/pairmesh/i18n"
 	"github.com/pairmesh/pairmesh/node/api"
@@ -40,6 +38,7 @@ import (
 	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/version"
 	"github.com/skratchdot/open-golang/open"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 
