@@ -102,7 +102,7 @@ P2P traffic are encrypted by %[1]s. Every tunnel has different secret key.
 			}
 
 			// Normalize the gateway scheme
-			gateway := constant.DefaultAPIGateway
+			gateway := config.APIGateway()
 			if apiEndpoint != "" {
 				gateway = apiEndpoint
 			}
@@ -156,7 +156,7 @@ P2P traffic are encrypted by %[1]s. Every tunnel has different secret key.
 	}
 
 	rootCmd.Flags().StringVarP(&authKey, "key", "k", "", "The pre-authentication key of the node")
-	rootCmd.Flags().StringVarP(&apiEndpoint, "api-endpoint", "a", "", "Specify the path of configuration file")
+	rootCmd.Flags().StringVarP(&apiEndpoint, "api-endpoint", "a", "", "Specify the path of api endpoint")
 
 	cmdutil.Run(rootCmd)
 }
