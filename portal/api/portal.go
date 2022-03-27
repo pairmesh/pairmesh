@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/pairmesh/pairmesh/internal/ledis"
@@ -97,9 +98,18 @@ func serveHTTP(cfg *config.Config) (*http.Server, error) {
 		cfg.PrivateKey = path
 	}
 
+	redirect := cfg.SSO.Redirect
+	// Trim sso redirect so that tailing "/" will be removed
+	for len(redirect) > 0 {
+		if strings.HasSuffix(redirect, "/") {
+			redirect = redirect[:len(redirect)-1]
+		} else {
+			break
+		}
+	}
 	var (
 		server    = newServer(cfg.Relay.AuthKey, key)
-		ssoServer = newSSOServer(cfg.SSO.Redirect)
+		ssoServer = newSSOServer(redirect)
 
 		mux     = route(server, ssoServer)
 		address = fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
