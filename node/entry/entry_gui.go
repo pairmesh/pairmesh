@@ -22,11 +22,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"go.uber.org/atomic"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/emersion/go-autostart"
@@ -38,6 +38,7 @@ import (
 	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/version"
 	"github.com/skratchdot/open-golang/open"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 
@@ -195,6 +196,24 @@ func (app *osApp) refreshTray() {
 
 		cachedSummary = summary
 		app.render(summary)
+
+		// Workaround for MacOS calculate menu item tabstop location
+		// see: ./systray/system_darwin.m:246
+		if runtime.GOOS == "darwin" {
+			needReRender := false
+			for i := range summary.Mesh.MyDevices {
+				if i == 0 {
+					continue
+				}
+				if len(summary.Mesh.MyDevices[i].Name) > len(summary.Mesh.MyDevices[i-1].Name) {
+					needReRender = true
+					break
+				}
+			}
+			if needReRender {
+				app.render(summary)
+			}
+		}
 	}
 
 	for {

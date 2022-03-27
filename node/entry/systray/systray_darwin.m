@@ -13,101 +13,6 @@
 
 #endif
 
-@interface MenuLabelView : NSView
-@property(nonatomic, strong) NSString *title;
-@property(nonatomic, strong) NSString *desc;
-@property(nonatomic, strong) NSView *container;
-@property(nonatomic, strong) NSTextField *titleLabel;
-@property(nonatomic, strong) NSTextField *descLabel;
-@property(nonatomic, strong) NSColor *normalColor;
-@property(nonatomic, strong) NSColor *highLightColor;
-@property(nonatomic, assign) id target;
-@property(nonatomic, assign) SEL selector;
-@property(nonatomic, strong) NSNumber *representedObject;
-@end
-
-@implementation MenuLabelView
-- (id)initWithFrame:(NSRect)frame {
-  self = [super initWithFrame:frame];
-  if (self) {
-    CGFloat paddingX = 5; // Container padding horizontally
-    CGFloat paddingY = 0; // Container padding vertically
-    CGFloat width = NSRectToCGRect(frame).size.width - paddingX * 2.0;
-    CGFloat height = NSRectToCGRect(frame).size.height - paddingY * 2.0;
-    self.container = [[NSView alloc]
-        initWithFrame:NSRectFromCGRect(
-                          CGRectMake(paddingX, paddingY, width, height))];
-    [self addSubview:self.container];
-
-    paddingX = 17; // Label padding horizontally
-    paddingY = 2;  // Label padding vertically
-    self.titleLabel = [[NSTextField alloc]
-        initWithFrame:NSRectFromCGRect(CGRectMake(paddingX, paddingY,
-                                                  width / 2.0,
-                                                  height - paddingY * 2.0))];
-    self.titleLabel.editable = NO;
-    self.titleLabel.bordered = NO;
-    self.titleLabel.drawsBackground = NO;
-    self.titleLabel.font = [NSFont systemFontOfSize:13];
-    self.titleLabel.backgroundColor = [NSColor clearColor];
-    [self.container addSubview:self.titleLabel];
-
-    self.descLabel = [[NSTextField alloc]
-        initWithFrame:NSRectFromCGRect(CGRectMake(width / 2.0, paddingY,
-                                                  width / 2.0 - paddingX,
-                                                  height - paddingY * 2.0))];
-    self.descLabel.editable = NO;
-    self.descLabel.bordered = NO;
-    self.descLabel.drawsBackground = NO;
-    self.descLabel.font = [NSFont systemFontOfSize:13];
-    self.descLabel.backgroundColor = [NSColor clearColor];
-    self.descLabel.alignment = NSTextAlignmentRight;
-    [self.container addSubview:self.descLabel];
-
-    self.normalColor = self.titleLabel.textColor;
-    self.highLightColor = [NSColor whiteColor];
-  }
-  return self;
-}
-
-- (void)setTitle:(NSString *)title {
-  _title = title;
-  self.titleLabel.stringValue = title;
-}
-
-- (void)setDesc:(NSString *)desc {
-  _desc = desc;
-  self.descLabel.stringValue = desc;
-}
-
-- (void)drawRect:(NSRect)rect {
-  BOOL isHighlighted = [[self enclosingMenuItem] isHighlighted];
-  if (isHighlighted) {
-    self.container.layer.cornerRadius = 4;
-    self.container.layer.masksToBounds = YES;
-    self.container.layer.backgroundColor =
-        [[[NSColor selectedContentBackgroundColor]
-            colorWithAlphaComponent:0.78f] CGColor];
-    [self.titleLabel setTextColor:self.highLightColor];
-    [self.descLabel setTextColor:self.highLightColor];
-  } else {
-    [super drawRect:rect];
-    self.container.layer.cornerRadius = 0;
-    self.container.layer.masksToBounds = YES;
-    self.container.layer.backgroundColor = [[NSColor clearColor] CGColor];
-    [self.titleLabel setTextColor:self.normalColor];
-    [self.descLabel setTextColor:self.normalColor];
-  }
-}
-
-- (void)mouseDown:(NSEvent *)event {
-  [self.target performSelectorOnMainThread:self.selector
-                                withObject:self
-                             waitUntilDone:YES];
-}
-
-@end
-
 @interface MenuItem : NSObject {
 @public
   NSNumber *menuId;
@@ -213,7 +118,6 @@
   }
 
   NSMenuItem *menuItem;
-  MenuLabelView *labelView;
   menuItem = find_menu_item(theMenu, item->menuId);
   if (menuItem == NULL) {
     SEL selector = @selector(menuHandler:);
@@ -231,22 +135,35 @@
                              keyEquivalent:@""];
     }
 
-    if ([item->title containsString:@"\t"]) {
-      MenuLabelView *labelView = [[MenuLabelView alloc]
-          initWithFrame:NSRectFromCGRect(CGRectMake(0, 0, 300, 22))];
-      labelView.representedObject = item->menuId;
-      labelView.target = self;
-      labelView.selector = selector;
-      [menuItem setView:labelView];
-    }
-
     [menuItem setRepresentedObject:item->menuId];
   }
   if ([item->title containsString:@"\t"]) {
-    NSArray *listItems = [item->title componentsSeparatedByString:@"\t"];
-    labelView = (MenuLabelView *)menuItem.view;
-    [labelView setTitle:listItems[0]];
-    [labelView setDesc:listItems[1]];
+    // Find longest menu title
+    NSArray *items = theMenu.itemArray;
+    NSFont *font = [NSFont menuBarFontOfSize: 0.00f];
+    NSDictionary<NSAttributedStringKey, id> *attrs = @{NSFontAttributeName: font};
+    CGFloat maxWidth = [item->title sizeWithAttributes: attrs].width;
+    int i = 0;
+    for (i = 0; i < [items count]; i++) {
+        NSMenuItem *siblingItem = [items objectAtIndex:i];
+        CGFloat itemWidth = [siblingItem.title sizeWithAttributes: attrs].width;
+        if (item->disabled == 0 && itemWidth > maxWidth) {
+          maxWidth = itemWidth;
+        }
+    }
+
+    NSMutableParagraphStyle *paragraph = [NSMutableParagraphStyle alloc];
+    NSTextTab *tab =
+        [[NSTextTab alloc] initWithTextAlignment:NSTextAlignmentRight
+                                        location:30.0f + maxWidth
+                                         options:@{}];
+    [paragraph setTabStops:@[ tab ]];
+    NSMutableAttributedString *attributed = [[NSMutableAttributedString alloc]
+        initWithString:item->title
+            attributes:@{
+              NSParagraphStyleAttributeName : paragraph,
+            }];
+    [menuItem setAttributedTitle:attributed];
   } else {
     [menuItem setTitle:item->title];
   }
