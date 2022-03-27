@@ -40,11 +40,16 @@ import (
 // Run startups the linux version of PairMesh
 func Run() {
 	var (
-		authKey  string
-		examples = cmdutil.Examples{
+		authKey     string
+		apiEndpoint string
+		examples    = cmdutil.Examples{
 			{
 				Example: "pairmesh -k <AUTH_KEY>",
 				Comment: "Start PairMesh with the specified auth key",
+			},
+			{
+				Example: "pairmesh -a <API_ENDPOINT> -k <AUTH_KEY>",
+				Comment: "Start PairMesh with customized api endpoint and specified auth key",
 			},
 			{
 				Example: "pairmesh --version",
@@ -97,7 +102,10 @@ P2P traffic are encrypted by %[1]s. Every tunnel has different secret key.
 			}
 
 			// Normalize the gateway scheme
-			gateway := config.APIGateway()
+			gateway := constant.DefaultAPIGateway
+			if apiEndpoint != "" {
+				gateway = apiEndpoint
+			}
 			u, err := url.Parse(gateway)
 			if err != nil {
 				return err
@@ -148,6 +156,7 @@ P2P traffic are encrypted by %[1]s. Every tunnel has different secret key.
 	}
 
 	rootCmd.Flags().StringVarP(&authKey, "key", "k", "", "The pre-authentication key of the node")
+	rootCmd.Flags().StringVarP(&apiEndpoint, "api-endpoint", "a", "", "Specify the path of configuration file")
 
 	cmdutil.Run(rootCmd)
 }
