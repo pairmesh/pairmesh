@@ -98,15 +98,9 @@ func serveHTTP(cfg *config.Config) (*http.Server, error) {
 		cfg.PrivateKey = path
 	}
 
-	redirect := cfg.SSO.Redirect
 	// Trim sso redirect so that tailing "/" will be removed
-	for len(redirect) > 0 {
-		if strings.HasSuffix(redirect, "/") {
-			redirect = redirect[:len(redirect)-1]
-		} else {
-			break
-		}
-	}
+	redirect := strings.TrimRight(cfg.SSO.Redirect, "/")
+
 	var (
 		server    = newServer(cfg.Relay.AuthKey, key)
 		ssoServer = newSSOServer(redirect)
