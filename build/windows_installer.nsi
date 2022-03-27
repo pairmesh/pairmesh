@@ -31,9 +31,6 @@ Unicode true
 !define MUI_FINISHPAGE_RUN_FUNCTION "RunIt"
 !define MUI_FINISHPAGE_LINK $(LNG_PreWin10MustRead)
 !define MUI_FINISHPAGE_LINK_LOCATION ${PRE_WIN10_MUST_READ_URL}
-!define MUI_FINISHPAGE_SHOWREADME
-!define MUI_FINISHPAGE_SHOWREADME_Function "AutoBoot"
-!define MUI_FINISHPAGE_SHOWREADME_TEXT "Auto Start on System Boot"
 
 ; Language Selection Dialog Settings
 !define MUI_LANGDLL_REGISTRY_ROOT "${PRODUCT_UNINST_ROOT_KEY}"
@@ -192,10 +189,6 @@ Function "OnPageWelcomeLeave"
 FunctionEnd
 
 Function "OnPageDirectoryLeave"
-FunctionEnd
-
-Function AutoBoot
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "PairMesh" '"$INSTDIR\PairMesh.exe"'
 FunctionEnd
 
 Function RunIt
