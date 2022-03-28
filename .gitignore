@@ -4,7 +4,10 @@
 *.dll
 *.so
 *.dylib
+#MacOS DS Store file
 .DS_Store
+*.DS_Store
+*/.DS_Store 
 bin
 
 # IDE directories
