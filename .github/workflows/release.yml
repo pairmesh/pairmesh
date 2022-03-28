@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install ARM64 gcc
-        run: sudo apt install gcc-aarch64-linux-gnu
+        run: sudo apt install -y --fix-missing gcc-aarch64-linux-gnu
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
