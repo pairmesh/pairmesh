@@ -64,7 +64,6 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
   self->statusItem = [[NSStatusBar systemStatusBar]
       statusItemWithLength:NSVariableStatusItemLength];
-  //NSStatusBar.system.statusItem( withLength: NSStatusItem.variableLength )
   self->menu = [[NSMenu alloc] init];
   [self->menu setAutoenablesItems:FALSE];
   [self->statusItem setMenu:self->menu];
