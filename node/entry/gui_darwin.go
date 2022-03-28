@@ -60,7 +60,7 @@ func newOSApp() *osApp {
 }
 
 func (app *osApp) createTray() {
-	systray.SetIcon(resources.Logo)
+	systray.SetTemplateIcon(resources.Logo,nil)
 
 	// Guest status
 	app.login = app.addMenuItemWithAction(i18n.L("tray.login"), app.onOpenLoginWeb)

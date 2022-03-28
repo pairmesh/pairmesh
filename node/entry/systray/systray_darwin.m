@@ -263,9 +263,8 @@ void runInMainThread(SEL method, id object) {
 void set_icon(const char *iconBytes, int length, bool template) {
   NSData *buffer = [NSData dataWithBytes:iconBytes length:length];
   NSImage *image = [[NSImage alloc] initWithData:buffer];
-  // [image setSize:NSMakeSize(19, 19)];
-  //image.template = template;
-  image.template = true;
+  [image setSize:NSMakeSize(19, 19)];
+  image.template = template;
   runInMainThread(@selector(setIcon:), (id)image);
 }
 
