@@ -23,8 +23,6 @@ FILES     := $$(find . -name "*.go")
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)
 
-include build/*.mk
-
 default: fmt pairmesh pairportal pairrelay
 
 pairmesh:
@@ -42,3 +40,5 @@ clean:
 	rm -rf ./bin
 
 .PHONY: build package
+
+include build/*.mk
