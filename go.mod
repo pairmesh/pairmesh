@@ -67,6 +67,3 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
 )
-replace (
-	github.com/pairmesh/pairmesh/node/resources => ../github.com/pairmesh/pairmesh/node/resources
-)
