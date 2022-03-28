@@ -64,6 +64,7 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
   self->statusItem = [[NSStatusBar systemStatusBar]
       statusItemWithLength:NSVariableStatusItemLength];
+  //NSStatusBar.system.statusItem( withLength: NSStatusItem.variableLength )
   self->menu = [[NSMenu alloc] init];
   [self->menu setAutoenablesItems:FALSE];
   [self->statusItem setMenu:self->menu];
@@ -262,8 +263,9 @@ void runInMainThread(SEL method, id object) {
 void set_icon(const char *iconBytes, int length, bool template) {
   NSData *buffer = [NSData dataWithBytes:iconBytes length:length];
   NSImage *image = [[NSImage alloc] initWithData:buffer];
-  [image setSize:NSMakeSize(19, 19)];
-  image.template = template;
+  // [image setSize:NSMakeSize(19, 19)];
+  //image.template = template;
+  image.template = true;
   runInMainThread(@selector(setIcon:), (id)image);
 }
 

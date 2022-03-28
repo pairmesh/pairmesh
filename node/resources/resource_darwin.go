@@ -17,5 +17,5 @@ import (
 	_ "embed"
 )
 
-//go:embed logo.png
+//go:embed logo.pdf
 var Logo []byte
