@@ -90,7 +90,7 @@ func NewTUN() (Device, error) {
 	// the errors are ignored for now. Deep dive needed.
 	//
 	// tracking issue: https://github.com/pairmesh/pairmesh/issues/65
-	wintun.Uninstall()
+	_ = wintun.Uninstall()
 
 	wt, err := wintun.CreateAdapter(WintunTunnelName, WintunTunnelType, WintunStaticRequestedGUID)
 	if err != nil {
