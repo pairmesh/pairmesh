@@ -1,4 +1,6 @@
-![](docs/images/logo.svg)
+![](docs/images/logo.svg#gh-light-mode-only)
+![](docs/images/logo_dark.svg#gh-dark-mode-only)
+
 
 [![LICENSE](https://img.shields.io/github/license/pairmesh/pairmesh.svg)](https://github.com/pairmesh/pairmesh/blob/master/LICENSE)
 [![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
