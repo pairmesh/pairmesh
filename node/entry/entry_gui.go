@@ -112,13 +112,30 @@ func Run() {
 		messagebox.Fatal("Exchange auth key failed", err.Error())
 	}
 
+	// Start the daemon HTTP server
+	go func() {
+		http.Handle("/local/auth/callback", http.HandlerFunc(app.onLoginCallback))
+		err := http.Serve(listener, nil)
+		if err != nil {
+			messagebox.Fatal("Serve listener failed", err.Error())
+		}
+	}()
+
+	zap.L().Info("Startup node successfully")
+
+	if err := app.Run(); err != nil {
+		messagebox.Fatal("Run application failed", err.Error())
+	}
+}
+
+func (app *osApp) Run() error {
 	dev, err := device.NewDevice()
 	if err != nil {
-		messagebox.Fatal("Preflight device failed", err.Error())
+		return fmt.Errorf("preflight device failed. error message: %s", err.Error())
 	}
 	app.dev = dev
 
-	d := driver.New(cfg, dev, app.api)
+	d := driver.New(app.cfg, dev, app.api)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -139,23 +156,6 @@ func Run() {
 	app.cancel = cancel
 	app.driver = d
 
-	// Start the daemon HTTP server
-	go func() {
-		http.Handle("/local/auth/callback", http.HandlerFunc(app.onLoginCallback))
-		err := http.Serve(listener, nil)
-		if err != nil {
-			messagebox.Fatal("Serve listener failed", err.Error())
-		}
-	}()
-
-	zap.L().Info("Startup node successfully")
-
-	if err := app.Run(); err != nil {
-		messagebox.Fatal("Run application failed", err.Error())
-	}
-}
-
-func (app *osApp) Run() error {
 	zap.L().Info("Driver initialized successfully")
 
 	app.auto = &autostart.App{

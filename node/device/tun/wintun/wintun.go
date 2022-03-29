@@ -22,10 +22,11 @@
 package wintun
 
 import (
-	"go.uber.org/zap"
 	"runtime"
 	"syscall"
 	"unsafe"
+
+	"go.uber.org/zap"
 
 	"golang.org/x/sys/windows"
 )
@@ -138,10 +139,12 @@ func (wintun *Adapter) Close() (err error) {
 
 // Uninstall removes the driver from the system if no drivers are currently in use.
 func Uninstall() (err error) {
-	r1, _, e1 := syscall.Syscall(procWintunDeleteDriver.Addr(), 0, 0, 0, 0)
-	if r1 == 0 {
-		err = e1
-	}
+	// TODO: this syscall fails in some machines. So there are indeed errors returned
+	// sometimes in these cases. However in order not to block following steps,
+	// the errors are ignored for now. Deep dive needed.
+	//
+	// tracking issue: https://github.com/pairmesh/pairmesh/issues/65
+	syscall.Syscall(procWintunDeleteDriver.Addr(), 0, 0, 0, 0)
 	return
 }
 
