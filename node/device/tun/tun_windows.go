@@ -85,9 +85,12 @@ func nanotime() int64
 // interface with the same name exist, it is reused.
 func NewTUN() (Device, error) {
 	// Remove the previous adapter
-	if err := wintun.Uninstall(); err != nil {
-		return nil, err
-	}
+	// TODO: Uninstall() fails in some machines. So there are indeed errors returned
+	// sometimes in these cases. However in order not to block following steps,
+	// the errors are ignored for now. Deep dive needed.
+	//
+	// tracking issue: https://github.com/pairmesh/pairmesh/issues/65
+	_ = wintun.Uninstall()
 
 	wt, err := wintun.CreateAdapter(WintunTunnelName, WintunTunnelType, WintunStaticRequestedGUID)
 	if err != nil {
