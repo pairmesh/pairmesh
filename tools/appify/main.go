@@ -173,6 +173,8 @@ const infoPlistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 		<string>{{ .InfoString }}</string>
 		<key>CFBundleShortVersionString</key>
 		<string>{{ .ShortVersionString }}</string>
+		<key>LSUIElement</key>
+		<true/>
 		{{ if .IconFile -}}
 		<key>CFBundleIconFile</key>
 		<string>{{ .IconFile }}</string>
