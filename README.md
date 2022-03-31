@@ -1,4 +1,6 @@
-![](docs/images/logo.svg)
+![](docs/images/logo.svg#gh-light-mode-only)
+![](docs/images/logo_dark.svg#gh-dark-mode-only)
+
 
 [![LICENSE](https://img.shields.io/github/license/pairmesh/pairmesh.svg)](https://github.com/pairmesh/pairmesh/blob/master/LICENSE)
 [![Language](https://img.shields.io/badge/Language-Go-blue.svg)](https://golang.org/)
@@ -44,6 +46,12 @@ By setting up a security P2P virtual private LAN network among multiple devices 
 - Use **[PairMesh](https://www.pairmesh.com)** managed control plane service (Chinese Only).
 - Self-hosted PairMesh control plane.
 
+## Architecture
+
+The following diagram shows the overall architecture of PairMesh, where the PairMesh node is an application installed on the end device, responsible for managing the local virtual NIC device and discovering information about other nodes from the Control Plane service, as well as establishing P2P communication connections with other nodes, encrypting and decrypting data and processing traffic data in the network.
+
+![Architecture](./docs/images/architecture.svg)
+
 ## Community
 
 You can join these discussion forum and chats to discuss and ask PairMesh related questions:
@@ -68,12 +76,6 @@ Here are guidelines for contributing to various aspect of the project:
 - [How to setup development environment](docs/guide/dev-guide.md)
 
 Any other question? Reach out to the [PairMesh Discussion](https://github.com/pairmesh/pairmesh/discussions) forum to get help!
-
-## Architecture
-
-The following diagram shows the overall architecture of PairMesh, where the PairMesh node is an application installed on the end device, responsible for managing the local virtual NIC device and discovering information about other nodes from the Control Plane service, as well as establishing P2P communication connections with other nodes, encrypting and decrypting data and processing traffic data in the network.
-
-![Architecture](./docs/images/architecture.svg)
 
 ## Development Guidelines
 

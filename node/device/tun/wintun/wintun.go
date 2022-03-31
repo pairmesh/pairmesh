@@ -22,10 +22,11 @@
 package wintun
 
 import (
-	"go.uber.org/zap"
 	"runtime"
 	"syscall"
 	"unsafe"
+
+	"go.uber.org/zap"
 
 	"golang.org/x/sys/windows"
 )

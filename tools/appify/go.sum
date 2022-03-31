@@ -1,0 +1,6 @@
+github.com/JackMordaunt/icns v1.0.0 h1:41cNyWyQrG6beMw7m93LFK5o1GhefflsBTkauUkUtG8=
+github.com/JackMordaunt/icns v1.0.0/go.mod h1:ubRqphS0f2OD07BuNaQSuw9uHUVQNBX5g38n6i2bdqM=
+github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 h1:zYyBkD/k9seD2A7fsi6Oo2LfFZAehjjQMERAvZLEDnQ=
+github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646/go.mod h1:jpp1/29i3P1S/RLdc7JQKbRpFeM1dOBd8T9ki5s+AY8=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
