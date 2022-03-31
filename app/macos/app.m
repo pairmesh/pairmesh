@@ -54,7 +54,7 @@ Boolean runProcessAsAdministrator(NSString *scriptPath, NSArray *arguments,
   }
 }
 
-void RunNativeApp(char *path) {
+void runNativeApp(char *path) {
   NSString *binpath = [[NSString alloc] initWithCString:path
                                                encoding:NSUTF8StringEncoding];
   free(path);
