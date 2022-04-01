@@ -34,7 +34,8 @@ By setting up a security P2P virtual private LAN network among multiple devices 
     - All nodes use different keys, and each node pair of the whole topology network uses a unique key to avoid key leakage affecting the security of the whole network.
 
 ## Quick Start
-
+- Prerequisites
+    - Golang >= v1.17.
 - How to build PairMesh
   ```shell
   # Linux/macOS Terminal
