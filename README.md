@@ -34,15 +34,17 @@ By setting up a security P2P virtual private LAN network among multiple devices 
     - All nodes use different keys, and each node pair of the whole topology network uses a unique key to avoid key leakage affecting the security of the whole network.
 
 ## Quick Start
-
+- Prerequisites
+    - Golang >= v1.17.
 - How to build PairMesh
-  ```shell
-  # Linux/macOS Terminal
-  make pairmesh
-  
-  # Windows PowerShell
-  go build -o bin/PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
-  ```
+    - Linux/MacOS Terminal
+      ```shell
+      make pairmesh
+      ```
+    - Windows Powershell
+      ```
+      go build -o bin/PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
+      ```
 - Use **[PairMesh](https://www.pairmesh.com)** managed control plane service (Chinese Only).
 - Self-hosted PairMesh control plane.
 
@@ -57,6 +59,7 @@ The following diagram shows the overall architecture of PairMesh, where the Pair
 You can join these discussion forum and chats to discuss and ask PairMesh related questions:
 
 - [PairMesh Discussion](https://github.com/pairmesh/pairmesh/discussions)
+- [Slack channel](https://pairmesh.slack.com)
 
 ## Contributing
 
