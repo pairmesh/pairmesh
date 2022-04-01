@@ -41,6 +41,7 @@ type osApp struct {
 	start      *walk.Action
 	logout     *walk.Action
 	about      *walk.Action
+	language   *walk.Action
 	exit       *walk.Action
 
 	// Separators which are showed only when login status
@@ -93,6 +94,11 @@ func (app *osApp) createTray() error {
 		return err
 	}
 
+	// Set locale name
+	if app.cfg.LocaleName != "" {
+		i18n.SetLocale(app.cfg.LocaleName)
+	}
+
 	// Guest status
 	app.login = app.addActionWithAction(nil, i18n.L("tray.login"), app.onOpenLoginWeb)
 
@@ -117,11 +123,11 @@ func (app *osApp) createTray() error {
 	// General menu item
 	app.start = app.addActionWithAction(nil, i18n.L("tray.autorun"), app.onAutoStart)
 	app.start.SetChecked(app.auto.IsEnabled())
-
 	app.logout = app.addActionWithAction(nil, i18n.L("tray.profile.logout"), app.onLogout)
-
 	app.about = app.addActionWithAction(nil, i18n.L("tray.about"), app.onOpenAbout)
+	app.addSeparator()
 
+	app.language = app.addMenuAction(nil, i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 	app.addSeparator()
 
 	app.exit = app.addActionWithAction(nil, i18n.L("tray.exit"), app.onQuit)
@@ -260,6 +266,7 @@ func (app *osApp) render(summary *driver.Summary) {
 		}
 	}
 
+	app.displayLanguageList()
 	app.start.SetChecked(app.auto.IsEnabled())
 }
 
@@ -283,6 +290,20 @@ func (app *osApp) replaceHandler(action *walk.Action, handler walk.EventHandler)
 	for i := 0; i < index; i++ {
 		action.Triggered().Detach(i)
 	}
+}
+
+func (app *osApp) addMenuAction(parent *walk.Menu, title string) *walk.Action {
+	submenu, _ := walk.NewMenu()
+	action := walk.NewMenuAction(submenu)
+	_ = action.SetVisible(true)
+	_ = action.SetText(title)
+	if parent != nil {
+		_ = parent.Actions().Add(action)
+		_ = action.SetVisible(true)
+	} else {
+		_ = app.tray.ContextMenu().Actions().Add(action)
+	}
+	return action
 }
 
 func (app *osApp) addAction(parent *walk.Menu, title string) *walk.Action {
@@ -342,4 +363,53 @@ func (app *osApp) copyAddressToClipboard(name, address string) func() {
 
 func (app *osApp) showMessage(title, content string) {
 	walk.MsgBox(app.mw, title, content, walk.MsgBoxApplModal)
+}
+
+func (app *osApp) displayLanguageList() {
+	locales := i18n.Locales()
+	lSubmenu := app.language.Menu()
+	lShowCount := lSubmenu.Actions().Len()
+	curName := i18n.GetCurrentLocaleName()
+	for i, name := range locales {
+		desc := i18n.GetLocaleDesc(name)
+		checked := (curName == name)
+		var language *walk.Action
+		if i < lShowCount {
+			language = lSubmenu.Actions().At(i)
+			language.SetText(desc)
+			app.replaceHandler(language, app.setLocale(name))
+		} else {
+			language = app.addAction(lSubmenu, desc)
+			language.Triggered().Attach(app.setLocale(name))
+		}
+		language.SetEnabled(!checked)
+		language.SetChecked(checked)
+	}
+}
+
+func (app *osApp) setLocale(name string) func() {
+	return func() {
+		err := i18n.SetLocale(name)
+		if err != nil {
+			zap.L().Error("SetLocale failed", zap.Error(err))
+		} else {
+			app.login.SetText(i18n.L("tray.login"))
+			app.device.SetText(i18n.L("tray.unknown"))
+			app.status.SetText(i18n.L("tray.unknown"))
+			app.enable.SetText(i18n.L("tray.enable"))
+			app.console.SetText(i18n.L("tray.profile.console"))
+			app.myDevices.SetText(i18n.L("tray.my_devices"))
+			app.myNetworks.SetText(i18n.L("tray.my_networks"))
+			app.start.SetText(i18n.L("tray.autorun"))
+			app.logout.SetText(i18n.L("tray.profile.logout"))
+			app.about.SetText(i18n.L("tray.about"))
+			app.language.SetText(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+			app.exit.SetText(i18n.L("tray.exit"))
+
+			summary := app.driver.Summarize()
+			app.render(summary)
+
+			app.cfg.SetLocaleName(name)
+		}
+	}
 }

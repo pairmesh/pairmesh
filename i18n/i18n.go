@@ -100,6 +100,18 @@ func Locales() []string {
 	return results
 }
 
+func GetLocaleDesc(name string) string {
+	l, found := localesData[name]
+	if !found {
+		return ""
+	}
+	return l.data["desc"]
+}
+
+func GetCurrentLocaleName() string {
+	return currentLocale.name
+}
+
 // SetLocale sets the current locale file.
 func SetLocale(name string) error {
 	l, found := localesData[name]

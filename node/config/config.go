@@ -40,12 +40,13 @@ var configFilePath string
 
 // Config represents the current node's configuration
 type Config struct {
-	Token     string      `json:"token"`
-	FastKey   string      `json:"fast_key"`
-	DHKey     noise.DHKey `json:"dh_key"`
-	Port      int         `json:"port"`
-	MachineID string      `json:"machine_id"`
-	OnceAlert bool        `json:"once_alert"`
+	Token      string      `json:"token"`
+	FastKey    string      `json:"fast_key"`
+	DHKey      noise.DHKey `json:"dh_key"`
+	Port       int         `json:"port"`
+	MachineID  string      `json:"machine_id"`
+	OnceAlert  bool        `json:"once_alert"`
+	LocaleName string      `json:"locale_name"`
 }
 
 // SetConfigDir overrides the default configuration file path.
@@ -155,11 +156,12 @@ func (c *Config) Clone() *Config {
 	copy(key.Public, c.DHKey.Public)
 	copy(key.Private, c.DHKey.Private)
 	return &Config{
-		Token:     c.Token,
-		DHKey:     key,
-		Port:      c.Port,
-		MachineID: c.MachineID,
-		OnceAlert: c.OnceAlert,
+		Token:      c.Token,
+		DHKey:      key,
+		Port:       c.Port,
+		MachineID:  c.MachineID,
+		OnceAlert:  c.OnceAlert,
+		LocaleName: c.LocaleName,
 	}
 }
 
@@ -204,5 +206,10 @@ func (c *Config) IsBearer() bool {
 
 func (c *Config) SetJWTToken(tok string) error {
 	c.Token = constant.PrefixJwtToken + " " + tok
+	return c.Save()
+}
+
+func (c *Config) SetLocaleName(name string) error {
+	c.LocaleName = name
 	return c.Save()
 }

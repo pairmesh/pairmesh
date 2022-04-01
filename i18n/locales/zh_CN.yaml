@@ -20,7 +20,6 @@ tray:
     title_not_login: "请先登入PairMesh"
     title_disconnected: "连接已断开,请点击以重新连接"
     title_connecting: "连接中..."
-
   auth_expires_in:
     title_foramt: "认证将于%d小时后过期"
     tips: "认证过期提醒"
@@ -52,6 +51,7 @@ tray:
     file: "打开日志文件"
     update: "更新"
   about: "关于"
+  language: "语言\t%s"
   exit: "退出"
   toast:
     my_address:

@@ -42,6 +42,7 @@ type osApp struct {
 	start      *systray.MenuItem
 	logout     *systray.MenuItem
 	about      *systray.MenuItem
+	language   *systray.MenuItem
 	quit       *systray.MenuItem
 
 	// Separators which are showed only when login status
@@ -61,6 +62,11 @@ func newOSApp() *osApp {
 
 func (app *osApp) createTray() {
 	systray.SetTemplateIcon(resources.Logo)
+
+	// Set locale name
+	if app.cfg.LocaleName != "" {
+		i18n.SetLocale(app.cfg.LocaleName)
+	}
 
 	// Guest status
 	app.login = app.addMenuItemWithAction(i18n.L("tray.login"), app.onOpenLoginWeb)
@@ -89,7 +95,9 @@ func (app *osApp) createTray() {
 
 	app.logout = app.addMenuItemWithAction(i18n.L("tray.profile.logout"), app.onLogout)
 	app.about = app.addMenuItemWithAction(i18n.L("tray.about"), app.onOpenAbout)
+	app.addSeparator()
 
+	app.language = app.addMenuItem(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 	app.addSeparator()
 
 	app.quit = app.addMenuItemWithAction(i18n.L("tray.exit"), app.onQuit)
@@ -234,6 +242,7 @@ func (app *osApp) render(summary *driver.Summary) {
 		}
 	}
 
+	app.displayLanguageList()
 	app.start.SetDisabled(!app.auto.IsEnabled())
 }
 
@@ -306,5 +315,54 @@ func (app *osApp) copyAddressToClipboard(name, address string) func() {
 		//		}
 		//	}
 		//})
+	}
+}
+
+func (app *osApp) displayLanguageList() {
+	locales := i18n.Locales()
+	children := app.language.Children()
+	lShowCount := len(children)
+	curName := i18n.GetCurrentLocaleName()
+	for i, name := range locales {
+		desc := i18n.GetLocaleDesc(name)
+		checked := (curName == name)
+		var language *systray.MenuItem
+		if i < lShowCount {
+			language = children[i]
+			language.SetTitle(desc)
+			language.SetHidden(false)
+		} else {
+			language = systray.NewMenuItem(desc)
+			systray.AddMenuItem(app.language, language)
+		}
+		language.SetDisabled(checked)
+		language.SetChecked(checked)
+		language.SetAction(app.setLocale(name))
+	}
+}
+
+func (app *osApp) setLocale(name string) func() {
+	return func() {
+		err := i18n.SetLocale(name)
+		if err != nil {
+			zap.L().Error("SetLocale failed", zap.Error(err))
+		} else {
+			app.login.SetTitle(i18n.L("tray.login"))
+			app.device.SetTitle(i18n.L("tray.unknown"))
+			app.status.SetTitle(i18n.L("tray.unknown"))
+			app.enable.SetTitle(i18n.L("tray.enable"))
+			app.console.SetTitle(i18n.L("tray.profile.console"))
+			app.myDevices.SetTitle(i18n.L("tray.my_devices"))
+			app.myNetworks.SetTitle(i18n.L("tray.my_networks"))
+			app.start.SetTitle(i18n.L("tray.autorun"))
+			app.logout.SetTitle(i18n.L("tray.profile.logout"))
+			app.about.SetTitle(i18n.L("tray.about"))
+			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+			app.quit.SetTitle(i18n.L("tray.exit"))
+			app.displayLanguageList()
+
+			summary := app.driver.Summarize()
+			app.render(summary)
+		}
 	}
 }
