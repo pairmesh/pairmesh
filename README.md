@@ -59,6 +59,7 @@ The following diagram shows the overall architecture of PairMesh, where the Pair
 You can join these discussion forum and chats to discuss and ask PairMesh related questions:
 
 - [PairMesh Discussion](https://github.com/pairmesh/pairmesh/discussions)
+- [Slack channel](https://pairmesh.slack.com)
 
 ## Contributing
 
