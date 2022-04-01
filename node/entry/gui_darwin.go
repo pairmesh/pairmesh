@@ -359,10 +359,11 @@ func (app *osApp) setLocale(name string) func() {
 			app.about.SetTitle(i18n.L("tray.about"))
 			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 			app.quit.SetTitle(i18n.L("tray.exit"))
-			app.displayLanguageList()
 
 			summary := app.driver.Summarize()
 			app.render(summary)
+
+			app.cfg.SetLocaleName(name)
 		}
 	}
 }
