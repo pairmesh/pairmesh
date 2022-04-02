@@ -53,13 +53,13 @@ type osApp struct {
 	myDevicesSep   *systray.MenuItem
 	myNetworksSep  *systray.MenuItem
 
-	actionLocaleNameMap map[*systray.MenuItem]string
+	itemLocaleNameMap map[*systray.MenuItem]string
 }
 
 func newOSApp() *osApp {
 	return &osApp{
-		baseApp:             baseApp{events: make(chan struct{}, 4)},
-		actionLocaleNameMap: make(map[*systray.MenuItem]string),
+		baseApp:           baseApp{events: make(chan struct{}, 4)},
+		itemLocaleNameMap: make(map[*systray.MenuItem]string),
 	}
 }
 
@@ -93,17 +93,17 @@ func (app *osApp) createTray() {
 	app.seps = append(app.seps, app.myDevicesSep, app.myNetworksSep)
 
 	// General menu item
-	app.start = app.addMenuItemWithActionWithTK("tray.autorun", pp.onAutoStart)
+	app.start = app.addMenuItemWithActionWithTK("tray.autorun", app.onAutoStart)
 	app.start.SetChecked(app.auto.IsEnabled())
 
 	app.logout = app.addMenuItemWithActionWithTK("tray.profile.logout", app.onLogout)
-	app.about = app.addMenuItemWithActionWithTK("tray.about", pp.onOpenAbout)
+	app.about = app.addMenuItemWithActionWithTK("tray.about", app.onOpenAbout)
 	app.addSeparator()
 
 	app.language = app.addMenuItem(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 	app.addSeparator()
 
-	app.quit = app.addMenuItemWithActionWithTK("tray.exit", pp.onQuit)
+	app.quit = app.addMenuItemWithActionWithTK("tray.exit", app.onQuit)
 
 	app.initialized.Store(true)
 	app.setMenuVisibility(app.cfg.IsGuest())
@@ -256,8 +256,8 @@ func (app *osApp) addSeparator() *systray.MenuItem {
 }
 
 func (app *osApp) addMenuItemWithActionWithTK(titleKey string, action func()) *systray.MenuItem {
-	act := app.addMenuItemWithAction(i18n.L(titleKey), action)
-	app.actionLocaleNameMap[action] = titleKey
+	item := app.addMenuItemWithAction(i18n.L(titleKey), action)
+	app.itemLocaleNameMap[item] = titleKey
 	return action
 }
 
@@ -269,9 +269,9 @@ func (app *osApp) addMenuItemWithAction(title string, action func()) *systray.Me
 }
 
 func (app *osApp) addMenuItemWithTK(titleKey string) *systray.MenuItem {
-	action := app.addMenuItem(i18n.L(titleKey))
-	app.actionLocaleNameMap[action] = titleKey
-	return action
+	item := app.addMenuItem(i18n.L(titleKey))
+	app.itemLocaleNameMap[item] = titleKey
+	return item
 }
 
 func (app *osApp) addMenuItem(title string) *systray.MenuItem {
@@ -362,7 +362,7 @@ func (app *osApp) setLocale(name string) func() {
 		if err != nil {
 			zap.L().Error("SetLocale failed", zap.Error(err))
 		} else {
-			for k, v := range app.actionLocaleNameMap {
+			for k, v := range app.itemLocaleNameMap {
 				k.SetText(i18n.L(v))
 			}
 			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
