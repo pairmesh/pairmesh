@@ -93,17 +93,17 @@ func (app *osApp) createTray() {
 	app.seps = append(app.seps, app.myDevicesSep, app.myNetworksSep)
 
 	// General menu item
-	app.start = app.addMenuItemWithActionWithTK("tray.autorun"), pp.onAutoStart)
+	app.start = app.addMenuItemWithActionWithTK("tray.autorun", pp.onAutoStart)
 	app.start.SetChecked(app.auto.IsEnabled())
 
 	app.logout = app.addMenuItemWithActionWithTK("tray.profile.logout", app.onLogout)
-	app.about = app.addMenuItemWithActionWithTK("tray.about"), pp.onOpenAbout)
+	app.about = app.addMenuItemWithActionWithTK("tray.about", pp.onOpenAbout)
 	app.addSeparator()
 
 	app.language = app.addMenuItem(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 	app.addSeparator()
 
-	app.quit = app.addMenuItemWithActionWithTK("tray.exit"), pp.onQuit)
+	app.quit = app.addMenuItemWithActionWithTK("tray.exit", pp.onQuit)
 
 	app.initialized.Store(true)
 	app.setMenuVisibility(app.cfg.IsGuest())
