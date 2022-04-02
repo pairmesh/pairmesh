@@ -72,7 +72,7 @@ func (app *osApp) createTray() {
 	}
 
 	// Guest status
-	app.login = app.addMenuItemWithActionWithTK("tray.login"), pp.onOpenLoginWeb)
+	app.login = app.addMenuItemWithActionWithTK("tray.login"), app.onOpenLoginWeb)
 
 	// Login status
 	app.device = app.addMenuItemWithTK("tray.unknown")
