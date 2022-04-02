@@ -30,6 +30,7 @@ type Results struct {
 	throughput uint64
 }
 
+// NewResults function returns the Results struct in initialized state
 func NewResults() Results {
 	return Results{
 		latencies:  make([]time.Duration, 0),
@@ -37,6 +38,8 @@ func NewResults() Results {
 	}
 }
 
+// Submit takes the result data points from input Results (res)
+// and bring them in the current Results (r)
 func (r *Results) Submit(res *Results) {
 	r.l.Lock()
 	defer r.l.Unlock()
@@ -45,6 +48,7 @@ func (r *Results) Submit(res *Results) {
 	r.throughput += res.throughput
 }
 
+// AddDataPoint adds one latency data to the current Results
 func (r *Results) AddDataPoint(lat time.Duration) {
 	r.l.Lock()
 	defer r.l.Unlock()
@@ -53,6 +57,7 @@ func (r *Results) AddDataPoint(lat time.Duration) {
 	r.throughput += 1
 }
 
+// Report processes internal data points, and generates verbose results report
 func (r *Results) Report(cfg *Config) {
 	r.l.Lock()
 	defer r.l.Unlock()

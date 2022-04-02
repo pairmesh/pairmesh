@@ -20,6 +20,7 @@ type Config struct {
 	isBounce bool
 }
 
+// NewConfig function returns a new server side Config with given parameters
 func NewConfig(port uint16, isBounce bool) Config {
 	return Config{
 		port:     port,
@@ -27,10 +28,13 @@ func NewConfig(port uint16, isBounce bool) Config {
 	}
 }
 
+// Port returns the port of the server
 func (c *Config) Port() uint16 {
 	return c.port
 }
 
+// IsBounce returns whether the server bounces back incoming data,
+// or just echoes OK as minimal payload message
 func (c *Config) IsBounce() bool {
 	return c.isBounce
 }
