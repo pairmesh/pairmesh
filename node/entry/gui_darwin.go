@@ -258,7 +258,7 @@ func (app *osApp) addSeparator() *systray.MenuItem {
 func (app *osApp) addMenuItemWithActionWithTK(titleKey string, action func()) *systray.MenuItem {
 	item := app.addMenuItemWithAction(i18n.L(titleKey), action)
 	app.itemLocaleNameMap[item] = titleKey
-	return action
+	return item
 }
 
 func (app *osApp) addMenuItemWithAction(title string, action func()) *systray.MenuItem {
