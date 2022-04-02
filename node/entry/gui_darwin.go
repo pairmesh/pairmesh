@@ -363,7 +363,7 @@ func (app *osApp) setLocale(name string) func() {
 			zap.L().Error("SetLocale failed", zap.Error(err))
 		} else {
 			for k, v := range app.itemLocaleNameMap {
-				k.SetText(i18n.L(v))
+				k.SetTitle(i18n.L(v))
 			}
 			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 
