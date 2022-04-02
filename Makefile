@@ -23,10 +23,10 @@ FILES     := $$(find . -name "*.go")
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)
 
-default: fmt pairbenchmark pairmesh pairportal pairrelay
+default: fmt pairbench pairmesh pairportal pairrelay
 
-pairbenchmark:
-	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairbenchmark ./cmd/pairbenchmark
+pairbench:
+	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairbench ./cmd/pairbench
 
 pairmesh:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairmesh ./cmd/pairmesh

@@ -1,4 +1,4 @@
-// Copyright 2021 PairMesh, Inc.
+// Copyright 2022 PairMesh, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,11 +26,11 @@ import (
 
 const bufferSize = 512
 
-// Start function starts a simple echo server as server side of pairbenchmark
+// Start function starts a simple echo server as server side of pairbench
 // If cfg.isBounce is true, it echoes whatever it hears from incoming connection
 // Otherwise, it always echoes "OK" as minimal backward payload
 func Start(cfg *Config) error {
-	zap.L().Info("Starting pairbenchmark server")
+	zap.L().Info("Starting pairbench server")
 	addr := fmt.Sprintf("%s:%d", "0.0.0.0", cfg.Port())
 	s, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -38,7 +38,7 @@ func Start(cfg *Config) error {
 		return err
 	}
 
-	zap.L().Info(fmt.Sprintf("Started pairbenchmark server on port %d", cfg.Port()))
+	zap.L().Info(fmt.Sprintf("Started pairbench server on port %d", cfg.Port()))
 
 	defer s.Close()
 

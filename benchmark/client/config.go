@@ -1,4 +1,4 @@
-// Copyright 2021 PairMesh, Inc.
+// Copyright 2022 PairMesh, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 package client
 
-// Config is the config struct for client side pairbenchmark
+// Config is the config struct for client side pairbench
 type Config struct {
 	endpoint string
 	port     uint16

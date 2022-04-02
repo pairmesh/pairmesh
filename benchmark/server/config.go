@@ -1,4 +1,4 @@
-// Copyright 2021 PairMesh, Inc.
+// Copyright 2022 PairMesh, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 package server
 
-// Config is the config struct for server side pairbenchmark
+// Config is the config struct for server side pairbench
 type Config struct {
 	port     uint16
 	isBounce bool

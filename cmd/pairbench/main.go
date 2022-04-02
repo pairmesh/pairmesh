@@ -1,4 +1,4 @@
-// Copyright 2021 PairMesh, Inc.
+// Copyright 2022 PairMesh, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,19 +38,19 @@ func main() {
 		duration    uint16
 		examples    = cmdutil.Examples{
 			{
-				Example: "pairbenchmark -m server -p 9736",
-				Comment: "Start pairbenchmark in server mode, serving port 9736",
+				Example: "pairbench -m server -p 9736",
+				Comment: "Start pairbench in server mode, serving port 9736",
 			},
 			{
-				Example: "pairbenchmark -m client -e 100.68.80.110 -p 9736 -c 12 -l 42 -d 60",
-				Comment: `Start pairbenchmark in client mode, connecting to server 100.68.80.110 port 9736, 
+				Example: "pairbench -m client -e 100.68.80.110 -p 9736 -c 12 -l 42 -d 60",
+				Comment: `Start pairbench in client mode, connecting to server 100.68.80.110 port 9736, 
 spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 			},
 		}
 	)
 	rootCmd := &cobra.Command{
-		Use: fmt.Sprintf("pairbenchmark -m %s [flags]", cmdutil.Underline("<MODE>")),
-		Long: fmt.Sprintf(`pairbenchmark starts with server or client mode.
+		Use: fmt.Sprintf("pairbench -m %s [flags]", cmdutil.Underline("<MODE>")),
+		Long: fmt.Sprintf(`pairbench starts with server or client mode.
 
 - In server mode, besides '-m %[1]s', additional parameters '-p %[2]s', '-b %[3]s' are optional.
 
@@ -103,7 +103,7 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&mode, "mode", "m", "server", "Specify the mode of pairbenchmark")
+	rootCmd.Flags().StringVarP(&mode, "mode", "m", "server", "Specify the mode of pairbench")
 	rootCmd.Flags().StringVarP(&host, "endpoint", "e", "127.0.0.1", "Specify the server endpoint when in client mode")
 	rootCmd.Flags().Uint16VarP(&port, "port", "p", 9736, "Specify the portal of the server")
 	rootCmd.Flags().StringVarP(&isBounceStr, "bounce", "b", "true", "Specify whether server would echo back all data from clients. Otherwise simply echo back 'OK'")
