@@ -53,13 +53,13 @@ type osApp struct {
 	myDevicesSep   *systray.MenuItem
 	myNetworksSep  *systray.MenuItem
 
-	actionLocaleNameMap map[*walk.Action]string
+	actionLocaleNameMap map[*systray.MenuItem]string
 }
 
 func newOSApp() *osApp {
 	return &osApp{
 		baseApp:             baseApp{events: make(chan struct{}, 4)},
-		actionLocaleNameMap: make(map[*walk.Action]string),
+		actionLocaleNameMap: make(map[*systray.MenuItem]string),
 	}
 }
 
