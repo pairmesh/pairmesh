@@ -17,29 +17,29 @@ desc: "English"
 tray:
   unknown: "UnKnown"
   app:
-    title_not_login: "Need Login into PairMesh"
+    title_not_login: "Please log in to PairMesh"
     title_disconnected: "Network disconnected, please click to reconnect"
     title_connecting: "Connecting..."
   auth_expires_in:
-    title_foramt: "Certification will expires in %d hours"
+    title_foramt: "Certificate expires in %d hours"
     tips: "Certificate Expiration Reminder"
   my_address: "My address: %s"
   connect:
     title: "Online"
-    tips: "Online Current Node"
+    tips: "Current Online Nodes"
   disconnect:
     title: "Offline"
-    tips: "Offline Current Node"
+    tips: "Current Offline Nodes"
   admin:
     title: "Console"
-    tips: "Login into PairMesh Console"
+    tips: "Login to PairMesh Console"
   login: "Login"
   profile:
     console: "Management Console"
     logout: "Logout"
   device: "Current Device\t%s"
-  my_devices: "My Device"
-  my_networks: "My Network"
+  my_devices: "My Devices"
+  my_networks: "My Networkds"
   status:
     connecting: "Network Status\tConnecting..."
     connected: "Network Status\tConnected"

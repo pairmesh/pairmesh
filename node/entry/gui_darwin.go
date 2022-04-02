@@ -52,11 +52,14 @@ type osApp struct {
 	myNetworksList []*systray.MenuItem
 	myDevicesSep   *systray.MenuItem
 	myNetworksSep  *systray.MenuItem
+
+	actionLocaleNameMap map[*walk.Action]string
 }
 
 func newOSApp() *osApp {
 	return &osApp{
-		baseApp: baseApp{events: make(chan struct{}, 4)},
+		baseApp:             baseApp{events: make(chan struct{}, 4)},
+		actionLocaleNameMap: make(map[*walk.Action]string),
 	}
 }
 
@@ -69,38 +72,38 @@ func (app *osApp) createTray() {
 	}
 
 	// Guest status
-	app.login = app.addMenuItemWithAction(i18n.L("tray.login"), app.onOpenLoginWeb)
+	app.login = app.addMenuItemWithActionWithTK("tray.login"), pp.onOpenLoginWeb)
 
 	// Login status
-	app.device = app.addMenuItem(i18n.L("tray.unknown"))
-	app.status = app.addMenuItem(i18n.L("tray.unknown"))
+	app.device = app.addMenuItemWithTK("tray.unknown")
+	app.status = app.addMenuItemWithTK("tray.unknown")
 	app.status.SetDisabled(true)
-	app.enable = app.addMenuItem(i18n.L("tray.enable"))
-	app.console = app.addMenuItemWithAction(i18n.L("tray.profile.console"), app.onOpenConsole)
+	app.enable = app.addMenuItemWithTK("tray.enable")
+	app.console = app.addMenuItemWithActionWithTK("tray.profile.console", app.onOpenConsole)
 
 	app.seps = append(app.seps, app.addSeparator())
 
-	app.myDevices = app.addMenuItem(i18n.L("tray.my_devices"))
+	app.myDevices = app.addMenuItemWithTK("tray.my_devices")
 	app.myDevices.SetDisabled(true)
 	app.myDevicesSep = app.addSeparator()
-	app.myNetworks = app.addMenuItem(i18n.L("tray.my_networks"))
+	app.myNetworks = app.addMenuItemWithTK("tray.my_networks")
 	app.myNetworks.SetDisabled(true)
 	app.myNetworksSep = app.addSeparator()
 
 	app.seps = append(app.seps, app.myDevicesSep, app.myNetworksSep)
 
 	// General menu item
-	app.start = app.addMenuItemWithAction(i18n.L("tray.autorun"), app.onAutoStart)
+	app.start = app.addMenuItemWithActionWithTK("tray.autorun"), pp.onAutoStart)
 	app.start.SetChecked(app.auto.IsEnabled())
 
-	app.logout = app.addMenuItemWithAction(i18n.L("tray.profile.logout"), app.onLogout)
-	app.about = app.addMenuItemWithAction(i18n.L("tray.about"), app.onOpenAbout)
+	app.logout = app.addMenuItemWithActionWithTK("tray.profile.logout", app.onLogout)
+	app.about = app.addMenuItemWithActionWithTK("tray.about"), pp.onOpenAbout)
 	app.addSeparator()
 
 	app.language = app.addMenuItem(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
 	app.addSeparator()
 
-	app.quit = app.addMenuItemWithAction(i18n.L("tray.exit"), app.onQuit)
+	app.quit = app.addMenuItemWithActionWithTK("tray.exit"), pp.onQuit)
 
 	app.initialized.Store(true)
 	app.setMenuVisibility(app.cfg.IsGuest())
@@ -252,11 +255,23 @@ func (app *osApp) addSeparator() *systray.MenuItem {
 	return sep
 }
 
+func (app *osApp) addMenuItemWithActionWithTK(titleKey string, action func()) *systray.MenuItem {
+	act := app.addMenuItemWithAction(i18n.L(titleKey), action)
+	app.actionLocaleNameMap[action] = titleKey
+	return action
+}
+
 func (app *osApp) addMenuItemWithAction(title string, action func()) *systray.MenuItem {
 	item := systray.NewMenuItem(title)
 	item.SetAction(action)
 	systray.AddMenuItem(nil, item)
 	return item
+}
+
+func (app *osApp) addMenuItemWithTK(titleKey string) *systray.MenuItem {
+	action := app.addMenuItem(i18n.L(titleKey))
+	app.actionLocaleNameMap[action] = titleKey
+	return action
 }
 
 func (app *osApp) addMenuItem(title string) *systray.MenuItem {
@@ -347,18 +362,10 @@ func (app *osApp) setLocale(name string) func() {
 		if err != nil {
 			zap.L().Error("SetLocale failed", zap.Error(err))
 		} else {
-			app.login.SetTitle(i18n.L("tray.login"))
-			app.device.SetTitle(i18n.L("tray.unknown"))
-			app.status.SetTitle(i18n.L("tray.unknown"))
-			app.enable.SetTitle(i18n.L("tray.enable"))
-			app.console.SetTitle(i18n.L("tray.profile.console"))
-			app.myDevices.SetTitle(i18n.L("tray.my_devices"))
-			app.myNetworks.SetTitle(i18n.L("tray.my_networks"))
-			app.start.SetTitle(i18n.L("tray.autorun"))
-			app.logout.SetTitle(i18n.L("tray.profile.logout"))
-			app.about.SetTitle(i18n.L("tray.about"))
+			for k, v := range app.actionLocaleNameMap {
+				k.SetText(i18n.L(v))
+			}
 			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
-			app.quit.SetTitle(i18n.L("tray.exit"))
 
 			summary := app.driver.Summarize()
 			app.render(summary)
