@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"fmt"
-	mrand "math/rand"
 	"net"
 	"sync"
 	"time"
@@ -26,6 +25,7 @@ import (
 	"github.com/flynn/noise"
 	"github.com/pairmesh/pairmesh/benchmark/config"
 	"github.com/pairmesh/pairmesh/benchmark/results"
+	"github.com/pairmesh/pairmesh/benchmark/utils"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/protocol"
@@ -50,9 +50,7 @@ func (c *RelayClient) Start() error {
 	// Since in benchmark test we don't have a portal to transmit credentials,
 	// we will have to make credentials deterministic so that the relay side and
 	// the client side share the same knowledge
-	mrand.Seed(1)
-	source := mrand.NewSource(1)
-	rng := mrand.New(source)
+	rng := utils.NewDetermRng()
 	priv, err := rsa.GenerateKey(rng, 512)
 	if err != nil {
 		return fmt.Errorf("error generating private key: %s", err.Error())
