@@ -97,7 +97,7 @@ func (c *EchoClient) Start() error {
 						return
 					}
 
-					// TODO: definitely need a smarter way of handler Read
+					// TODO: definitely need a smarter way of handling Read
 					// This is actually related to how to
 					// accurately measure Read(). Sometimes when buf is too small, the following
 					// Read() would immediately return with empty buf.
