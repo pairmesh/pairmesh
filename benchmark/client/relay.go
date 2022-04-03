@@ -115,6 +115,8 @@ func (c *RelayClient) Start() error {
 				return
 			}
 
+			payload := utils.GenerateRandPayload(cfg.Payload())
+
 			for {
 				select {
 				case <-notify:
@@ -122,7 +124,7 @@ func (c *RelayClient) Start() error {
 					return
 				default:
 					prev_time := time.Now()
-					err = client.Send(message.PacketType__UnitTestRequest, &message.P_UnitTestRequest{Field: fmt.Sprintf("magic")})
+					err = client.Send(message.PacketType__UnitTestRequest, &message.P_UnitTestRequest{Field: string(payload)})
 					if err != nil {
 						zap.L().Error(fmt.Sprintf("[worker %d] error sending packet to relay server: %s", index, err.Error()))
 						return

@@ -14,25 +14,13 @@
 
 package utils
 
-// DeternRng is a deterministic "random" number generator that implements Read(),
-// so it works as mock io.Reader for generating credentials
-type DetermRng struct {
-	counter int
-}
+import "math/rand"
 
-// NewDetermRng returns DetermRng struct with counter initiated
-func NewDetermRng() *DetermRng {
-	return &DetermRng{
-		counter: 0,
+func GenerateRandPayload(plen uint32) []byte {
+	var alp = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]byte, plen)
+	for i := range b {
+		b[i] = alp[rand.Intn(len(alp))]
 	}
-}
-
-// Read is the implementation of the io.Reader interface. It generates
-// deterministic results, only based on its counter
-func (rng *DetermRng) Read(p []byte) (n int, err error) {
-	for i := 0; i < len(p); i++ {
-		p[i] = byte((i + rng.counter) % 256)
-	}
-	rng.counter++
-	return len(p), nil
+	return b
 }

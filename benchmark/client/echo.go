@@ -24,6 +24,7 @@ import (
 
 	"github.com/pairmesh/pairmesh/benchmark/config"
 	"github.com/pairmesh/pairmesh/benchmark/results"
+	"github.com/pairmesh/pairmesh/benchmark/utils"
 	"go.uber.org/zap"
 )
 
@@ -73,7 +74,7 @@ func (c *EchoClient) Start() error {
 				res.Submit(&lres)
 			}()
 
-			payload := generateRandPayload(cfg.Payload())
+			payload := utils.GenerateRandPayload(cfg.Payload())
 
 			for {
 				select {
@@ -114,13 +115,4 @@ func (c *EchoClient) Start() error {
 	res.Report(cfg)
 
 	return nil
-}
-
-func generateRandPayload(plen uint32) []byte {
-	var alp = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]byte, plen)
-	for i := range b {
-		b[i] = alp[rand.Intn(len(alp))]
-	}
-	return b
 }
