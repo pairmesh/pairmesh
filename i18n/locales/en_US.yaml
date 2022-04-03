@@ -39,7 +39,7 @@ tray:
     logout: "Logout"
   device: "Current Device\t%s"
   my_devices: "My Devices"
-  my_networks: "My Networkds"
+  my_networks: "My Networks"
   status:
     connecting: "Network Status\tConnecting..."
     connected: "Network Status\tConnected"
