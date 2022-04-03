@@ -12,29 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package config
 
-// Config is the config struct for server side pairbench
-type Config struct {
+import "github.com/pairmesh/pairmesh/benchmark"
+
+// ServerConfig is the config struct for server side pairbench
+type ServerConfig struct {
+	mode     benchmark.ModeType
 	port     uint16
 	isBounce bool
 }
 
-// NewConfig function returns a new server side Config with given parameters
-func NewConfig(port uint16, isBounce bool) Config {
-	return Config{
+// NewConfig function returns a new ServerConfig with given parameters
+func NewServerConfig(
+	mode benchmark.ModeType,
+	port uint16,
+	isBounce bool,
+) ServerConfig {
+	return ServerConfig{
+		mode:     mode,
 		port:     port,
 		isBounce: isBounce,
 	}
 }
 
+// Mode return the mode of the server
+func (c *ServerConfig) Mode() benchmark.ModeType {
+	return c.mode
+}
+
 // Port returns the port of the server
-func (c *Config) Port() uint16 {
+func (c *ServerConfig) Port() uint16 {
 	return c.port
 }
 
 // IsBounce returns whether the server bounces back incoming data,
 // or just echoes OK as minimal payload message
-func (c *Config) IsBounce() bool {
+func (c *ServerConfig) IsBounce() bool {
 	return c.isBounce
 }

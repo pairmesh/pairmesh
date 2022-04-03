@@ -19,7 +19,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pairmesh/pairmesh/benchmark"
 	"github.com/pairmesh/pairmesh/benchmark/client"
+	"github.com/pairmesh/pairmesh/benchmark/config"
 	"github.com/pairmesh/pairmesh/benchmark/server"
 	"github.com/pairmesh/pairmesh/pkg/cmdutil"
 	"github.com/pairmesh/pairmesh/pkg/logutil"
@@ -29,6 +31,7 @@ import (
 
 func main() {
 	var (
+		role        string
 		mode        string
 		port        uint16
 		host        string
@@ -38,23 +41,23 @@ func main() {
 		duration    uint16
 		examples    = cmdutil.Examples{
 			{
-				Example: "pairbench -m server -p 9736",
-				Comment: "Start pairbench in server mode, serving port 9736",
+				Example: "pairbench -r server -p 9736",
+				Comment: "Start pairbench in server role as an echo server, serving port 9736",
 			},
 			{
-				Example: "pairbench -m client -e 100.68.80.110 -p 9736 -c 12 -l 42 -d 60",
-				Comment: `Start pairbench in client mode, connecting to server 100.68.80.110 port 9736, 
+				Example: "pairbench -r client -e 100.68.80.110 -p 9736 -c 12 -l 42 -d 60",
+				Comment: `Start pairbench in client role, connecting to echo server 100.68.80.110 port 9736, 
 spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 			},
 		}
 	)
 	rootCmd := &cobra.Command{
-		Use: fmt.Sprintf("pairbench -m %s [flags]", cmdutil.Underline("<MODE>")),
-		Long: fmt.Sprintf(`pairbench starts with server or client mode.
+		Use: fmt.Sprintf("pairbench -r %s [flags]", cmdutil.Underline("<MODE>")),
+		Long: fmt.Sprintf(`pairbench starts with server or client role.
 
-- In server mode, besides '-m %[1]s', additional parameters '-p %[2]s', '-b %[3]s' are optional.
+- In server role, besides '-m %[1]s', additional parameters '-p %[2]s', '-b %[3]s' are optional.
 
-- In client mode, besides '-m %[4]s', additional parameters '-e %[5]s', '-p %[2]s', '-c %[6]s', '-l %[7]s', '-d %[8]s' are optional.
+- In client role, besides '-m %[4]s', additional parameters '-e %[5]s', '-p %[2]s', '-c %[6]s', '-l %[7]s', '-d %[8]s' are optional.
 `,
 			cmdutil.Underline("server"),
 			cmdutil.Underline("<PORT>"),
@@ -73,8 +76,17 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 			logutil.InitLogger()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Validate and convert mode
 			mode = strings.ToLower(mode)
-			if mode == "server" {
+			if mode != "relay" && mode != "echo" {
+				return errors.New("invalid mode param. Only relay or echo are valid")
+			}
+			modeType := benchmark.ModeType(mode)
+
+			// Validate and convert role
+			role = strings.ToLower(role)
+			switch {
+			case role == "server":
 				var isBounce bool
 				isBounceStr = strings.ToLower(isBounceStr)
 				if isBounceStr == "true" {
@@ -84,30 +96,30 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 				} else {
 					return errors.New("invalid bounce param. Only true or false are valid")
 				}
-
-				serverCfg := server.NewConfig(port, isBounce)
-				return server.Start(&serverCfg)
-
-			} else if mode == "client" {
-				clientCfg := client.NewConfig(
+				serverCfg := config.NewServerConfig(modeType, port, isBounce)
+				return server.Run(&serverCfg)
+			case role == "client":
+				clientCfg := config.NewClientConfig(
+					modeType,
 					host,
 					port,
 					clients,
 					payload,
 					duration,
 				)
-				return client.Start(&clientCfg)
-			} else {
-				return errors.New("invalid mode. Only server or client are valid modes")
+				return client.Run(&clientCfg)
+			default:
+				return errors.New("invalid role. Only server or client are valid roles")
 			}
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&mode, "mode", "m", "server", "Specify the mode of pairbench")
-	rootCmd.Flags().StringVarP(&host, "endpoint", "e", "127.0.0.1", "Specify the server endpoint when in client mode")
+	rootCmd.Flags().StringVarP(&role, "role", "r", "server", "Specify the role of pairbench, server of client")
+	rootCmd.Flags().StringVarP(&mode, "mode", "m", "relay", "Specify the mode of pairbench, relay or echo")
+	rootCmd.Flags().StringVarP(&host, "endpoint", "e", "127.0.0.1", "Specify the server endpoint when in client role")
 	rootCmd.Flags().Uint16VarP(&port, "port", "p", 9736, "Specify the portal of the server")
 	rootCmd.Flags().StringVarP(&isBounceStr, "bounce", "b", "true", "Specify whether server would echo back all data from clients. Otherwise simply echo back 'OK'")
-	rootCmd.Flags().Uint16VarP(&clients, "client", "c", 1, "Specify the number of clients when in client mode")
+	rootCmd.Flags().Uint16VarP(&clients, "client", "c", 1, "Specify the number of clients when in client role")
 	rootCmd.Flags().Uint32VarP(&payload, "payload", "l", 128, "Specify the payload in bytes")
 	rootCmd.Flags().Uint16VarP(&duration, "duration", "d", 60, "Specify the test duration in seconds")
 	cmdutil.Run(rootCmd)

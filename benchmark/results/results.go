@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package client
+package results
 
 import (
 	"fmt"
@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pairmesh/pairmesh/benchmark/config"
 	"go.uber.org/zap"
 )
 
@@ -58,7 +59,7 @@ func (r *Results) AddDataPoint(lat time.Duration) {
 }
 
 // Report processes internal data points, and generates verbose results report
-func (r *Results) Report(cfg *Config) {
+func (r *Results) Report(cfg *config.ClientConfig) {
 	r.l.Lock()
 	defer r.l.Unlock()
 
@@ -66,7 +67,7 @@ func (r *Results) Report(cfg *Config) {
 		return r.latencies[i] < r.latencies[j]
 	})
 
-	tps := r.throughput / uint64(cfg.duration)
+	tps := r.throughput / uint64(cfg.Duration())
 	llen := len(r.latencies)
 	p50 := r.latencies[int(float64(llen)*0.5)]
 	p90 := r.latencies[int(float64(llen)*0.9)]

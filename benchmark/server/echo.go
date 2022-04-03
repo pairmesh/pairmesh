@@ -21,29 +21,38 @@ import (
 	"net"
 	"syscall"
 
+	"github.com/pairmesh/pairmesh/benchmark"
+	"github.com/pairmesh/pairmesh/benchmark/config"
 	"go.uber.org/zap"
 )
 
-const bufferSize = 512
+type EchoServer struct {
+	cfg *config.ServerConfig
+}
 
-// Start function starts a simple echo server as server side of pairbench
-// If cfg.isBounce is true, it echoes whatever it hears from incoming connection
-// Otherwise, it always echoes "OK" as minimal backward payload
-func Start(cfg *Config) error {
-	zap.L().Info("Starting pairbench server")
-	addr := fmt.Sprintf("%s:%d", "0.0.0.0", cfg.Port())
-	s, err := net.Listen("tcp", addr)
+// NewEchoServer returns EchoServer struct with input config
+func NewEchoServer(cfg *config.ServerConfig) *EchoServer {
+	return &EchoServer{
+		cfg: cfg,
+	}
+}
+
+// Start runs the job of an echo server
+func (s *EchoServer) Start() error {
+	zap.L().Info("Starting pairbench echo server")
+	addr := fmt.Sprintf("%s:%d", "0.0.0.0", s.cfg.Port())
+	srv, err := net.Listen("tcp", addr)
 	if err != nil {
 		zap.L().Error("Error setting up server")
 		return err
 	}
 
-	zap.L().Info(fmt.Sprintf("Started pairbench server on port %d", cfg.Port()))
+	zap.L().Info(fmt.Sprintf("Started pairbench echo server on port %d", s.cfg.Port()))
 
-	defer s.Close()
+	defer srv.Close()
 
 	for {
-		conn, err := s.Accept()
+		conn, err := srv.Accept()
 		if err != nil {
 			zap.L().Error("Error accepting incoming connection")
 			return err
@@ -52,7 +61,7 @@ func Start(cfg *Config) error {
 		go func(conn net.Conn, bounce bool) {
 			defer conn.Close()
 			for {
-				buffer := make([]byte, bufferSize)
+				buffer := make([]byte, benchmark.BufferSize)
 				if _, err = conn.Read(buffer); err != nil {
 					if err != io.EOF {
 						zap.L().Error(fmt.Sprintf("Error reading from connection: %s", err.Error()))
@@ -77,6 +86,6 @@ func Start(cfg *Config) error {
 				}
 
 			}
-		}(conn, cfg.IsBounce())
+		}(conn, s.cfg.IsBounce())
 	}
 }

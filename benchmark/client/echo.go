@@ -16,36 +16,46 @@ package client
 
 import (
 	"fmt"
-	"math/rand"
 	"net"
 	"sync"
 	"time"
 
+	"math/rand"
+
+	"github.com/pairmesh/pairmesh/benchmark/config"
+	"github.com/pairmesh/pairmesh/benchmark/results"
 	"go.uber.org/zap"
 )
 
 const timeout = 3
 
-// Start function connects to endpoint host and start performance testing
-func Start(cfg *Config) error {
+type EchoClient struct {
+	cfg *config.ClientConfig
+}
+
+// NewEchoClient returns EchoClient struct with input config
+func NewEchoClient(cfg *config.ClientConfig) *EchoClient {
+	return &EchoClient{
+		cfg: cfg,
+	}
+}
+
+// Start function starts echo test cases from client side
+func (c *EchoClient) Start() error {
 	rand.Seed(time.Now().UnixNano())
+
+	cfg := c.cfg
 
 	var wg sync.WaitGroup
 	timer := time.NewTimer(time.Duration(cfg.Duration()) * time.Second)
 	notify := make(chan interface{})
 
-	results := NewResults()
+	res := results.NewResults()
 
 	var i uint16
 	for i = 0; uint16(i) < cfg.Clients(); i++ {
 		wg.Add(1)
-		go func(
-			wg *sync.WaitGroup,
-			index uint16,
-			cfg *Config,
-			notify <-chan interface{},
-			results *Results,
-		) {
+		go func(index uint16) {
 			defer wg.Done()
 
 			zap.L().Info(fmt.Sprintf("[worker %d] test job started", index))
@@ -56,11 +66,11 @@ func Start(cfg *Config) error {
 				return
 			}
 
-			lresults := NewResults()
+			lres := results.NewResults()
 
 			defer func() {
 				conn.Close()
-				results.Submit(&lresults)
+				res.Submit(&lres)
 			}()
 
 			payload := generateRandPayload(cfg.Payload())
@@ -71,6 +81,9 @@ func Start(cfg *Config) error {
 					zap.L().Info(fmt.Sprintf("[worker %d] test job finished", index))
 					return
 				default:
+					// TODO: any better handling of buf? This is actually related to how to
+					// accurately measure Read(). Sometimes when buf is too small, the following
+					// Read() would immediately return with empty buf.
 					buf := make([]byte, 2*cfg.Payload())
 					conn.SetDeadline(time.Now().Add(timeout * time.Second))
 					prev_time := time.Now()
@@ -85,10 +98,10 @@ func Start(cfg *Config) error {
 					}
 					post_time := time.Now()
 					delta := post_time.Sub(prev_time)
-					lresults.AddDataPoint(delta)
+					lres.AddDataPoint(delta)
 				}
 			}
-		}(&wg, i, cfg, notify, &results)
+		}(i)
 	}
 
 	// time.C only sends one signal, without closing
@@ -98,7 +111,7 @@ func Start(cfg *Config) error {
 	close(notify)
 	wg.Wait()
 
-	results.Report(cfg)
+	res.Report(cfg)
 
 	return nil
 }
