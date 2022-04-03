@@ -76,27 +76,51 @@ func (c *EchoClient) Start() error {
 
 			payload := utils.GenerateRandPayload(cfg.Payload())
 
+			var thres uint32
+			if cfg.IsBounce() {
+				thres = cfg.Payload()
+			} else {
+				thres = 2 // just the length of "OK"
+			}
+
 			for {
 				select {
 				case <-notify:
 					zap.L().Info(fmt.Sprintf("[worker %d] test job finished", index))
 					return
 				default:
-					// TODO: any better handling of buf? This is actually related to how to
-					// accurately measure Read(). Sometimes when buf is too small, the following
-					// Read() would immediately return with empty buf.
-					buf := make([]byte, 2*cfg.Payload())
 					conn.SetDeadline(time.Now().Add(timeout * time.Second))
 					prev_time := time.Now()
-					if _, err := conn.Write(payload); err != nil {
+					_, err := conn.Write(payload)
+					if err != nil {
 						zap.L().Error(fmt.Sprintf("[worker %d] error writing to server: %s", index, err.Error()))
 						return
 					}
 
-					if _, err = conn.Read(buf); err != nil {
-						zap.L().Error(fmt.Sprintf("[worker %d] error reading from server: %s", index, err.Error()))
-						return
+					// TODO: definitely need a smarter way of handler Read
+					// This is actually related to how to
+					// accurately measure Read(). Sometimes when buf is too small, the following
+					// Read() would immediately return with empty buf.
+					var rcount uint32 = 0
+					for {
+						buf := make([]byte, 512)
+						_, err = conn.Read(buf)
+						if err != nil {
+							zap.L().Error(fmt.Sprintf("[worker %d] error reading from server: %s", index, err.Error()))
+							return
+						}
+						for i := 0; i < len(buf); i++ {
+							if buf[i] == byte(0) {
+								break
+							}
+							rcount++
+						}
+
+						if rcount == thres {
+							break
+						}
 					}
+
 					post_time := time.Now()
 					delta := post_time.Sub(prev_time)
 					lres.AddDataPoint(delta)

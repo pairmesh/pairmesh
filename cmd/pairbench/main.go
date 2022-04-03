@@ -83,19 +83,21 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 			}
 			modeType := benchmark.ModeType(mode)
 
+			// Validate and convert isBounce
+			var isBounce bool
+			isBounceStr = strings.ToLower(isBounceStr)
+			if isBounceStr == "true" {
+				isBounce = true
+			} else if isBounceStr == "false" {
+				isBounce = false
+			} else {
+				return errors.New("invalid bounce param. Only true or false are valid")
+			}
+
 			// Validate and convert role
 			role = strings.ToLower(role)
 			switch {
 			case role == "server":
-				var isBounce bool
-				isBounceStr = strings.ToLower(isBounceStr)
-				if isBounceStr == "true" {
-					isBounce = true
-				} else if isBounceStr == "false" {
-					isBounce = false
-				} else {
-					return errors.New("invalid bounce param. Only true or false are valid")
-				}
 				serverCfg := config.NewServerConfig(modeType, port, isBounce)
 				return server.Run(&serverCfg)
 			case role == "client":
@@ -103,6 +105,7 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 					modeType,
 					host,
 					port,
+					isBounce,
 					clients,
 					payload,
 					duration,

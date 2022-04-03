@@ -21,6 +21,7 @@ type ClientConfig struct {
 	mode     benchmark.ModeType
 	endpoint string
 	port     uint16
+	isBounce bool
 	clients  uint16
 	payload  uint32
 	duration uint16
@@ -31,6 +32,7 @@ func NewClientConfig(
 	mode benchmark.ModeType,
 	endpoint string,
 	port uint16,
+	isBounce bool,
 	clients uint16,
 	payload uint32,
 	duration uint16,
@@ -39,6 +41,7 @@ func NewClientConfig(
 		mode:     mode,
 		endpoint: endpoint,
 		port:     port,
+		isBounce: isBounce,
 		clients:  clients,
 		payload:  payload,
 		duration: duration,
@@ -58,6 +61,12 @@ func (c *ClientConfig) Endpoint() string {
 // Port returns the port of the server to connect to
 func (c *ClientConfig) Port() uint16 {
 	return c.port
+}
+
+// IsBounce returns whether the server to connect to
+// bounces all input data, or just returns an "OK"
+func (c *ClientConfig) IsBounce() bool {
+	return c.isBounce
 }
 
 // Clients returns the number of client workers to spawn
