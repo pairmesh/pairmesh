@@ -42,6 +42,7 @@ type osApp struct {
 	start      *systray.MenuItem
 	logout     *systray.MenuItem
 	about      *systray.MenuItem
+	language   *systray.MenuItem
 	quit       *systray.MenuItem
 
 	// Separators which are showed only when login status
@@ -51,48 +52,58 @@ type osApp struct {
 	myNetworksList []*systray.MenuItem
 	myDevicesSep   *systray.MenuItem
 	myNetworksSep  *systray.MenuItem
+
+	itemLocaleNameMap map[*systray.MenuItem]string
 }
 
 func newOSApp() *osApp {
 	return &osApp{
-		baseApp: baseApp{events: make(chan struct{}, 4)},
+		baseApp:           baseApp{events: make(chan struct{}, 4)},
+		itemLocaleNameMap: make(map[*systray.MenuItem]string),
 	}
 }
 
 func (app *osApp) createTray() {
 	systray.SetTemplateIcon(resources.Logo)
 
+	// Set locale name
+	if app.cfg.LocaleName != "" {
+		i18n.SetLocale(app.cfg.LocaleName)
+	}
+
 	// Guest status
-	app.login = app.addMenuItemWithAction(i18n.L("tray.login"), app.onOpenLoginWeb)
+	app.login = app.addMenuItemWithActionWithTK("tray.login", app.onOpenLoginWeb)
 
 	// Login status
-	app.device = app.addMenuItem(i18n.L("tray.unknown"))
-	app.status = app.addMenuItem(i18n.L("tray.unknown"))
+	app.device = app.addMenuItemWithTK("tray.unknown")
+	app.status = app.addMenuItemWithTK("tray.unknown")
 	app.status.SetDisabled(true)
-	app.enable = app.addMenuItem(i18n.L("tray.enable"))
-	app.console = app.addMenuItemWithAction(i18n.L("tray.profile.console"), app.onOpenConsole)
+	app.enable = app.addMenuItemWithTK("tray.enable")
+	app.console = app.addMenuItemWithActionWithTK("tray.profile.console", app.onOpenConsole)
 
 	app.seps = append(app.seps, app.addSeparator())
 
-	app.myDevices = app.addMenuItem(i18n.L("tray.my_devices"))
+	app.myDevices = app.addMenuItemWithTK("tray.my_devices")
 	app.myDevices.SetDisabled(true)
 	app.myDevicesSep = app.addSeparator()
-	app.myNetworks = app.addMenuItem(i18n.L("tray.my_networks"))
+	app.myNetworks = app.addMenuItemWithTK("tray.my_networks")
 	app.myNetworks.SetDisabled(true)
 	app.myNetworksSep = app.addSeparator()
 
 	app.seps = append(app.seps, app.myDevicesSep, app.myNetworksSep)
 
 	// General menu item
-	app.start = app.addMenuItemWithAction(i18n.L("tray.autorun"), app.onAutoStart)
+	app.start = app.addMenuItemWithActionWithTK("tray.autorun", app.onAutoStart)
 	app.start.SetChecked(app.auto.IsEnabled())
 
-	app.logout = app.addMenuItemWithAction(i18n.L("tray.profile.logout"), app.onLogout)
-	app.about = app.addMenuItemWithAction(i18n.L("tray.about"), app.onOpenAbout)
-
+	app.logout = app.addMenuItemWithActionWithTK("tray.profile.logout", app.onLogout)
+	app.about = app.addMenuItemWithActionWithTK("tray.about", app.onOpenAbout)
 	app.addSeparator()
 
-	app.quit = app.addMenuItemWithAction(i18n.L("tray.exit"), app.onQuit)
+	app.language = app.addMenuItem(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+	app.addSeparator()
+
+	app.quit = app.addMenuItemWithActionWithTK("tray.exit", app.onQuit)
 
 	app.initialized.Store(true)
 	app.setMenuVisibility(app.cfg.IsGuest())
@@ -234,6 +245,7 @@ func (app *osApp) render(summary *driver.Summary) {
 		}
 	}
 
+	app.displayLanguageList()
 	app.start.SetDisabled(!app.auto.IsEnabled())
 }
 
@@ -243,10 +255,22 @@ func (app *osApp) addSeparator() *systray.MenuItem {
 	return sep
 }
 
+func (app *osApp) addMenuItemWithActionWithTK(titleKey string, action func()) *systray.MenuItem {
+	item := app.addMenuItemWithAction(i18n.L(titleKey), action)
+	app.itemLocaleNameMap[item] = titleKey
+	return item
+}
+
 func (app *osApp) addMenuItemWithAction(title string, action func()) *systray.MenuItem {
 	item := systray.NewMenuItem(title)
 	item.SetAction(action)
 	systray.AddMenuItem(nil, item)
+	return item
+}
+
+func (app *osApp) addMenuItemWithTK(titleKey string) *systray.MenuItem {
+	item := app.addMenuItem(i18n.L(titleKey))
+	app.itemLocaleNameMap[item] = titleKey
 	return item
 }
 
@@ -306,5 +330,47 @@ func (app *osApp) copyAddressToClipboard(name, address string) func() {
 		//		}
 		//	}
 		//})
+	}
+}
+
+func (app *osApp) displayLanguageList() {
+	locales := i18n.Locales()
+	children := app.language.Children()
+	lShowCount := len(children)
+	curName := i18n.GetCurrentLocaleName()
+	for i, name := range locales {
+		desc := i18n.GetLocaleDesc(name)
+		checked := (curName == name)
+		var language *systray.MenuItem
+		if i < lShowCount {
+			language = children[i]
+			language.SetTitle(desc)
+			language.SetHidden(false)
+		} else {
+			language = systray.NewMenuItem(desc)
+			systray.AddMenuItem(app.language, language)
+		}
+		language.SetDisabled(checked)
+		language.SetChecked(checked)
+		language.SetAction(app.setLocale(name))
+	}
+}
+
+func (app *osApp) setLocale(name string) func() {
+	return func() {
+		err := i18n.SetLocale(name)
+		if err != nil {
+			zap.L().Error("SetLocale failed", zap.Error(err))
+		} else {
+			for k, v := range app.itemLocaleNameMap {
+				k.SetTitle(i18n.L(v))
+			}
+			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+
+			summary := app.driver.Summarize()
+			app.render(summary)
+
+			app.cfg.SetLocaleName(name)
+		}
 	}
 }
