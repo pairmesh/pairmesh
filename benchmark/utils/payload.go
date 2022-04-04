@@ -16,7 +16,7 @@ package utils
 
 import "math/rand"
 
-func GenerateRandPayload(plen uint32) []byte {
+func GenerateRandPayload(plen uint16) []byte {
 	var alp = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]byte, plen)
 	for i := range b {

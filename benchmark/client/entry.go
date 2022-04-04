@@ -36,6 +36,6 @@ func Run(cfg *config.ClientConfig) error {
 		job = NewRelayClient(cfg)
 		return job.Start()
 	default:
-		return errors.New("invalid mode specified when starting client")
+		return errors.New("invalid mode specified when starting client (supported mode: echo/relay)")
 	}
 }

@@ -23,7 +23,7 @@ type ClientConfig struct {
 	port     uint16
 	isBounce bool
 	clients  uint16
-	payload  uint32
+	payload  uint16
 	duration uint16
 }
 
@@ -34,7 +34,7 @@ func NewClientConfig(
 	port uint16,
 	isBounce bool,
 	clients uint16,
-	payload uint32,
+	payload uint16,
 	duration uint16,
 ) ClientConfig {
 	return ClientConfig{
@@ -75,7 +75,7 @@ func (c *ClientConfig) Clients() uint16 {
 }
 
 // Payload returns the size of message payload data
-func (c *ClientConfig) Payload() uint32 {
+func (c *ClientConfig) Payload() uint16 {
 	return c.payload
 }
 

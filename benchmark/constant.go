@@ -22,3 +22,5 @@ const (
 )
 
 const BufferSize = 512
+const MaxClientCount = 1000
+const MaxPayload = 9000

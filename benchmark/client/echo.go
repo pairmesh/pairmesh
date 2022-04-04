@@ -49,7 +49,7 @@ func (c *EchoClient) Start() error {
 
 	var wg sync.WaitGroup
 	timer := time.NewTimer(time.Duration(cfg.Duration()) * time.Second)
-	notify := make(chan interface{})
+	notify := make(chan struct{})
 
 	res := results.NewResults()
 
@@ -76,7 +76,7 @@ func (c *EchoClient) Start() error {
 
 			payload := utils.GenerateRandPayload(cfg.Payload())
 
-			var thres uint32
+			var thres uint16
 			if cfg.IsBounce() {
 				thres = cfg.Payload()
 			} else {
@@ -101,7 +101,7 @@ func (c *EchoClient) Start() error {
 					// This is actually related to how to
 					// accurately measure Read(). Sometimes when buf is too small, the following
 					// Read() would immediately return with empty buf.
-					var rcount uint32 = 0
+					var rcount uint16 = 0
 					for {
 						buf := make([]byte, 512)
 						_, err = conn.Read(buf)

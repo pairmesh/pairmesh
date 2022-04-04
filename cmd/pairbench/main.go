@@ -37,7 +37,7 @@ func main() {
 		host        string
 		isBounceStr string
 		clients     uint16
-		payload     uint32
+		payload     uint16
 		duration    uint16
 		examples    = cmdutil.Examples{
 			{
@@ -101,6 +101,14 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 				serverCfg := config.NewServerConfig(modeType, port, isBounce)
 				return server.Run(&serverCfg)
 			case role == "client":
+				if clients > benchmark.MaxClientCount {
+					return fmt.Errorf("invalid client number. Cannot be more than %d", benchmark.MaxClientCount)
+				}
+
+				if payload > benchmark.MaxPayload {
+					return fmt.Errorf("invalid payload length. Cannot be more than %d", benchmark.MaxPayload)
+				}
+
 				clientCfg := config.NewClientConfig(
 					modeType,
 					host,
@@ -117,13 +125,13 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 		},
 	}
 
-	rootCmd.Flags().StringVarP(&role, "role", "r", "server", "Specify the role of pairbench, server of client")
+	rootCmd.Flags().StringVarP(&role, "role", "r", "server", "Specify the role of pairbench, server or client")
 	rootCmd.Flags().StringVarP(&mode, "mode", "m", "relay", "Specify the mode of pairbench, relay or echo")
 	rootCmd.Flags().StringVarP(&host, "endpoint", "e", "127.0.0.1", "Specify the server endpoint when in client role")
 	rootCmd.Flags().Uint16VarP(&port, "port", "p", 9736, "Specify the portal of the server")
 	rootCmd.Flags().StringVarP(&isBounceStr, "bounce", "b", "true", "Specify whether server would echo back all data from clients. Otherwise simply echo back 'OK'")
-	rootCmd.Flags().Uint16VarP(&clients, "client", "c", 1, "Specify the number of clients when in client role")
-	rootCmd.Flags().Uint32VarP(&payload, "payload", "l", 128, "Specify the payload in bytes")
+	rootCmd.Flags().Uint16VarP(&clients, "client", "c", 1, fmt.Sprintf("Specify the number of clients when in client role, max %d", benchmark.MaxClientCount))
+	rootCmd.Flags().Uint16VarP(&payload, "payload", "l", 128, fmt.Sprintf("Specify the payload in bytes, max %d", benchmark.MaxPayload))
 	rootCmd.Flags().Uint16VarP(&duration, "duration", "d", 60, "Specify the test duration in seconds")
 	cmdutil.Run(rootCmd)
 }

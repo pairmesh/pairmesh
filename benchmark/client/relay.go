@@ -79,7 +79,7 @@ func (c *RelayClient) Start() error {
 
 	var wg sync.WaitGroup
 	timer := time.NewTimer(time.Duration(c.cfg.Duration()) * time.Second)
-	notify := make(chan interface{})
+	notify := make(chan struct{})
 	res := results.NewResults()
 
 	var i uint16
