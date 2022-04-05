@@ -27,11 +27,13 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/pairmesh/pairmesh/internal/messagebox"
 	"go.uber.org/atomic"
 
+	locale "github.com/Xuanwo/go-locale"
 	"github.com/emersion/go-autostart"
 	"github.com/pairmesh/pairmesh/i18n"
 	"github.com/pairmesh/pairmesh/node/api"
@@ -107,6 +109,16 @@ func Run() {
 	}
 	app.cfg = cfg
 	app.api = api.New(config.APIGateway(), cfg.Token, cfg.MachineID)
+
+	// Set locale name
+	localName := app.cfg.LocaleName
+	if localName == "" {
+		tag, err := locale.Detect()
+		if err == nil {
+			localName = strings.Replace(fmt.Sprintf("%v", tag), "-", "_", -1)
+		}
+	}
+	i18n.SetLocale(localName)
 
 	if err := exchangeAuthKeyIfNeed(app.api, app.cfg); err != nil {
 		messagebox.Fatal("Exchange auth key failed", err.Error())

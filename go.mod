@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/Xuanwo/go-locale v1.1.0
 	github.com/atotto/clipboard v0.1.4
 	github.com/coreos/go-semver v0.3.0
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -11,6 +12,7 @@ require (
 	github.com/emersion/go-autostart v0.0.0-20210130080809-00ed301c8e9a
 	github.com/fatih/color v1.13.0
 	github.com/flynn/noise v1.0.0
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/jeremywohl/flatten v1.0.1
@@ -40,7 +42,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
-	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.0-20170215233205-553a64147049 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
@@ -63,6 +64,7 @@ require (
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20211027215541-db492cf91b37 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
