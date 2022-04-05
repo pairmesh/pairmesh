@@ -66,11 +66,6 @@ func newOSApp() *osApp {
 func (app *osApp) createTray() {
 	systray.SetTemplateIcon(resources.Logo)
 
-	// Set locale name
-	if app.cfg.LocaleName != "" {
-		i18n.SetLocale(app.cfg.LocaleName)
-	}
-
 	// Guest status
 	app.login = app.addMenuItemWithActionWithTK("tray.login", app.onOpenLoginWeb)
 

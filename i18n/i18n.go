@@ -23,7 +23,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const defaultLocale = "zh_CN"
+const defaultLocale = "en_US"
 
 //go:embed locales/*.yaml
 var locales embed.FS

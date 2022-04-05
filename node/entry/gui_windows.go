@@ -97,11 +97,6 @@ func (app *osApp) createTray() error {
 		return err
 	}
 
-	// Set locale name
-	if app.cfg.LocaleName != "" {
-		i18n.SetLocale(app.cfg.LocaleName)
-	}
-
 	// Guest status
 	app.login = app.addActionWithActionWithTK(nil, "tray.login", app.onOpenLoginWeb)
 
