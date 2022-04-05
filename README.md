@@ -53,7 +53,7 @@ By setting up a security P2P virtual private LAN network among multiple devices 
 The following diagram shows the overall architecture of PairMesh, where the PairMesh node is an application installed on the end device, responsible for managing the local virtual NIC device and discovering information about other nodes from the Control Plane service, as well as establishing P2P communication connections with other nodes, encrypting and decrypting data and processing traffic data in the network.
 
 ![Architecture](./docs/images/architecture.svg#gh-light-mode-only)
-![Architecture](./docs/images/architecture_dark.png#gh-dark-mode-only)
+![Architecture](./docs/images/architecture_dark.svg#gh-dark-mode-only)
 
 ## Community
 
