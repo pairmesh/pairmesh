@@ -132,6 +132,7 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 	c.conn = conn
 	c.state = ClientTransporterStateConnecting
 
+	zap.L().Info("Starting to spawn client Read and Write")
 	go c.Read(ctx)
 	go c.Write(ctx)
 
