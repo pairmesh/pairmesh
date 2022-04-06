@@ -1,4 +1,4 @@
-// Copyright 2021 PairMesh, Inc.
+// Copyright 2022 PairMesh, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package i18n_test
+package messagebox
 
-import (
-	"testing"
-
-	"github.com/pairmesh/pairmesh/i18n"
-	"github.com/stretchr/testify/assert"
-)
-
-func TestL(t *testing.T) {
-	i18n.SetLocale("zh_CN")
-
-	s := i18n.L("tray.login")
-
-	assert.Equal(t, s, "登入")
+func fatal(title, content string) {
 }
