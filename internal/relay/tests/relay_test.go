@@ -106,6 +106,7 @@ func TestRelay(t *testing.T) {
 	zap.L().Info("Starting to connect from test case")
 
 	err = client.Connect(ctx)
+	zap.L().Info(fmt.Sprintf("The err is indeed nil: %v", err == nil))
 	assert.True(t, err != nil)
 
 	zap.L().Info("Starting to send data")
