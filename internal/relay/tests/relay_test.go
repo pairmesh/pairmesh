@@ -83,6 +83,9 @@ func TestRelay(t *testing.T) {
 	}
 	trs := relay.NewClientTransporter(relayServer, credentials, clientDHKey, security.NewDHPublic(serverDHKey.Public))
 	client := relay.NewClient(trs)
+
+	zap.L().Info("Starting client")
+
 	go client.Serve(ctx)
 
 	const iter = 5
@@ -99,11 +102,15 @@ func TestRelay(t *testing.T) {
 	err = client.Connect(ctx)
 	assert.Nil(t, err)
 
+	zap.L().Info("Starting to send data")
+
 	for i := 0; i < iter; i++ {
 		// Use client to send a message to server
 		err = client.Send(message.PacketType__UnitTestRequest, &message.P_UnitTestRequest{Field: fmt.Sprintf("magic-%d", i)})
 		assert.Nil(t, err)
 	}
+
+	zap.L().Info("Starting to validate data from chWait")
 
 	// Wait server response the request message.
 	for i := 0; i < iter; i++ {
