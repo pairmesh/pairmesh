@@ -73,6 +73,9 @@ func TestRelay(t *testing.T) {
 
 	go server.Serve(ctx)
 
+	// Wait for the server to get up running and ready to accept connections
+	time.Sleep(time.Duration(1 * time.Second))
+
 	// Generate mock credentials
 	credentials, err := security.Credential(priv, protocol.UserID(1), protocol.PeerID(11000), net.ParseIP("1.2.3.4"), time.Hour)
 	assert.Nil(t, err)
@@ -149,10 +152,9 @@ func TestRelayNetworkFailure(t *testing.T) {
 
 	zap.L().Info("Starting server")
 
-	go func() {
-		err = server.Serve(ctx)
-		assert.Nil(t, err)
-	}()
+	go server.Serve(ctx)
+	// Wait for the server to get up running and ready to accept connections
+	time.Sleep(time.Duration(1 * time.Second))
 
 	peerID := protocol.PeerID(11000)
 
