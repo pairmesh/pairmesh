@@ -119,7 +119,7 @@ func (c *clientTransporterImpl) HandshakeState() *noise.HandshakeState {
 
 // Connect connects to the relay server.
 func (c *clientTransporterImpl) Connect(ctx context.Context) error {
-
+	zap.L().Info("Starting to connect from client side")
 	if c.state != ClientTransporterStateInit {
 		return errors.New("cannot connect remote MERP server due to state isn't init")
 	}
