@@ -60,9 +60,12 @@ func TestRelay(t *testing.T) {
 
 	server := relay.NewServer(addr, 5*time.Second, serverDHKey, &priv.PublicKey)
 
+	c := 0
 	// Register customize callback
 	server.Handler().On(message.PacketType__UnitTestRequest, func(s *relay.Session, typ message.PacketType, msg proto.Message) error {
+		zap.L().Info(fmt.Sprintf("Got message from server: %d", c))
 		res := &message.P_UnitTestResponse{Field: msg.(*message.P_UnitTestRequest).Field}
+		c++
 		return s.Send(message.PacketType__UnitTestResponse, res)
 	})
 
