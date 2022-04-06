@@ -71,10 +71,7 @@ func TestRelay(t *testing.T) {
 
 	zap.L().Info("Starting server")
 
-	go func() {
-		err = server.Serve(ctx)
-		assert.Nil(t, err)
-	}()
+	go server.Serve(ctx)
 
 	// Generate mock credentials
 	credentials, err := security.Credential(priv, protocol.UserID(1), protocol.PeerID(11000), net.ParseIP("1.2.3.4"), time.Hour)

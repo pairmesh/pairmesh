@@ -37,6 +37,9 @@ pairportal:
 pairrelay:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairrelay ./cmd/pairrelay
 
+test:
+	$(GOTEST) `go list ./... | grep -v app/macos | grep -v systray`
+
 check: vet fmt check-static # TODO: enable lint
 
 clean:
