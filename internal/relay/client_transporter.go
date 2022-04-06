@@ -185,6 +185,7 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 	buffer := make([]byte, bufferSize)
 	for {
 		n, err := c.conn.Read(buffer)
+		zap.L().Info("Got data from buffer")
 		if err != nil {
 			zap.L().Error("Read relay server message failed", zap.Error(err))
 			return
@@ -196,6 +197,7 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 			return
 		}
 		for _, p := range output {
+			zap.L().Info("Put data to chRead")
 			c.chRead <- p
 		}
 	}
@@ -216,11 +218,13 @@ func (c *clientTransporterImpl) Write(ctx context.Context) {
 	for {
 		select {
 		case wp := <-c.chWrite:
+			zap.L().Info("Got data from chWrite")
 			err := writePacketHelper(c.conn, wp, c.cipher, c.codec, 5*time.Second)
 			if err != nil {
 				zap.L().Error("Write message failed", zap.Error(err))
 				return
 			}
+			zap.L().Info("Writen data")
 
 		case <-heartbeatTimer:
 			if c.state != ClientTransporterStateConnected {
