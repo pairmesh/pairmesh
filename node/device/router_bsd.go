@@ -38,7 +38,7 @@ func bsdAdd(devName string, _ netaddr.IP, target netaddr.IPPrefix) error {
 func bsdDel(devName string, _ netaddr.IP, target netaddr.IPPrefix) error {
 	net := target.IPNet()
 	nip := net.IP.Mask(net.Mask)
-	nstr := fmt.Sprintf("%v/%d", nip, target.Bits)
+	nstr := fmt.Sprintf("%v/%d", nip, target.Bits())
 	del := "del"
 	if runtime.GOOS == "darwin" {
 		del = "delete"
