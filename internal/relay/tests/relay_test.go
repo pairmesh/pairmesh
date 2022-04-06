@@ -45,6 +45,8 @@ func TestRelay(t *testing.T) {
 
 	port, err := netutil.PickFreePort(netutil.TCP)
 
+	assert.True(t, 1+1 == 3)
+
 	assert.Nil(t, err)
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 
