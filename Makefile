@@ -5,7 +5,7 @@ GOARCH  := $(if $(GOARCH),$(GOARCH),$(shell go env GOARCH))
 GOENV   := GO111MODULE=on CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH)
 GO      := $(GOENV) go
 GOBUILD := $(GO) build $(BUILD_FLAG)
-GOTEST  := GO111MODULE=on CGO_ENABLED=1 $(GO) test -p 3 -timeout 10s
+GOTEST  := GO111MODULE=on CGO_ENABLED=1 $(GO) test -p 3
 SHELL   := /usr/bin/env bash
 
 COMMIT    := $(shell git describe --no-match --always --dirty)

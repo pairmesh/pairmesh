@@ -82,8 +82,6 @@ func (s *sessionTransporterImpl) Read(_ context.Context) {
 			return
 		}
 
-		zap.L().Info("Got data from server side to read")
-
 		output, err := s.codec.Decode(buffer[:n])
 		if err != nil {
 			zap.L().Error("Decode packet failed", zap.Error(err))
@@ -92,7 +90,6 @@ func (s *sessionTransporterImpl) Read(_ context.Context) {
 
 		for _, p := range output {
 			s.chRead <- p
-			zap.L().Info("Got data from server side to chRead")
 		}
 	}
 }
@@ -112,7 +109,6 @@ func (s *sessionTransporterImpl) Write(ctx context.Context) {
 		select {
 		case wp := <-s.chWrite:
 			err := writePacketHelper(s.conn, wp, s.cipher, s.codec, s.heartbeatInterval)
-			zap.L().Info("Got data from server side to write")
 			if err != nil {
 				zap.L().Error("Write message failed", zap.Error(err))
 				return

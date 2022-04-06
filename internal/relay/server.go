@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/rsa"
 	"errors"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -112,7 +111,6 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 
 	cfg := net.ListenConfig{}
-	zap.L().Info(fmt.Sprintf("Listening from server side with port: %s", s.addr))
 	listener, err := cfg.Listen(ctx, "tcp", s.addr)
 	if err != nil {
 		return err
@@ -125,7 +123,6 @@ func (s *Server) Serve(ctx context.Context) error {
 	}()
 
 	for {
-		zap.L().Info("Accepting from server side")
 		conn, err := listener.Accept()
 		if err != nil {
 			zap.L().Error("Accept incoming connection failed", zap.Error(err))

@@ -119,23 +119,19 @@ func (c *clientTransporterImpl) HandshakeState() *noise.HandshakeState {
 
 // Connect connects to the relay server.
 func (c *clientTransporterImpl) Connect(ctx context.Context) error {
-	zap.L().Info("Starting to connect from client side")
+
 	if c.state != ClientTransporterStateInit {
 		return errors.New("cannot connect remote MERP server due to state isn't init")
 	}
 
 	addr := fmt.Sprintf("%s:%d", c.relayServer.Host, c.relayServer.Port)
-	zap.L().Info("Before dialing")
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		zap.L().Info(fmt.Sprintf("Error dialing: %s", err.Error()))
 		return err
 	}
-	zap.L().Info("After dialing")
 	c.conn = conn
 	c.state = ClientTransporterStateConnecting
 
-	zap.L().Info("Starting to spawn client Read and Write")
 	go c.Read(ctx)
 	go c.Write(ctx)
 
@@ -177,7 +173,6 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 }
 
 func (c *clientTransporterImpl) Read(ctx context.Context) {
-	zap.L().Info("Started client read job")
 	defer func() {
 		if e := recover(); e != nil {
 			zap.L().Error("Read thread panicked", zap.Reflect("error", e))
@@ -185,13 +180,11 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 
 		_ = c.Close()
 		close(c.chRead)
-		zap.L().Info("Stopped client read job")
 	}()
 
 	buffer := make([]byte, bufferSize)
 	for {
 		n, err := c.conn.Read(buffer)
-		zap.L().Info("Got data from buffer")
 		if err != nil {
 			zap.L().Error("Read relay server message failed", zap.Error(err))
 			return
@@ -203,14 +196,12 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 			return
 		}
 		for _, p := range output {
-			zap.L().Info("Put data to chRead")
 			c.chRead <- p
 		}
 	}
 }
 
 func (c *clientTransporterImpl) Write(ctx context.Context) {
-	zap.L().Info("Started client write job")
 	defer func() {
 		if e := recover(); e != nil {
 			zap.L().Error("Write thread panicked", zap.Reflect("error", e))
@@ -218,7 +209,6 @@ func (c *clientTransporterImpl) Write(ctx context.Context) {
 
 		_ = c.Close()
 		close(c.chWrite)
-		zap.L().Info("Stopped client write job")
 	}()
 
 	// Default to 1 second
@@ -226,13 +216,11 @@ func (c *clientTransporterImpl) Write(ctx context.Context) {
 	for {
 		select {
 		case wp := <-c.chWrite:
-			zap.L().Info("Got data from chWrite")
 			err := writePacketHelper(c.conn, wp, c.cipher, c.codec, 5*time.Second)
 			if err != nil {
 				zap.L().Error("Write message failed", zap.Error(err))
 				return
 			}
-			zap.L().Info("Writen data")
 
 		case <-heartbeatTimer:
 			if c.state != ClientTransporterStateConnected {

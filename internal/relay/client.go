@@ -73,7 +73,6 @@ func (c *Client) Send(typ message.PacketType, msg proto.Message) (err error) {
 
 	select {
 	case c.WriteQueue() <- Packet{Type: typ, Message: msg}:
-		zap.L().Info("Added data to write queue")
 		return nil
 	default:
 		err = fmt.Errorf("send buffer exceeded: %s:%d", c.RelayServer().Host, c.RelayServer().Port)

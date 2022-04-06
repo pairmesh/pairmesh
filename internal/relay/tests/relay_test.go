@@ -45,8 +45,6 @@ func TestRelay(t *testing.T) {
 
 	port, err := netutil.PickFreePort(netutil.TCP)
 
-	assert.True(t, 1+1 == 3)
-
 	assert.Nil(t, err)
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 
@@ -62,12 +60,9 @@ func TestRelay(t *testing.T) {
 
 	server := relay.NewServer(addr, 5*time.Second, serverDHKey, &priv.PublicKey)
 
-	c := 0
 	// Register customize callback
 	server.Handler().On(message.PacketType__UnitTestRequest, func(s *relay.Session, typ message.PacketType, msg proto.Message) error {
-		zap.L().Info(fmt.Sprintf("Got message from server: %d", c))
 		res := &message.P_UnitTestResponse{Field: msg.(*message.P_UnitTestRequest).Field}
-		c++
 		return s.Send(message.PacketType__UnitTestResponse, res)
 	})
 
@@ -77,6 +72,9 @@ func TestRelay(t *testing.T) {
 	zap.L().Info("Starting server")
 
 	go server.Serve(ctx)
+
+	// Wait for the server to get up running and ready to accept connections
+	time.Sleep(time.Duration(1 * time.Second))
 
 	// Generate mock credentials
 	credentials, err := security.Credential(priv, protocol.UserID(1), protocol.PeerID(11000), net.ParseIP("1.2.3.4"), time.Hour)
@@ -88,9 +86,6 @@ func TestRelay(t *testing.T) {
 	}
 	trs := relay.NewClientTransporter(relayServer, credentials, clientDHKey, security.NewDHPublic(serverDHKey.Public))
 	client := relay.NewClient(trs)
-
-	zap.L().Info("Starting client")
-
 	go client.Serve(ctx)
 
 	const iter = 5
@@ -98,20 +93,14 @@ func TestRelay(t *testing.T) {
 	chWait := make(chan string, iter)
 	client.Handler().On(message.PacketType__UnitTestResponse, func(s *relay.Client, typ message.PacketType, msg proto.Message) error {
 		res := msg.(*message.P_UnitTestResponse)
-		zap.L().Info(fmt.Sprintf("Feeding in chWait with index: %d", counter))
 		assert.Equal(t, fmt.Sprintf("magic-%d", counter), res.Field)
 		counter++
 		chWait <- res.Field
 		return nil
 	})
 
-	zap.L().Info("Starting to connect from test case")
-
 	err = client.Connect(ctx)
-	zap.L().Info(fmt.Sprintf("The err is indeed nil: %v", err == nil))
-	assert.True(t, err != nil)
-
-	zap.L().Info("Starting to send data")
+	assert.Nil(t, err)
 
 	for i := 0; i < iter; i++ {
 		// Use client to send a message to server
@@ -119,11 +108,8 @@ func TestRelay(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	zap.L().Info("Starting to validate data from chWait")
-
 	// Wait server response the request message.
 	for i := 0; i < iter; i++ {
-		zap.L().Info(fmt.Sprintf("Current index in chWait is: %d", i))
 		m := <-chWait
 		assert.Equal(t, m, fmt.Sprintf("magic-%d", i))
 	}
@@ -166,10 +152,9 @@ func TestRelayNetworkFailure(t *testing.T) {
 
 	zap.L().Info("Starting server")
 
-	go func() {
-		err = server.Serve(ctx)
-		assert.Nil(t, err)
-	}()
+	go server.Serve(ctx)
+	// Wait for the server to get up running and ready to accept connections
+	time.Sleep(time.Duration(1 * time.Second))
 
 	peerID := protocol.PeerID(11000)
 
