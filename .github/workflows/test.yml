@@ -1,4 +1,4 @@
-name: Unit Test
+name: Test
 on:
   push:
     branches:
@@ -24,3 +24,4 @@ jobs:
           go-version: '1.17.2'
       - name: Unit Test
         run: make test
+

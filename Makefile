@@ -40,6 +40,8 @@ pairrelay:
 test:
 	$(GOTEST) `go list ./... | grep -v app/macos | grep -v systray`
 
+integration_test:
+
 check: vet fmt check-static # TODO: enable lint
 
 clean:
