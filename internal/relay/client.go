@@ -54,17 +54,30 @@ func (c *Client) Handler() ClientHandler {
 	return c.handler
 }
 
-func (c *Client) Send(typ message.PacketType, msg proto.Message) error {
+func (c *Client) Send(typ message.PacketType, msg proto.Message) (err error) {
 	if c.closed.Load() {
 		return errors.New("cannot send message to closed client")
 	}
+
+	// Prevents write data to a closed channel
+	defer func() {
+		if e := recover(); e != nil {
+			e1, ok := e.(error)
+			if !ok {
+				err = fmt.Errorf("send data panicked: %v", e)
+			} else {
+				err = e1
+			}
+		}
+	}()
 
 	select {
 	case c.WriteQueue() <- Packet{Type: typ, Message: msg}:
 		return nil
 	default:
-		return fmt.Errorf("send buffer exceeded: %s:%d", c.RelayServer().Host, c.RelayServer().Port)
+		err = fmt.Errorf("send buffer exceeded: %s:%d", c.RelayServer().Host, c.RelayServer().Port)
 	}
+	return
 }
 
 func (c *Client) Serve(ctx context.Context) {
