@@ -134,17 +134,30 @@ func (s *Session) LifetimeHook() SessionLifetimeHook {
 }
 
 // Send sends message to the pairmesh client-side via the client session.
-func (s *Session) Send(typ message.PacketType, msg proto.Message) error {
+func (s *Session) Send(typ message.PacketType, msg proto.Message) (err error) {
 	if s.closed.Load() {
 		return errors.New("cannot send message to closed session")
 	}
+
+	// Prevents write data to a closed channel
+	defer func() {
+		if e := recover(); e != nil {
+			e1, ok := e.(error)
+			if !ok {
+				err = fmt.Errorf("send data panicked: %v", e)
+			} else {
+				err = e1
+			}
+		}
+	}()
 
 	select {
 	case s.WriteQueue() <- Packet{Type: typ, Message: msg}:
 		return nil
 	default:
-		return fmt.Errorf("write buffer exceed: %d", s.peerID)
+		err = fmt.Errorf("write buffer exceed: %d", s.peerID)
 	}
+	return
 }
 
 func (s *Session) Serve(ctx context.Context, wg *sync.WaitGroup) {
