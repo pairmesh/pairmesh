@@ -125,10 +125,13 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 	}
 
 	addr := fmt.Sprintf("%s:%d", c.relayServer.Host, c.relayServer.Port)
+	zap.L().Info("Before dialing")
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
+		zap.L().Info("Error dialing")
 		return err
 	}
+	zap.L().Info("After dialing")
 	c.conn = conn
 	c.state = ClientTransporterStateConnecting
 
