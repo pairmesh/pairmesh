@@ -128,7 +128,7 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 	zap.L().Info("Before dialing")
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		zap.L().Info("Error dialing")
+		zap.L().Info(fmt.Sprintf("Error dialing: %s", err.Error()))
 		return err
 	}
 	zap.L().Info("After dialing")
