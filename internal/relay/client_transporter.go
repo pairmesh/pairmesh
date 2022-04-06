@@ -173,6 +173,7 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 }
 
 func (c *clientTransporterImpl) Read(ctx context.Context) {
+	zap.L().Info("Started client read job")
 	defer func() {
 		if e := recover(); e != nil {
 			zap.L().Error("Read thread panicked", zap.Reflect("error", e))
@@ -180,6 +181,7 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 
 		_ = c.Close()
 		close(c.chRead)
+		zap.L().Info("Stopped client read job")
 	}()
 
 	buffer := make([]byte, bufferSize)
@@ -204,6 +206,7 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 }
 
 func (c *clientTransporterImpl) Write(ctx context.Context) {
+	zap.L().Info("Started client write job")
 	defer func() {
 		if e := recover(); e != nil {
 			zap.L().Error("Write thread panicked", zap.Reflect("error", e))
@@ -211,6 +214,7 @@ func (c *clientTransporterImpl) Write(ctx context.Context) {
 
 		_ = c.Close()
 		close(c.chWrite)
+		zap.L().Info("Stopped client write job")
 	}()
 
 	// Default to 1 second
