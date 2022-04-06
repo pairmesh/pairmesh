@@ -93,6 +93,7 @@ func TestRelay(t *testing.T) {
 	chWait := make(chan string, iter)
 	client.Handler().On(message.PacketType__UnitTestResponse, func(s *relay.Client, typ message.PacketType, msg proto.Message) error {
 		res := msg.(*message.P_UnitTestResponse)
+		zap.L().Info(fmt.Sprintf("Feeding in chWait with index: %d", counter))
 		assert.Equal(t, fmt.Sprintf("magic-%d", counter), res.Field)
 		counter++
 		chWait <- res.Field
