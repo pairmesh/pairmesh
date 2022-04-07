@@ -22,13 +22,7 @@ package main
    void runNativeApp(char* path);
 */
 import "C"
-import "sync"
 
 func runNativeApp(path string) {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		C.runNativeApp(C.CString(path))
-	}()
-	wg.Wait()
+	C.runNativeApp(C.CString(path))
 }
