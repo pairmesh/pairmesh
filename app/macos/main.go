@@ -17,7 +17,9 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"time"
 
+	ps "github.com/mitchellh/go-ps"
 	"github.com/pairmesh/pairmesh/internal/messagebox"
 )
 
@@ -31,5 +33,19 @@ func main() {
 	if err != nil {
 		messagebox.Fatal("Daemon executable path not found", err.Error())
 	}
-	runNativeApp(path)
+
+	go runNativeApp(path)
+
+	ticker := time.NewTicker(time.Second)
+	for range ticker.C {
+		pl, err := ps.Processes()
+		if err != nil {
+			messagebox.Fatal("List processes failed", err.Error())
+		}
+		for _, p := range pl {
+			if p.Executable() == "pairmesh" {
+				os.Exit(0)
+			}
+		}
+	}
 }
