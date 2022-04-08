@@ -6,7 +6,7 @@ lint: tools/bin/revive
 	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(FILES)
 
 vet:
-	$(GO) vet ./...
+	$(GO) vet $$(go list ./... | grep -vE "wintun|tools|systray|macos")
 
 check-static: tools/bin/golangci-lint
 	tools/bin/golangci-lint run --timeout 5m ./...
