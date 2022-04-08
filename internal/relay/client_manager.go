@@ -38,6 +38,7 @@ import (
 const eventBufferSize = 1024
 
 type (
+	// PacketCallback is the interface to handle given packet with certain types
 	PacketCallback interface {
 		// OnForward handles the messages forwarded by the relay server
 		OnForward(s *Client, typ message.PacketType, msg proto.Message) error
@@ -72,6 +73,7 @@ func NewManager(staticKey noise.DHKey, callback PacketCallback) *Manager {
 	}
 }
 
+// SetCredential sets credential to the manager
 func (m *Manager) SetCredential(credential []byte) {
 	m.credential.Store(credential)
 }
@@ -207,6 +209,7 @@ func (m *Manager) Tick(ctx context.Context) {
 	})
 }
 
+// AddServer adds a given relay server to the manager
 func (m *Manager) AddServer(relayServer protocol.RelayServer) {
 	_, found := m.clients.Load(relayServer.ID)
 	if found {

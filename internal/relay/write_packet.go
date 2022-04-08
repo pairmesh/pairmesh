@@ -27,6 +27,7 @@ import (
 )
 
 type (
+	// Packet is the fundamental struct representing a network packet, with type and message
 	Packet struct {
 		Type    message.PacketType
 		Message proto.Message

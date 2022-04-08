@@ -14,18 +14,22 @@
 
 package monitor
 
+// EventType represents the type of an event
 type EventType byte
 
+// Constant variables for event type
 const (
 	EventTypeExternalAddressChanged EventType = iota + 1
 )
 
 type (
+	// Event is the event struct with event type and data
 	Event struct {
 		Type EventType
 		Data interface{}
 	}
 
+	// EventExternalAddressChanged is the event when external address changed
 	EventExternalAddressChanged struct {
 		ExternalAddress string
 	}

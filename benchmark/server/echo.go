@@ -26,6 +26,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// EchoServer is the struct for echo server for benchmark
 type EchoServer struct {
 	cfg *config.ServerConfig
 }

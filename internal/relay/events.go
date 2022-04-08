@@ -16,24 +16,29 @@ package relay
 
 import "github.com/pairmesh/pairmesh/protocol"
 
+// EventType represents the type of an event
 type EventType byte
 
+// EventType represents the type of an event
 const (
 	EventTypeClientClosed EventType = iota
 	EventTypeClientConnected
 )
 
 type (
+	// Event is a generic event item
 	Event struct {
 		Type EventType
 		Data interface{}
 	}
 
+	// EventClientClosed is the event when a client is closed
 	EventClientClosed struct {
 		RelayServer protocol.RelayServer
 		Client      *Client
 	}
 
+	// EventClientConnected is the event when a client is connected
 	EventClientConnected struct {
 		RelayServer protocol.RelayServer
 		Client      *Client

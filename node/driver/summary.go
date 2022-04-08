@@ -24,6 +24,7 @@ import (
 
 const mockSummary = false
 
+// Summary is the summary instance with essential metadata
 type Summary struct {
 	Enabled bool          `json:"enabled"`
 	Status  string        `json:"status"`
@@ -31,6 +32,7 @@ type Summary struct {
 	Mesh    *mesh.Summary `json:"mesh"`
 }
 
+// Profile is the profile of a user
 type Profile struct {
 	UserID uint64 `json:"user_id"`
 	Name   string `json:"name"`

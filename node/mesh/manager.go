@@ -56,6 +56,7 @@ type Manager struct {
 	cachedSummary *Summary
 }
 
+// NewManager generates a manager struct with given parameters
 func NewManager(dialer *net.Dialer, localPeer types.LocalPeer, callback tunnel.FragmentCallback, rm *relay.Manager, router device.Router) *Manager {
 	m := &Manager{
 		dialer:    dialer,
@@ -74,6 +75,7 @@ func (m *Manager) markChanged() {
 	m.lastChangedAt = time.Now()
 }
 
+// Tunnel returns a tunnel according to given dest if exists.
 func (m *Manager) Tunnel(dest string) *tunnel.Tunnel {
 	// TODO: support subnet NAT.
 	m.mu.RLock()
@@ -163,6 +165,7 @@ func (m *Manager) Summarize() *Summary {
 	return summary
 }
 
+// Tick proceeds with probing peers
 func (m *Manager) Tick() {
 	m.probePeers()
 }
@@ -367,6 +370,7 @@ func (m *Manager) ProbeResult(probe *message.PacketProbeResponse) {
 	}
 }
 
+// PeerCatchup handles peer catchup operation according to input PacketSyncPeer message
 func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	peerInfo := syncPeer.Peer
 	if peerInfo == nil {
@@ -452,6 +456,7 @@ func (m *Manager) PeerCatchup(syncPeer *message.PacketSyncPeer) error {
 	return nil
 }
 
+// PeerCatchupAck acks back to message.PacketSyncPeer
 func (m *Manager) PeerCatchupAck(syncPeer *message.PacketSyncPeer) {
 	peerInfo := syncPeer.Peer
 	if peerInfo == nil {
@@ -486,6 +491,7 @@ func (m *Manager) PeerCatchupAck(syncPeer *message.PacketSyncPeer) {
 	}
 }
 
+// PeerEndpoints sets up a tunnel given input message.PacketSyncPeer
 func (m *Manager) PeerEndpoints(syncPeer *message.PacketSyncPeer) {
 	peerInfo := syncPeer.Peer
 	if peerInfo == nil {

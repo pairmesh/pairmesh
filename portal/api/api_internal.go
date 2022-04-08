@@ -330,8 +330,8 @@ func (s *server) RelayKeepalive(req *protocol.RelayKeepaliveRequest) (*protocol.
 
 	err := db.Tx(func(tx *gorm.DB) error {
 		var devices []models.ID
-		for _, peerId := range req.Peers {
-			devices = append(devices, models.ID(peerId))
+		for _, peerID := range req.Peers {
+			devices = append(devices, models.ID(peerID))
 		}
 		return models.NewDeviceQuerySet(tx).
 			IDIn(devices...).
@@ -369,12 +369,14 @@ func (s *server) RenewCredential(req *protocol.RenewCredentialRequest) (*protoco
 	return res, nil
 }
 
+// VersionCheckResponse is the response to a version check request
 type VersionCheckResponse struct {
 	NewVersion      bool   `json:"new_version"`
 	NewVersionCode  string `json:"new_version_code"`
 	DownloadAddress string `json:"download_address"`
 }
 
+// VersionCheck gets, checks and validates the version
 func (s *server) VersionCheck(form *fn.Form) (*VersionCheckResponse, error) {
 	version := form.Get("version")
 	platform := form.Get("platform")

@@ -26,6 +26,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// EncodeMessage encodes a given message with certain type, cipher and peerID together to make a byte slice
 func EncodeMessage(typ message.PacketType, cipher noise.Cipher, peerID protocol.PeerID, msg proto.Message) ([]byte, error) {
 	data, err := proto.Marshal(msg)
 	if err != nil {
@@ -52,6 +53,7 @@ func Encode(typ message.PacketType, cipher noise.Cipher, peerID protocol.PeerID,
 	return buffer
 }
 
+// Decode decodes byte slice into formatted packet and peer id
 func Decode(data []byte) (uint32, message.PacketType, protocol.PeerID, []byte, error) {
 	if len(data) < constant.FragmentHeaderSize {
 		return 0, message.PacketType(0), protocol.PeerID(0), nil, errors.New("invalid fragment data")

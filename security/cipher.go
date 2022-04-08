@@ -24,5 +24,6 @@ var (
 
 	// HandshakePatternNN represents the handshake pattern which is used to exchange the DH key.
 	HandshakePatternNN = noise.HandshakeNN
+	// HandshakePatternIK is handshake pattern to be used later
 	HandshakePatternIK = noise.HandshakeIK
 )

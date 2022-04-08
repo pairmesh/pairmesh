@@ -71,7 +71,10 @@ func TestRelay(t *testing.T) {
 
 	zap.L().Info("Starting server")
 
-	go server.Serve(ctx)
+	go func() {
+		err := server.Serve(ctx)
+		assert.Nil(t, err)
+	}()
 
 	// Wait for the server to get up running and ready to accept connections
 	time.Sleep(time.Duration(1 * time.Second))
@@ -152,7 +155,11 @@ func TestRelayNetworkFailure(t *testing.T) {
 
 	zap.L().Info("Starting server")
 
-	go server.Serve(ctx)
+	go func() {
+		err := server.Serve(ctx)
+		assert.Nil(t, err)
+	}()
+
 	// Wait for the server to get up running and ready to accept connections
 	time.Sleep(time.Duration(1 * time.Second))
 

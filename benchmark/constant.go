@@ -14,13 +14,18 @@
 
 package benchmark
 
+// ModeType as string alias, represents type of a mode
 type ModeType string
 
+// ModeType represents type of a mode
 const (
 	ModeTypeEcho  ModeType = "echo"
 	ModeTypeRelay ModeType = "relay"
 )
 
-const BufferSize = 512
-const MaxClientCount = 1000
-const MaxPayload = 9000
+// Some handy constant variables for benchmark tooling
+const (
+	BufferSize     = 512
+	MaxClientCount = 1000
+	MaxPayload     = 9000
+)

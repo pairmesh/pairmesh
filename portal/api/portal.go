@@ -33,7 +33,6 @@ import (
 	"github.com/pairmesh/pairmesh/portal/config"
 	"github.com/pairmesh/pairmesh/portal/db"
 	"github.com/pairmesh/pairmesh/portal/sso"
-	_ "github.com/pairmesh/pairmesh/portal/sso/github"
 
 	"go.uber.org/zap"
 )

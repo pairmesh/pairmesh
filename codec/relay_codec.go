@@ -24,6 +24,7 @@ import (
 )
 
 type (
+	// RelayCodec is the struct for message codec
 	RelayCodec struct {
 		buf   *bytes.Buffer
 		size  int
@@ -31,6 +32,7 @@ type (
 		nonce uint32
 	}
 
+	// RawPacket is the struct for a row network packet
 	RawPacket struct {
 		Type    message.PacketType
 		Nonce   uint32
@@ -38,6 +40,7 @@ type (
 	}
 )
 
+// NewCodec returns a new RelayCodec instance
 func NewCodec() *RelayCodec {
 	return &RelayCodec{
 		buf:  bytes.NewBuffer(nil),

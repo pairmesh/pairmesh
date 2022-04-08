@@ -55,6 +55,7 @@ func (s *ssoServer) userInfo(name sso.Vendor, token *sso.Token) (*models.User, b
 	return p.UserInfo(token)
 }
 
+// SSOMethod is the SSO login method struct
 type SSOMethod struct {
 	Name string `json:"name"`
 	Link string `json:"link"`
@@ -75,6 +76,7 @@ func (s *ssoServer) SSOMethods(form *fn.Form) ([]*SSOMethod, error) {
 	return res, nil
 }
 
+// UserInfo is the struct of a user's info
 type UserInfo struct {
 	ID     uint64 `json:"id"`
 	Name   string `json:"name"`
@@ -82,12 +84,14 @@ type UserInfo struct {
 	Origin string `json:"origin"`
 }
 
+// CallbackResponse is the response struct of a user info request
 type CallbackResponse struct {
 	NotifyClient int       `json:"notify_client"`
 	AccessToken  string    `json:"access_token"`
 	User         *UserInfo `json:"user"`
 }
 
+// GithubAuthCallback is the callback function to handle GitHub authentication
 func (s *ssoServer) GithubAuthCallback(form *fn.Form) (*CallbackResponse, error) {
 	code := form.Get("code")
 	if code == "" {
@@ -154,6 +158,7 @@ func (s *ssoServer) GithubAuthCallback(form *fn.Form) (*CallbackResponse, error)
 	return res, nil
 }
 
+// Logout handles user log out operations
 func (s *ssoServer) Logout(w http.ResponseWriter, r *http.Request) {
 	metadata, err := jwt.Shared().ExtractTokenMetadata(r)
 	if err != nil {

@@ -28,6 +28,7 @@ const defaultLocale = "en_US"
 //go:embed locales/*.yaml
 var locales embed.FS
 
+// Locale is the locale data struct
 type Locale struct {
 	name string
 	data map[string]string
@@ -100,6 +101,7 @@ func Locales() []string {
 	return results
 }
 
+// GetLocaleDesc returns locale data in desc order
 func GetLocaleDesc(name string) string {
 	l, found := localesData[name]
 	if !found {
@@ -108,6 +110,7 @@ func GetLocaleDesc(name string) string {
 	return l.data["desc"]
 }
 
+// GetCurrentLocaleName returns current locale name
 func GetCurrentLocaleName() string {
 	return currentLocale.name
 }

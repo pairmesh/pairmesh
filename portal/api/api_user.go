@@ -26,6 +26,7 @@ import (
 )
 
 type (
+	// UserProfileResponse is the response to a user profile request
 	UserProfileResponse struct {
 		UserID     models.ID `json:"user_id"`
 		Name       string    `json:"name"`
@@ -36,6 +37,7 @@ type (
 	}
 )
 
+// UserProfile collects the profile of the user and formats into UserProfileResponse
 func (s *server) UserProfile(ctx context.Context) (*UserProfileResponse, error) {
 	var res *UserProfileResponse
 	err := db.Tx(func(tx *gorm.DB) error {

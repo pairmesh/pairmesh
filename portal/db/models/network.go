@@ -34,6 +34,7 @@ WHERE user_id IN
 	return devices, tx.Error
 }
 
+// NetworkStats gets network stats info from database
 func NetworkStats(tx *gorm.DB, networkID ID) (userCount, deviceCount int64, err error) {
 	userCount, err = NewNetworkUserQuerySet(tx).NetworkIDEq(networkID).Count()
 	if err != nil {

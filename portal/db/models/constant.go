@@ -16,12 +16,16 @@ package models
 
 import "time"
 
+// MaxOwnDevice is the max device numbers that one user could have
 const MaxOwnDevice = 10
 
+// AssumeOnlineDuration is the time that a device is assumed to be online
 const AssumeOnlineDuration = time.Second * 120
 
+// RoleType as string alias, represents the type of a role
 type RoleType string
 
+// RoleType represents type of a role
 const (
 	RoleTypeOwner  RoleType = "owner"
 	RoleTypeAdmin  RoleType = "admin"
@@ -33,8 +37,10 @@ func (r RoleType) String() string {
 	return string(r)
 }
 
+// KeyType as string alias, represents the type of the key
 type KeyType string
 
+// KeyType constants are values representing types of a key
 const (
 	KeyTypeOneOff    KeyType = "one-off"
 	KeyTypeReusable  KeyType = "reusable"
@@ -46,8 +52,10 @@ func (k KeyType) String() string {
 	return string(k)
 }
 
+// DeviceStatusType represents the status of a device
 type DeviceStatusType string
 
+// DeviceStatusType constants are values representing device status
 const (
 	DeviceStatusTypeOnline  DeviceStatusType = "online"
 	DeviceStatusTypeOffline DeviceStatusType = "offline"

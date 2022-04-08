@@ -38,6 +38,7 @@ type Config struct {
 	SSO   *SSO   `yaml:"sso"`
 }
 
+// Relay represents a relay instance with its auth key
 type Relay struct {
 	AuthKey string `yaml:"authKey"`
 }

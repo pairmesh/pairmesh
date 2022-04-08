@@ -22,7 +22,8 @@ import (
 )
 
 func TestL(t *testing.T) {
-	i18n.SetLocale("zh_CN")
+	err := i18n.SetLocale("zh_CN")
+	assert.Nil(t, err)
 
 	s := i18n.L("tray.login")
 

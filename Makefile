@@ -19,6 +19,7 @@ LDFLAGS += -X "$(REPO)/version.GitBranch=$(BRANCH)"
 LDFLAGS += $(EXTRA_LDFLAGS)
 
 FILES     := $$(find . -name "*.go")
+LINT_DIRS := $$(go list ./... | grep -vE "wintun|tools|systray|macos")
 
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)

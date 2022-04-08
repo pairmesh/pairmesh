@@ -16,6 +16,7 @@ package messagebox
 
 import "go.uber.org/zap"
 
+// Fatal is the function to throw fatal error messages
 func Fatal(title, content string) {
 	fatal(title, content)
 	zap.L().Fatal("Application exit", zap.Stack("stack"), zap.String("title", title), zap.String("content", content))

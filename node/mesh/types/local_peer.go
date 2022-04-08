@@ -22,6 +22,7 @@ import (
 	"inet.af/netaddr"
 )
 
+// LocalPeer is the struct of a local peer with metadata
 type LocalPeer struct {
 	Name     string
 	UserID   protocol.UserID

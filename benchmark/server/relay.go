@@ -30,6 +30,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// RelayServer is the relay server struct for benchmark
 type RelayServer struct {
 	cfg *config.ServerConfig
 }

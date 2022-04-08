@@ -34,6 +34,7 @@ type (
 	}
 )
 
+// NewSessionHandler generates and returns a SessionHandler struct
 func NewSessionHandler(sm SessionManager) SessionHandler {
 	h := &sessionHandler{
 		sm:        sm,
@@ -44,6 +45,7 @@ func NewSessionHandler(sm SessionManager) SessionHandler {
 	return h
 }
 
+// On registers a callback function to sessionHandler with certain message packet type
 func (h *sessionHandler) On(typ message.PacketType, cb SessionCallback) {
 	h.callbacks[typ] = cb
 }

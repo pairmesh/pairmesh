@@ -21,6 +21,7 @@ import (
 	"github.com/pingcap/fn"
 )
 
+// Error message constant variables
 var (
 	ErrVersionMissing       = withcode(errors.New("version header is missing"), InvalidVersion)
 	ErrMajorVersionMismatch = withcode(errors.New("major version mismatch"), IncompatibleVersion)

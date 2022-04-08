@@ -27,7 +27,7 @@ type ClientConfig struct {
 	duration uint16
 }
 
-// NewConfig function returns ClientConfig struct with parameters given
+// NewClientConfig function returns ClientConfig struct with parameters given
 func NewClientConfig(
 	mode benchmark.ModeType,
 	endpoint string,

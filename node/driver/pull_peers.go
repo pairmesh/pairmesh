@@ -54,7 +54,7 @@ func (d *NodeDriver) pullPeerGraph(ctx context.Context) {
 
 			// Since response is already formatted so that res.Peers is sorted by peerID,
 			// using binary search to find the serverID by matching peerID.
-			primaryServerID := d.FindServerIDWithPeerID(res)
+			primaryServerID := d.findServerIDWithPeerID(res)
 
 			if primaryServerID == 0 {
 				zap.L().Error("Illegal peer graph response, cannot find primary server id")
@@ -94,7 +94,9 @@ func (d *NodeDriver) pullPeerGraph(ctx context.Context) {
 	}
 }
 
-func (d *NodeDriver) FindServerIDWithPeerID(res *protocol.PeerGraphResponse) protocol.ServerID {
+// findServerIDWithPeerID finds the relay server with a given peer in PeerGraphResponse
+// using binary search
+func (d *NodeDriver) findServerIDWithPeerID(res *protocol.PeerGraphResponse) protocol.ServerID {
 	var serverID protocol.ServerID
 
 	if len(res.Peers) == 0 {
@@ -122,6 +124,7 @@ func (d *NodeDriver) FindServerIDWithPeerID(res *protocol.PeerGraphResponse) pro
 	return serverID
 }
 
+// SetPeerID sets peerID to the node driver
 func (d *NodeDriver) SetPeerID(id protocol.PeerID) {
 	d.peerID = id
 }

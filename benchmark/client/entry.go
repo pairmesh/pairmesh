@@ -21,13 +21,14 @@ import (
 	"github.com/pairmesh/pairmesh/benchmark/config"
 )
 
-type ClientJob interface {
+// Job is the client interface that could be started with Start function
+type Job interface {
 	Start() error
 }
 
 // Run function connects to endpoint host and start performance testing
 func Run(cfg *config.ClientConfig) error {
-	var job ClientJob
+	var job Job
 	switch {
 	case cfg.Mode() == benchmark.ModeTypeEcho:
 		job = NewEchoClient(cfg)

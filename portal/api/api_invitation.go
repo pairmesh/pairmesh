@@ -29,6 +29,7 @@ import (
 )
 
 type (
+	// InvitationListItem is the single item struct of a invitation in invitation list
 	InvitationListItem struct {
 		InvitationID       models.ID `json:"invitation_id"`
 		NetworkID          models.ID `json:"network_id"`
@@ -38,6 +39,8 @@ type (
 		InviteUserName     string    `json:"invite_user_name"`
 		InviteDeviceCount  uint      `json:"invite_device_count"`
 	}
+
+	// InvitationListResponse is the struct with a list of invitations
 	InvitationListResponse struct {
 		Invitations []InvitationListItem `json:"invitations"`
 	}
@@ -70,15 +73,18 @@ func (s *server) Invitations(ctx context.Context) (*InvitationListResponse, erro
 }
 
 type (
+	// HandleInvitationRequest is the request to handle invitation
 	HandleInvitationRequest struct {
 		Action string `json:"action"`
 	}
 
+	// HandleInvitationResponse is the response to handle invitation
 	HandleInvitationResponse struct {
 		InvitationID models.ID `json:"invitation_id"`
 	}
 )
 
+// HandleInvitation handles invitation with request as given parameters
 func (s *server) HandleInvitation(ctx context.Context, raw *http.Request, req *HandleInvitationRequest) (*HandleInvitationResponse, error) {
 	vars := mux.Vars(raw)
 	id, found := vars["invitation_id"]
