@@ -141,6 +141,7 @@ func ParseBindingRequest(b []byte) (TxID, error) {
 	return txID, nil
 }
 
+// Handy error messages
 var (
 	ErrNotSTUN            = errors.New("response is not a STUN packet")
 	ErrNotSuccessResponse = errors.New("STUN packet is not a response")

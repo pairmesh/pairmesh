@@ -42,8 +42,10 @@ import (
 
 var _ Driver = &NodeDriver{}
 
+// SummaryChangedCallback is the callback function with summary is changed
 type SummaryChangedCallback func()
 
+// Driver is the interface of a node driver
 type Driver interface {
 	tunnel.FragmentCallback
 
@@ -121,6 +123,7 @@ func New(cfg *config.Config, dev device.Device, apiClient *api.Client) Driver {
 	}
 }
 
+// Preflight makes all necessary preparations before node driver is up and ready to serve
 func (d *NodeDriver) Preflight() error {
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -292,6 +295,7 @@ type MockDriver struct {
 	NodeDriver
 }
 
+// SetPeerID sets peer id to the mock driver
 func (d *MockDriver) SetPeerID(id protocol.PeerID) {
 	d.NodeDriver.peerID = id
 }

@@ -34,6 +34,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// RelayClient is the struct of relay client for benchmark
 type RelayClient struct {
 	cfg *config.ClientConfig
 }
@@ -123,15 +124,15 @@ func (c *RelayClient) Start() error {
 					zap.L().Info(fmt.Sprintf("[worker %d] test job finished", index))
 					return
 				default:
-					prev_time := time.Now()
+					prevTime := time.Now()
 					err = client.Send(message.PacketType__UnitTestRequest, &message.P_UnitTestRequest{Field: string(payload)})
 					if err != nil {
 						zap.L().Error(fmt.Sprintf("[worker %d] error sending packet to relay server: %s", index, err.Error()))
 						return
 					}
 					<-readCh
-					post_time := time.Now()
-					delta := post_time.Sub(prev_time)
+					postTime := time.Now()
+					delta := postTime.Sub(prevTime)
 					lres.AddDataPoint(delta)
 				}
 			}

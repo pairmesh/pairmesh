@@ -51,6 +51,7 @@ func NewClient(server, token, machineid string) *Client {
 	}
 }
 
+// SetToken sets token to the client
 func (c *Client) SetToken(token string) {
 	c.token.Store(token)
 }

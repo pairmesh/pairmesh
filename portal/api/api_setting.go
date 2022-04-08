@@ -26,16 +26,20 @@ import (
 )
 
 type (
+	// UserProfileSettingRequest is the request for user profile setting
 	UserProfileSettingRequest struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	}
+
+	// UserProfileSettingResponse is the response to user profile setting requests
 	UserProfileSettingResponse struct {
 		Name  string `json:"name"`
 		Email string `json:"email"`
 	}
 )
 
+// UserProfileSetting validates and updates user profile with given request, and returns response accordingly
 func (s *server) UserProfileSetting(ctx context.Context, req *UserProfileSettingRequest) (*UserProfileSettingResponse, error) {
 	if req.Name == "" && req.Email == "" {
 		return nil, errcode.ErrIllegalRequest

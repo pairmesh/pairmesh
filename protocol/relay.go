@@ -48,6 +48,7 @@ type (
 		PublicKey string `json:"public_key"`
 	}
 
+	// RelayKeepaliveRequest is the request to keep alive with relay server
 	RelayKeepaliveRequest struct {
 		// Name is a unique node name (across all regions).
 		// It is not a host name.
@@ -79,16 +80,19 @@ type (
 		StartedAt int64 `json:"started_at,omitempty"`
 	}
 
+	// RelayKeepaliveResponse is the response to keep alive requests
 	RelayKeepaliveResponse struct {
 		// PublicKey represents the public key which is used to validate the credential
 		PublicKey  string `json:"public_key,omitempty"`
 		SyncFailed bool   `json:"sync_failed"`
 	}
 
+	// RelayPeerOfflineRequest is the request to mark given peers as offline
 	RelayPeerOfflineRequest struct {
 		Peers []PeerID `json:"peers"`
 	}
 
+	// RelayPeerOfflineResponse is the response to relay peer offline requests
 	RelayPeerOfflineResponse struct {
 	}
 )

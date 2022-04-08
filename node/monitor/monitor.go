@@ -37,6 +37,7 @@ import (
 const eventBufferSize = 256
 
 var (
+	// ErrNoSTUNServer is the error message with there is no STUN server found
 	ErrNoSTUNServer = errors.New("no STUN server found")
 )
 
@@ -73,6 +74,7 @@ func (m *Monitor) ExternalAddress() string {
 	return val.(string)
 }
 
+// Events returns the events channel
 func (m *Monitor) Events() <-chan Event {
 	return m.events
 }
@@ -82,6 +84,7 @@ func (m *Monitor) event(event Event) {
 	m.events <- event
 }
 
+// Monitoring is the job to monitor detectExternalAddressTimer and handle the monitoring task
 func (m *Monitor) Monitoring(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 

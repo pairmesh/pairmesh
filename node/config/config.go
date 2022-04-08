@@ -148,6 +148,7 @@ func (c *Config) Load() error {
 	return nil
 }
 
+// Clone returns a clone of the config
 func (c *Config) Clone() *Config {
 	key := noise.DHKey{
 		Public:  make([]byte, len(c.DHKey.Public)),
@@ -196,19 +197,23 @@ func (c *Config) IsGuest() bool {
 	return c.Token == ""
 }
 
+// IsAuthKey checks if the token of the config is a valid auth key
 func (c *Config) IsAuthKey() bool {
 	return strings.HasPrefix(c.Token, constant.PrefixAuthKey)
 }
 
+// IsBearer checks if the token of the config has jwt token fomatted prefix
 func (c *Config) IsBearer() bool {
 	return strings.HasPrefix(c.Token, constant.PrefixJwtToken)
 }
 
+// SetJWTToken signs given token with jwt token as prefix
 func (c *Config) SetJWTToken(tok string) error {
 	c.Token = constant.PrefixJwtToken + " " + tok
 	return c.Save()
 }
 
+// SetLocaleName sets locale name of the config
 func (c *Config) SetLocaleName(name string) error {
 	c.LocaleName = name
 	return c.Save()

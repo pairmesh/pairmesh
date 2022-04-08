@@ -28,6 +28,7 @@ import (
 )
 
 type (
+	// DeviceListItem is the single item struct of a device in a device list
 	DeviceListItem struct {
 		DeviceID models.ID               `json:"device_id"`
 		Name     string                  `json:"name"`
@@ -37,6 +38,8 @@ type (
 		LastSeen time.Time               `json:"last_seen"`
 		Status   models.DeviceStatusType `json:"status"`
 	}
+
+	// DeviceListResponse is the response to a device list request
 	DeviceListResponse struct {
 		Devices []DeviceListItem `json:"devices"`
 	}
@@ -91,14 +94,17 @@ func (s *server) DeviceList(ctx context.Context) (*DeviceListResponse, error) {
 }
 
 type (
+	// DeviceDeleteRequest is the request struct to delete a device
 	DeviceDeleteRequest struct {
 		DeviceID models.ID `json:"device_id"`
 	}
 
+	// DeviceUpdateRequest is the request struct to update a device
 	DeviceUpdateRequest struct {
 		Name string `json:"name"`
 	}
 
+	// DeviceOperationResponse is the response the device operations
 	DeviceOperationResponse struct {
 		Success bool `json:"success"`
 	}

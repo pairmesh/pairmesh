@@ -27,6 +27,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// OnForward is the callback function that is triggered when forwarding happens
 func (d *NodeDriver) OnForward(_ *relay.Client, typ message.PacketType, msg proto.Message) error {
 	forward := msg.(*message.PacketForward)
 
@@ -61,6 +62,7 @@ func (d *NodeDriver) OnForward(_ *relay.Client, typ message.PacketType, msg prot
 	return nil
 }
 
+// OnSyncPeer is the callback function that is triggered when peer sync happens
 func (d *NodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
 	syncPeer := msg.(*message.PacketSyncPeer)
 	if protocol.PeerID(syncPeer.DstPeerID) != d.peerID {
@@ -140,6 +142,7 @@ func (d *NodeDriver) OnSyncPeer(_ *relay.Client, _ message.PacketType, msg proto
 	return nil
 }
 
+// OnProbeResponse handles probe result from the response
 func (d *NodeDriver) OnProbeResponse(_ *relay.Client, _ message.PacketType, msg proto.Message) error {
 	probe := msg.(*message.PacketProbeResponse)
 

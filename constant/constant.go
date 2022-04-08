@@ -19,11 +19,12 @@ import "time"
 // PluginKeyType represents the unique type of plugin key
 type PluginKeyType string
 
-const KeyRawRequest = PluginKeyType("_plugin_key_request")
-
-const MachineIDProtect = "pairmesh"
-
-const EnvLogLevel = "PAIRMESH_LOG_VERBOSE"
+// Some handy constant variables
+const (
+	KeyRawRequest    = PluginKeyType("_plugin_key_request")
+	MachineIDProtect = "pairmesh"
+	EnvLogLevel      = "PAIRMESH_LOG_VERBOSE"
+)
 
 // API path group
 const (
@@ -51,6 +52,8 @@ const (
 
 // DefaultAPIGateway represents the gateway's default address
 const DefaultAPIGateway = "https://api.pairmesh.com"
+
+// DefaultMyGateway represents the website's default address
 const DefaultMyGateway = "https://my.pairmesh.com"
 
 // Packet protocol constants
@@ -60,7 +63,6 @@ const DefaultMyGateway = "https://my.pairmesh.com"
 
 // Fragment packet format:
 // | nonce(4bytes) | type(2bytes) | peer_id(8bytes) | payload |
-
 const (
 	HeaderNonceSize      = 4
 	HeaderPacketTypeSize = 2
@@ -75,8 +77,11 @@ const MaxBufferSize = 4096
 // initial Ping packet to the peer
 const DiscoveryDuration = 30 * time.Second
 
+// Max segment and message size constants
 const (
 	MaxSegmentSize = 2048 - 32      // largest possible UDP datagram
 	MaxMessageSize = MaxSegmentSize // maximum size of transport message
 )
+
+// HeartbeatInterval is the heart beat interval time constant
 const HeartbeatInterval = 30 * time.Second

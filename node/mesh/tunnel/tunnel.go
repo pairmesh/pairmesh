@@ -35,9 +35,11 @@ import (
 	"go.uber.org/zap"
 )
 
+// ZeroTime is the default time initialized with zero value
 var ZeroTime = time.Time{}
 
 type (
+	// RelayClientGetter is a function to get relay client
 	RelayClientGetter func() *relay.Client
 
 	// Tunnel represents the remote conn and maintain the conn state.
@@ -64,6 +66,7 @@ type (
 	}
 )
 
+// New generates and returns a Tunnel struct with given parameters
 func New(rcGetter RelayClientGetter, dialer *net.Dialer, localPeer types.LocalPeer, peerID protocol.PeerID, callback FragmentCallback, cipher noise.Cipher) *Tunnel {
 	t := &Tunnel{
 		rcGetter:    rcGetter,
@@ -83,14 +86,17 @@ func (t *Tunnel) Cipher() noise.Cipher {
 	return t.cipher
 }
 
+// IsDisco returns whether the tunnel is discovered
 func (t *Tunnel) IsDisco() bool {
 	return t.disco.Load()
 }
 
+// SetLocalEndpoints sets the given endpoints to the tunnel
 func (t *Tunnel) SetLocalEndpoints(endpoints []string) {
 	t.localEndpoints.Store(endpoints)
 }
 
+// SetRemoteEndpoints sets given remote endpoints to the tunnel
 func (t *Tunnel) SetRemoteEndpoints(endpoints []string) {
 	t.endpointsCh <- endpoints
 	if !t.disco.Load() {
@@ -98,6 +104,7 @@ func (t *Tunnel) SetRemoteEndpoints(endpoints []string) {
 	}
 }
 
+// Write writes input data through the tunnel
 func (t *Tunnel) Write(data []byte) {
 	if logutil.IsEnablePeer() {
 		zap.L().Debug("Send fragment", zap.Any("peer", t.localPeer.PeerID))
@@ -217,6 +224,7 @@ func (t *Tunnel) OnUDPPacket(udpConn *net.UDPConn, data []byte) {
 	}
 }
 
+// ReachableEndpoint returns reachable endpoint, based on last discovery time
 func (t *Tunnel) ReachableEndpoint() *Endpoint {
 	val := t.endpoints.Load()
 	if val == nil {

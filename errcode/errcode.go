@@ -14,6 +14,7 @@
 
 package errcode
 
+// ErrCode as an int alias represents an error code
 type ErrCode int
 
 // NOTE: don't delete any item and resort the order.

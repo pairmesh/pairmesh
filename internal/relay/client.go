@@ -46,14 +46,17 @@ func NewClient(transporter ClientTransporter) *Client {
 	return c
 }
 
+// SetLatency sets c.latency = lat
 func (c *Client) SetLatency(lat time.Duration) {
 	c.latency = lat
 }
 
+// Handler return c.handler
 func (c *Client) Handler() ClientHandler {
 	return c.handler
 }
 
+// Send sends a given packet by pushing it into write queue
 func (c *Client) Send(typ message.PacketType, msg proto.Message) (err error) {
 	if c.closed.Load() {
 		return errors.New("cannot send message to closed client")
@@ -80,6 +83,7 @@ func (c *Client) Send(typ message.PacketType, msg proto.Message) (err error) {
 	return
 }
 
+// Serve starts a job to detect from read queue, and handles the data according to c.handler registrations
 func (c *Client) Serve(ctx context.Context) {
 	for {
 		select {
@@ -99,10 +103,12 @@ func (c *Client) Serve(ctx context.Context) {
 	}
 }
 
+// OnClosed updates callback function on client close
 func (c *Client) OnClosed(cb func()) {
 	c.onClosed = cb
 }
 
+// Close actually closes the client
 func (c *Client) Close() error {
 	if c.closed.Swap(true) {
 		return errors.New("close a closed client")

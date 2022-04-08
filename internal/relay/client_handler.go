@@ -33,6 +33,7 @@ type (
 	}
 )
 
+// NewClientHandler generates, initiates and returns a ClientHandler struct
 func NewClientHandler() ClientHandler {
 	h := &clientHandler{
 		callbacks: map[message.PacketType]ClientCallback{},
@@ -42,6 +43,7 @@ func NewClientHandler() ClientHandler {
 	return h
 }
 
+// On registers a callback function with a certain message packet type
 func (h *clientHandler) On(typ message.PacketType, cb ClientCallback) {
 	h.callbacks[typ] = cb
 }

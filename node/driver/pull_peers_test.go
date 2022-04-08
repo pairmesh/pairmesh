@@ -12,25 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pull_peers_test
+package driver
 
 import (
 	"testing"
 
-	"github.com/pairmesh/pairmesh/node/driver"
 	"github.com/pairmesh/pairmesh/protocol"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupDriver() *driver.MockDriver {
-	var mockDrv = driver.MockDriver{
-		NodeDriver: driver.NodeDriver{},
+func setupDriver() *MockDriver {
+	var mockDrv = MockDriver{
+		NodeDriver: NodeDriver{},
 	}
 	mockDrv.SetPeerID(protocol.PeerID(42))
 	return &mockDrv
 }
 
-func TestFindServerIdWithPeerId(t *testing.T) {
+func TestFindServerIDWithPeerID(t *testing.T) {
 	a := assert.New(t)
 
 	mockDrv := setupDriver()
@@ -52,11 +51,11 @@ func TestFindServerIdWithPeerId(t *testing.T) {
 	resp := protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID := mockDrv.FindServerIDWithPeerID(&resp)
+	serverID := mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(142))
 }
 
-func TestFindServerIdWithPeerIdEmptyArray(t *testing.T) {
+func TestFindServerIDWithPeerIDEmptyArray(t *testing.T) {
 	a := assert.New(t)
 
 	mockDrv := setupDriver()
@@ -65,11 +64,11 @@ func TestFindServerIdWithPeerIdEmptyArray(t *testing.T) {
 	resp := protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID := mockDrv.FindServerIDWithPeerID(&resp)
+	serverID := mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(0))
 }
 
-func TestFindServerIdWithPeerIdNotFound(t *testing.T) {
+func TestFindServerIDWithPeerIDNotFound(t *testing.T) {
 	a := assert.New(t)
 
 	mockDrv := setupDriver()
@@ -87,11 +86,11 @@ func TestFindServerIdWithPeerIdNotFound(t *testing.T) {
 	resp := protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID := mockDrv.FindServerIDWithPeerID(&resp)
+	serverID := mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(0))
 }
 
-func TestFindServerIdWithPeerIdBigListFound(t *testing.T) {
+func TestFindServerIDWithPeerIDBigListFound(t *testing.T) {
 	a := assert.New(t)
 
 	mockDrv := setupDriver()
@@ -108,7 +107,7 @@ func TestFindServerIdWithPeerIdBigListFound(t *testing.T) {
 	resp := protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID := mockDrv.FindServerIDWithPeerID(&resp)
+	serverID := mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(142))
 
 	// Test case peers: [(42, 142), (43, 143), ... (141, 241)]
@@ -122,7 +121,7 @@ func TestFindServerIdWithPeerIdBigListFound(t *testing.T) {
 	resp = protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID = mockDrv.FindServerIDWithPeerID(&resp)
+	serverID = mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(142))
 
 	// Test case peers: [(0, 100), (1, 101), ... (42, 142)]
@@ -136,11 +135,11 @@ func TestFindServerIdWithPeerIdBigListFound(t *testing.T) {
 	resp = protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID = mockDrv.FindServerIDWithPeerID(&resp)
+	serverID = mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(142))
 }
 
-func TestFindServerIdWithPeerIdBigListNotFound(t *testing.T) {
+func TestFindServerIDWithPeerIDBigListNotFound(t *testing.T) {
 	a := assert.New(t)
 
 	mockDrv := setupDriver()
@@ -160,7 +159,7 @@ func TestFindServerIdWithPeerIdBigListNotFound(t *testing.T) {
 	resp := protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID := mockDrv.FindServerIDWithPeerID(&resp)
+	serverID := mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(0))
 
 	// Test case peers: [(43, 143), (43, 143), ... (141, 241)]
@@ -174,7 +173,7 @@ func TestFindServerIdWithPeerIdBigListNotFound(t *testing.T) {
 	resp = protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID = mockDrv.FindServerIDWithPeerID(&resp)
+	serverID = mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(0))
 
 	// Test case peers: [(0, 100), (1, 101), ... (41, 141)]
@@ -188,6 +187,6 @@ func TestFindServerIdWithPeerIdBigListNotFound(t *testing.T) {
 	resp = protocol.PeerGraphResponse{
 		Peers: peersArray,
 	}
-	serverID = mockDrv.FindServerIDWithPeerID(&resp)
+	serverID = mockDrv.findServerIDWithPeerID(&resp)
 	a.Equal(serverID, protocol.ServerID(0))
 }

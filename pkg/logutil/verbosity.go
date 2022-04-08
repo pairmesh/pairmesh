@@ -50,6 +50,7 @@ func init() {
 	}
 }
 
+// Type as a byte alias represents the type of debug log
 type Type byte
 
 const (
@@ -63,11 +64,12 @@ const (
 	DebugDevicePacket Type = 3
 )
 
-// Enable enables the output of some types of verbose log.
+// Enable enables the output of some types of verbose log
 func Enable(t Type) {
 	bits |= 1 << t
 }
 
+// EnableAll enables the output of all types of verbose log
 func EnableAll() {
 	for _, l := range []Type{DebugPortalLevel, DebugRelayPacket, DebugPeerPacket, DebugDevicePacket} {
 		Enable(l)

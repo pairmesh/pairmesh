@@ -3,10 +3,10 @@ fmt:
 	@gofmt -s -l -w $(FILES) 2>&1
 
 lint: tools/bin/revive
-	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(FILES)
+	@tools/bin/revive -formatter friendly -config tools/check/revive.toml $(LINT_DIRS)
 
 vet:
-	$(GO) vet $$(go list ./... | grep -vE "wintun|tools|systray|macos")
+	$(GO) vet $(LINT_DIRS)
 
 check-static: tools/bin/golangci-lint
 	tools/bin/golangci-lint run --timeout 5m ./...

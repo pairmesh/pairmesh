@@ -21,7 +21,8 @@ import (
 	"github.com/pairmesh/pairmesh/benchmark/config"
 )
 
-type ServerJob interface {
+// Job is the interface of a server, which could be started with Start function
+type Job interface {
 	Start() error
 }
 
@@ -29,7 +30,7 @@ type ServerJob interface {
 // If cfg.isBounce is true, it echoes whatever it hears from incoming connection
 // Otherwise, it always echoes "OK" as minimal backward payload
 func Run(cfg *config.ServerConfig) error {
-	var job ServerJob
+	var job Job
 	switch {
 	case cfg.Mode() == benchmark.ModeTypeEcho:
 		job = NewEchoServer(cfg)

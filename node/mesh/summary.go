@@ -5,8 +5,10 @@ import (
 	"time"
 )
 
+// State represents the state of a mesh node
 type State byte
 
+// State is the state of a mesh node
 const (
 	StatePending State = 0
 	StateRelay   State = 1
@@ -28,18 +30,21 @@ func (s State) String() string {
 }
 
 type (
+	// Device is the struct of a device
 	Device struct {
 		Name   string `json:"name"`
 		IPv4   string `json:"ipv4"`
 		Status State  `json:"status"`
 	}
 
+	// Network is the struct of a network
 	Network struct {
 		ID      uint64   `json:"id"`
 		Name    string   `json:"name"`
 		Devices []Device `json:"devices"`
 	}
 
+	// Summary is the summary with last changed time, devices and networks
 	Summary struct {
 		LastChangedAt time.Time `json:"-"`
 		MyDevices     []Device  `json:"my_devices"`

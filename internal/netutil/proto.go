@@ -30,6 +30,7 @@ import (
 // or the special values Unknown or Fragment.
 type Proto uint8
 
+// Constant variables
 const (
 	// Unknown represents an unknown or unsupported protocol; it's
 	// deliberately the zero value. Strictly speaking the zero

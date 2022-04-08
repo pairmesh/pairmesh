@@ -29,10 +29,13 @@ import (
 )
 
 type (
+	// NetworkRequest is the request for information of a given network
 	NetworkRequest struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
 	}
+
+	// NetworkItem is the network information item struct
 	NetworkItem struct {
 		NetworkID   models.ID       `json:"network_id"`
 		Name        string          `json:"name"`
@@ -43,6 +46,7 @@ type (
 		Role        models.RoleType `json:"role"`
 	}
 
+	// NetworkResponse is the response the network request
 	NetworkResponse struct {
 		Network NetworkItem `json:"network"`
 	}
@@ -132,6 +136,7 @@ func (s *server) UpdateNetwork(ctx context.Context, r *http.Request, req *Networ
 }
 
 type (
+	// NetworkInfoResponse is the response to network info requests
 	NetworkInfoResponse struct {
 		Networks []NetworkItem `json:"networks"`
 	}
@@ -173,6 +178,7 @@ func (s *server) NetworkList(ctx context.Context) (*NetworkInfoResponse, error) 
 }
 
 type (
+	// NetworkMemberItem is struct to maintain network metadata
 	NetworkMemberItem struct {
 		NetworkID models.ID       `json:"network_id"`
 		UserID    models.ID       `json:"user_id"`
@@ -182,6 +188,7 @@ type (
 		Role      models.RoleType `json:"role"`
 	}
 
+	// NetworkMemberResponse is response struct with essential metadata
 	NetworkMemberResponse struct {
 		Members []NetworkMemberItem `json:"members"`
 		Owner   bool                `json:"owner"`
@@ -231,15 +238,18 @@ func (s *server) NetworkMembers(ctx context.Context, r *http.Request) (*NetworkM
 }
 
 type (
+	// ChangeNetworkStatusRequest is request to change network status
 	ChangeNetworkStatusRequest struct {
 		Status string `json:"status"`
 	}
 
+	// ChangeNetworkDurationRequest is request to change network duration
 	ChangeNetworkDurationRequest struct {
 		DurationType string `json:"duration_type"`
 		Duration     int64  `json:"duration"`
 	}
 
+	// NetworkOperationResponse is response to network operations
 	NetworkOperationResponse struct {
 		Success bool `json:"success"`
 	}
@@ -308,10 +318,12 @@ func (s *server) DeleteNetwork(ctx context.Context, r *http.Request) (*NetworkOp
 }
 
 type (
+	// ChangeMemberPermissionRequest is request to change membership permission
 	ChangeMemberPermissionRequest struct {
 		Role string `json:"role"`
 	}
 
+	// ChangeMemberPermissionResponse is response to change membership permission
 	ChangeMemberPermissionResponse struct {
 		Role models.RoleType `json:"role"`
 	}
@@ -362,9 +374,12 @@ func (s *server) ChangeNetworkMemberRole(ctx context.Context, r *http.Request, r
 }
 
 type (
+	// DeleteNetworkUserResponse is response to a request to delete a user in network
 	DeleteNetworkUserResponse struct {
 		UserID models.ID `json:"user_id"`
 	}
+
+	// DeleteNetworkDeviceResponse is response to a request to delete a device in network
 	DeleteNetworkDeviceResponse struct {
 		DeviceID models.ID `json:"device_id"`
 	}
@@ -426,16 +441,19 @@ func (s *server) DeleteNetworkUser(ctx context.Context, r *http.Request) (*Delet
 }
 
 type (
+	// InviteMemberRequest is request struct to invite a member
 	InviteMemberRequest struct {
 		Email string          `json:"email"`
 		Role  models.RoleType `json:"role"`
 	}
 
+	// InviteMemberResponse is response to the invitation request
 	InviteMemberResponse struct {
 		InvitationID models.ID `json:"invitation_id"`
 	}
 )
 
+// InviteMember handles the invitation, sends out invitation request, and returns response
 func (s *server) InviteMember(ctx context.Context, r *http.Request, req *InviteMemberRequest) (*InviteMemberResponse, error) {
 	vars := Vars(mux.Vars(r))
 	networkID := vars.ModelID("network_id")

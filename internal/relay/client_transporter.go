@@ -31,8 +31,10 @@ import (
 	"github.com/pairmesh/pairmesh/security"
 )
 
+// ClientTransporterState represents the state of client transporter
 type ClientTransporterState byte
 
+// ClientTransporterState represents the state of client transporter
 const (
 	ClientTransporterStateInit       ClientTransporterState = 0
 	ClientTransporterStateConnecting ClientTransporterState = 1
@@ -74,6 +76,7 @@ type clientTransporterImpl struct {
 	hsSignal          chan struct{} // handshake notifier
 }
 
+// NewClientTransporter generates a clientTransporterImpl struct with given server and credentials
 func NewClientTransporter(server protocol.RelayServer, credentials []byte, nodeDHKey noise.DHKey, srvPubKey security.DHPublic) *clientTransporterImpl {
 	return &clientTransporterImpl{
 		securityTransporter: newSecurityTransporter(nil),
@@ -88,14 +91,17 @@ func NewClientTransporter(server protocol.RelayServer, credentials []byte, nodeD
 	}
 }
 
+// RelayServer returns the relay server information of the client transporter
 func (c *clientTransporterImpl) RelayServer() protocol.RelayServer {
 	return c.relayServer
 }
 
+// State returns the state of the client transporter
 func (c *clientTransporterImpl) State() ClientTransporterState {
 	return c.state
 }
 
+// SetState sets the state of the client transporter
 func (c *clientTransporterImpl) SetState(s ClientTransporterState) {
 	// Handshake finished signal.
 	if c.state == ClientTransporterStateConnecting && s == ClientTransporterStateConnected {
@@ -105,14 +111,17 @@ func (c *clientTransporterImpl) SetState(s ClientTransporterState) {
 	c.state = s
 }
 
+// SetHeartbeatInterval sets the heartbeat interval of the client transporter
 func (c *clientTransporterImpl) SetHeartbeatInterval(interval time.Duration) {
 	c.heartbeatInterval = interval
 }
 
+// SetIsPrimary sets whether this client transporter is primary
 func (c *clientTransporterImpl) SetIsPrimary(is bool) {
 	c.isPrimary = is
 }
 
+// HandshakeState returns the handshake state of the client transporter
 func (c *clientTransporterImpl) HandshakeState() *noise.HandshakeState {
 	return c.handshakeState
 }
@@ -172,6 +181,7 @@ func (c *clientTransporterImpl) Connect(ctx context.Context) error {
 	}
 }
 
+// Read is the job to read data from connection, decode it and pushes to chRead
 func (c *clientTransporterImpl) Read(ctx context.Context) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -201,6 +211,7 @@ func (c *clientTransporterImpl) Read(ctx context.Context) {
 	}
 }
 
+// Write is the job to detect data from chWrite, and sends it through connection
 func (c *clientTransporterImpl) Write(ctx context.Context) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -247,6 +258,7 @@ func (c *clientTransporterImpl) Write(ctx context.Context) {
 	}
 }
 
+// Close actually closes the client transporter
 func (c *clientTransporterImpl) Close() error {
 	if c.closed.Swap(true) {
 		return errors.New("close a closed client")

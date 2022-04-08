@@ -30,6 +30,7 @@ import (
 
 const timeout = 3
 
+// EchoClient is the client struct
 type EchoClient struct {
 	cfg *config.ClientConfig
 }
@@ -89,8 +90,12 @@ func (c *EchoClient) Start() error {
 					zap.L().Info(fmt.Sprintf("[worker %d] test job finished", index))
 					return
 				default:
-					conn.SetDeadline(time.Now().Add(timeout * time.Second))
-					prev_time := time.Now()
+					err = conn.SetDeadline(time.Now().Add(timeout * time.Second))
+					if err != nil {
+						zap.L().Error(fmt.Sprintf("[worker %d] error setting deadline to connection: %s", index, err.Error()))
+						return
+					}
+					prevTime := time.Now()
 					_, err := conn.Write(payload)
 					if err != nil {
 						zap.L().Error(fmt.Sprintf("[worker %d] error writing to server: %s", index, err.Error()))
@@ -121,8 +126,8 @@ func (c *EchoClient) Start() error {
 						}
 					}
 
-					post_time := time.Now()
-					delta := post_time.Sub(prev_time)
+					postTime := time.Now()
+					delta := postTime.Sub(prevTime)
 					lres.AddDataPoint(delta)
 				}
 			}

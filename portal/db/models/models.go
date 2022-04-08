@@ -139,9 +139,9 @@ type (
 
 		UserID     ID     `gorm:"not null;unique"`
 		User       *User  `gorm:"foreignkey:UserID"`
-		UnionId    string `gorm:"type:varchar(128);not null;unique"`
+		UnionID    string `gorm:"type:varchar(128);not null;unique"`
 		Nickname   string `gorm:"type:varchar(64);not null;unique"`
-		HeadImgUrl string `gorm:"type:varchar(512)"`
+		HeadImgURL string `gorm:"type:varchar(512)"`
 		City       string `gorm:"type:varchar(128)"`
 	}
 

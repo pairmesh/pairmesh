@@ -16,6 +16,7 @@ package utils
 
 import "math/rand"
 
+// GenerateRandPayload generates a random payload with given payload length
 func GenerateRandPayload(plen uint16) []byte {
 	var alp = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]byte, plen)

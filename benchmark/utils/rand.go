@@ -14,7 +14,7 @@
 
 package utils
 
-// DeternRng is a deterministic "random" number generator that implements Read(),
+// DetermRng is a deterministic "random" number generator that implements Read(),
 // so it works as mock io.Reader for generating credentials
 type DetermRng struct {
 	counter int

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package serder is used to serialize/deserialize network packets.
+// Package serde is used to serialize/deserialize network packets.
 package serde
 
 import (
@@ -40,6 +40,7 @@ var sharedProtos = []reflect.Type{
 	message.PacketType__UnitTestResponse: reflect.TypeOf(&message.P_UnitTestResponse{}),
 }
 
+// Deserialize function deserializes input message from bytes to formatted proto.Message
 func Deserialize(t message.PacketType, buf []byte) (proto.Message, error) {
 	if int(t) >= len(sharedProtos) || sharedProtos[int(t)] == nil {
 		return nil, fmt.Errorf("unrecognized protobuf type: %v", t)

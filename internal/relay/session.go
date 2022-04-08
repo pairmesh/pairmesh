@@ -32,8 +32,10 @@ import (
 
 const bufferSize = 512
 
+// SessionState represents the state of a session
 type SessionState byte
 
+// SessionState represents the state of a session
 const (
 	SessionStateInit    SessionState = 0
 	SessionStateRunning SessionState = 1
@@ -109,26 +111,32 @@ func (s *Session) SetVAddress(addr net.IP) {
 	s.vaddress = addr
 }
 
+// SetHeartbeatAt sets the last heart beat time with given time parameter
 func (s *Session) SetHeartbeatAt(t time.Time) {
 	s.lastHeartbeatAt = t
 }
 
+// IsPrimary returns whether the session is primary
 func (s *Session) IsPrimary() bool {
 	return s.isPrimary
 }
 
+// SetIsPrimary updates whether the session is primary
 func (s *Session) SetIsPrimary(is bool) {
 	s.isPrimary = is
 }
 
+// SyncAt returns the last time the session was synced
 func (s *Session) SyncAt() time.Time {
 	return s.lastSyncAt
 }
 
+// SetSyncAt sets the last sync time of the session
 func (s *Session) SetSyncAt(t time.Time) {
 	s.lastSyncAt = t
 }
 
+// LifetimeHook returns the lifetimeHook of the session
 func (s *Session) LifetimeHook() SessionLifetimeHook {
 	return s.lifetimeHook
 }
@@ -160,6 +168,7 @@ func (s *Session) Send(typ message.PacketType, msg proto.Message) (err error) {
 	return
 }
 
+// Serve starts job to detect read queue, and handle it according to handler registrations
 func (s *Session) Serve(ctx context.Context, wg *sync.WaitGroup) {
 	defer func() {
 		if e := recover(); e != nil {

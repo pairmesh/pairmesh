@@ -30,10 +30,12 @@ import (
 // Vendor represents the current sso provider (github, ...)
 type Vendor int
 
+// Contant variables for Vender
 const (
 	GitHub Vendor = iota
 )
 
+// URIAuthCodeCallback is the URI of login auth, which will trigger callback function
 const URIAuthCodeCallback = "/login/auth/callback"
 
 var errIllegalParam = errors.New("illegal parameter(s)")
@@ -51,6 +53,7 @@ func (v Vendor) String() string {
 	return strings.ToLower(n)
 }
 
+// Token is the struct of a token, with its access token and row data
 type Token struct {
 	AccessToken string
 	Raw         map[string]string //extra data for diff platform

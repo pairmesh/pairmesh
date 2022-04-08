@@ -32,6 +32,7 @@ import (
 )
 
 type (
+	// KeyListItem is the single item struct for a key in a key list
 	KeyListItem struct {
 		KeyID   models.ID      `json:"key_id"`
 		Type    models.KeyType `json:"type"`
@@ -40,11 +41,14 @@ type (
 		Expiry  time.Time      `json:"expiry"`
 		Enabled bool           `json:"enabled"`
 	}
+
+	// KeyListResponse is the response to a key list request
 	KeyListResponse struct {
 		Keys []KeyListItem `json:"keys"`
 	}
 )
 
+// KeyList returns a key list in format of KeyListResponse
 func (s *server) KeyList(ctx context.Context) (*KeyListResponse, error) {
 	userID := models.ID(jwt.UserIDFromContext(ctx))
 
@@ -72,11 +76,15 @@ func (s *server) KeyList(ctx context.Context) (*KeyListResponse, error) {
 }
 
 type (
+	// KeyType as string alias, represents type of a key
 	KeyType string
 
+	// CreateKeyRequest is the request to create a key
 	CreateKeyRequest struct {
 		Type models.KeyType `json:"type"`
 	}
+
+	// CreateKeyResponse is the response to the request to create a key
 	CreateKeyResponse struct {
 		KeyID   models.ID      `json:"key_id"`
 		Type    models.KeyType `json:"type"`
@@ -87,6 +95,7 @@ type (
 	}
 )
 
+// CreateKey handles key creation
 func (s *server) CreateKey(ctx context.Context, req *CreateKeyRequest) (*CreateKeyResponse, error) {
 	if req.Type != models.KeyTypeOneOff && req.Type != models.KeyTypeReusable {
 		return nil, errcode.ErrIllegalRequest
@@ -119,53 +128,61 @@ func (s *server) CreateKey(ctx context.Context, req *CreateKeyRequest) (*CreateK
 }
 
 type (
+	// ChangeKeyRequest is request to change key
 	ChangeKeyRequest struct {
 		Op string `json:"op"`
 	}
+
+	// ChangeKeyResponse is response to requests to change key
 	ChangeKeyResponse struct {
 	}
 
+	// ExchangeKeyResponse is response to requests to exchange key
 	ExchangeKeyResponse struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
 	}
 )
 
+// ChangeKey updates key in database and returns response accordingly
 func (s *server) ChangeKey(ctx context.Context, r *http.Request, req *ChangeKeyRequest) (*ChangeKeyResponse, error) {
 	vars := Vars(mux.Vars(r))
 	if req.Op != "enable" && req.Op != "disable" {
 		return nil, errcode.ErrIllegalRequest
 	}
 
-	keyId := vars.ModelID("key_id")
-	if keyId == 0 {
+	keyID := vars.ModelID("key_id")
+	if keyID == 0 {
 		return nil, nil
 	}
 
 	userID := models.ID(jwt.UserIDFromContext(ctx))
 	return &ChangeKeyResponse{}, db.Tx(func(tx *gorm.DB) error {
-		return models.NewAuthKeyQuerySet(tx).UserIDEq(userID).IDEq(keyId).GetUpdater().SetEnabled(req.Op == "enable").Update()
+		return models.NewAuthKeyQuerySet(tx).UserIDEq(userID).IDEq(keyID).GetUpdater().SetEnabled(req.Op == "enable").Update()
 	})
 }
 
 type (
+	// DeleteKeyResponse is struct as response to Deleting a key
 	DeleteKeyResponse struct {
 	}
 )
 
+// DeleteKey handles key deletion
 func (s *server) DeleteKey(ctx context.Context, r *http.Request) (*DeleteKeyResponse, error) {
 	vars := Vars(mux.Vars(r))
-	keyId := vars.ModelID("key_id")
-	if keyId == 0 {
+	keyID := vars.ModelID("key_id")
+	if keyID == 0 {
 		return nil, nil
 	}
 
 	userID := models.ID(jwt.UserIDFromContext(ctx))
 	return &DeleteKeyResponse{}, db.Tx(func(tx *gorm.DB) error {
-		return models.NewAuthKeyQuerySet(tx).UserIDEq(userID).IDEq(keyId).Delete()
+		return models.NewAuthKeyQuerySet(tx).UserIDEq(userID).IDEq(keyID).Delete()
 	})
 }
 
+// ExchangeKey handles key exchange
 func (s *server) ExchangeKey(ctx context.Context) (*ExchangeKeyResponse, error) {
 	machineID := jwt.MachineIDFromContext(ctx)
 	keyID := models.ID(jwt.AuthKeyIDFromContext(ctx))

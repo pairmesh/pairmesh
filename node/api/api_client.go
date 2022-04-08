@@ -36,6 +36,7 @@ func New(server, token, machineid string) *Client {
 	}
 }
 
+// SetToken sets key token to the client
 func (c *Client) SetToken(key string) {
 	c.restful.SetToken(key)
 }

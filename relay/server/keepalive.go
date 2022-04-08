@@ -76,8 +76,8 @@ func keepalive(ctx context.Context, wg *sync.WaitGroup, server *relay.Server, ap
 				continue
 			}
 			now := time.Now()
-			for _, peerId := range peers {
-				s := server.Session(peerId)
+			for _, peerID := range peers {
+				s := server.Session(peerID)
 				if s == nil {
 					continue
 				}

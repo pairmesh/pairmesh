@@ -15,16 +15,21 @@
 package protocol
 
 type (
-	PeerID    uint64
-	UserID    uint64
+	// PeerID is the id of a peer
+	PeerID uint64
+	// UserID is the id of a user
+	UserID uint64
+	// NetworkID is the id of a network
 	NetworkID uint64
 
+	// Network is the struct of a network instance
 	Network struct {
 		ID    NetworkID `json:"id"`
 		Name  string    `json:"name"`
 		Peers []PeerID  `json:"peers"`
 	}
 
+	// Peer is the struct of a peer node instance
 	Peer struct {
 		ID       PeerID   `json:"id"`
 		UserID   UserID   `json:"user_id"`
@@ -48,16 +53,19 @@ type (
 		Networks       []Network     `json:"networks,omitempty"`
 	}
 
+	// KeyExchangeResponse is response to requests to exchange key
 	KeyExchangeResponse struct {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
 	}
 
+	// PreflightRequest is request to gather information to handle preflight and get ready
 	PreflightRequest struct {
 		OS   string `json:"os"`
 		Host string `json:"host"`
 	}
 
+	// PreflightResponse is the response to preflight requests with data needed
 	PreflightResponse struct {
 		ID PeerID `json:"id"`
 		// User is the user who created the node. If ACL tags are in
@@ -77,6 +85,7 @@ type (
 		Credential string `json:"credential,omitempty"`
 	}
 
+	// RenewCredentialResponse is response to requests to renew a credential
 	RenewCredentialResponse struct {
 		// the renewed credential in BASE64 representation
 		Credential      string `json:"credential,omitempty"`

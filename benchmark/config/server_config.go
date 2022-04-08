@@ -23,7 +23,7 @@ type ServerConfig struct {
 	isBounce bool
 }
 
-// NewConfig function returns a new ServerConfig with given parameters
+// NewServerConfig function returns a new ServerConfig with given parameters
 func NewServerConfig(
 	mode benchmark.ModeType,
 	port uint16,

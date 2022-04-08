@@ -70,6 +70,7 @@ func (s *Server) HeartbeatInterval() time.Duration {
 	return s.heartbeatInterval
 }
 
+// Handler returns handler of the session
 func (s *Server) Handler() SessionHandler {
 	return s.handler
 }
@@ -84,6 +85,7 @@ func (s *Server) RSAPublicKey() *rsa.PublicKey {
 	return s.publicKey
 }
 
+// SetRSAPublicKey sets the public key of the server
 func (s *Server) SetRSAPublicKey(key *rsa.PublicKey) {
 	s.publicKey = key
 }
@@ -97,6 +99,8 @@ func (s *Server) Session(peerID protocol.PeerID) *Session {
 	return v.(*Session)
 }
 
+// ForeachSession handles each session of the server,
+// according to the given callback function
 func (s *Server) ForeachSession(fn func(*Session)) {
 	s.sessions.Range(func(_, value interface{}) bool {
 		fn(value.(*Session))
@@ -140,6 +144,7 @@ func (s *Server) Serve(ctx context.Context) error {
 	}
 }
 
+// Close actually closes the server
 func (s *Server) Close() error {
 	if s.closed.Swap(true) {
 		return errors.New("close a closed server")
@@ -170,7 +175,7 @@ func (s *Server) OnSessionHandshake(ses *Session) {
 	}
 
 	if logutil.IsEnablePeer() {
-		zap.L().Debug("New session handshake successfully", zap.Reflect("peerId", ses.PeerID()), zap.Bool("isPrimary", ses.IsPrimary()))
+		zap.L().Debug("New session handshake successfully", zap.Reflect("peerID", ses.PeerID()), zap.Bool("isPrimary", ses.IsPrimary()))
 	}
 
 	// Close the old session if new connection established.

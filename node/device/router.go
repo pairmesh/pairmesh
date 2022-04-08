@@ -9,6 +9,7 @@ import (
 )
 
 type (
+	// Router is the interface for a router to set and add with a config
 	Router interface {
 		Set(cfg *Config)
 		Add(cfg *Config)

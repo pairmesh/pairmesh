@@ -236,8 +236,10 @@ func relayAuthKeyValidator(relayAuthKey string) fn.PluginFunc {
 	}
 }
 
+// Vars is the map of strings for maintaining keys and models
 type Vars map[string]string
 
+// Uint64 converts input string key into an uint64 integer
 func (v Vars) Uint64(key string) uint64 {
 	val, found := v[key]
 	if !found {
@@ -250,6 +252,7 @@ func (v Vars) Uint64(key string) uint64 {
 	return n
 }
 
+// ModelID returns model id of a given key
 func (v Vars) ModelID(key string) models.ID {
 	return models.ID(v.Uint64(key))
 }
