@@ -79,7 +79,7 @@ func (d *NodeDriver) pullPeerGraph(ctx context.Context) {
 			d.rm.Update(ctx, res.RelayServers)
 			err = d.mm.Update(res.Networks, res.Peers)
 			if err != nil {
-				zap.L().Error("Error updating peers to network")
+				zap.L().Error("Error updating peers to network", zap.Error(err))
 			}
 
 		case <-tickTimer:

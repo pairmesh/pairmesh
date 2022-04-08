@@ -34,6 +34,9 @@ import (
 	"github.com/pairmesh/pairmesh/portal/db"
 	"github.com/pairmesh/pairmesh/portal/sso"
 
+	// Need this anonymous import because we relay on the github.init() func to register sso provider.
+	_ "github.com/pairmesh/pairmesh/portal/sso/github"
+
 	"go.uber.org/zap"
 )
 
