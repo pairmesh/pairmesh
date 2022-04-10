@@ -22,7 +22,7 @@ do
   # Build PairMesh daemon process binary
   GOARCH=$arch make pairmesh
   mkdir PairMesh.app/Contents/Daemon
-  cp bin/pairmesh PairMesh.app/Contents/Daemon
+  cp bin/pairmesh PairMesh.app/Contents/Daemon/PairMesh
   zip dist/"pairmesh-$(git describe --tags --abbrev=0)-macos-$arch.zip" -r PairMesh.app
   rm -rf PairMesh.app
 done

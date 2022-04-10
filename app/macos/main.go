@@ -29,7 +29,7 @@ func main() {
 		messagebox.Fatal("Cannot found executable path", err.Error())
 	}
 	dir := filepath.Dir(exec)
-	path, err := filepath.Abs(filepath.Join(dir, "../Daemon/pairmesh"))
+	path, err := filepath.Abs(filepath.Join(dir, "../Daemon/PairMesh"))
 	if err != nil {
 		messagebox.Fatal("Daemon executable path not found", err.Error())
 	}
@@ -43,7 +43,7 @@ func main() {
 			messagebox.Fatal("List processes failed", err.Error())
 		}
 		for _, p := range pl {
-			if p.Executable() == "pairmesh" {
+			if p.Executable() == "PairMesh" {
 				os.Exit(0)
 			}
 		}

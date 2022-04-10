@@ -227,6 +227,10 @@ func (d *NodeDriver) Drive(ctx context.Context) {
 	d.wg.Add(1)
 	go d.mon.Monitoring(ctx, d.wg)
 
+	// Begin to renew credential
+	d.wg.Add(1)
+	go d.renewCredential(ctx)
+
 	zap.L().Info("All background threads running")
 }
 
