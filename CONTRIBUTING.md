@@ -2,7 +2,7 @@
 
 ## Contribution Guide
 
-PairMesh is a community-driven open source project and we welcome any contributor.  Contributions to the PairMesh project are expected to adhere to our [Code of Conduct](https://github.com/pairmesh/pairmesh/blob/master/CODE_OF_CONDUCT.md).
+PairMesh is a community-driven open source project and we look forward to you being part of the community of contributors. Contributions to the PairMesh project are expected to adhere to our [Code of Conduct](https://github.com/pairmesh/pairmesh/blob/master/CODE_OF_CONDUCT.md).
 
 This document outlines some conventions about development workflow, commit message formatting, contact points and other resources to make it easier to get your contribution accepted. You can also join us in our [Slack](https://pairmesh.slack.com) for help with any issues.
 

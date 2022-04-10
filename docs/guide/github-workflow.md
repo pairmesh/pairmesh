@@ -67,9 +67,9 @@ You can now edit the code on the `myfeature` branch.
 Build and run all tests:
 
 ```sh
-make build
+make
 
-make lint
+make check
 
 make test
 ```
