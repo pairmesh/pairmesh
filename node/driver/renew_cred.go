@@ -34,7 +34,6 @@ type credential struct {
 	Lease time.Duration
 }
 
-//nolint ; FIXME: I suspect we forgot to call this function in some proper places
 func (d *NodeDriver) renewCredential(ctx context.Context) {
 	defer d.wg.Done()
 
