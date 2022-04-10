@@ -77,7 +77,8 @@ PairMesh is developed by an open and friendly community. Everybody is cordially 
 
 Here are guidelines for contributing to various aspect of the project:
 
-- [How to setup development environment](docs/guide/dev-guide.md)
+- [How to contribute](./CONTRIBUTING.md)
+- [PairMesh GitHub workflow](./docs/guide/github-workflow.md)
 
 Any other question? Reach out to the [PairMesh Discussion](https://github.com/pairmesh/pairmesh/discussions) forum to get help!
 
