@@ -21,9 +21,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/pairmesh/pairmesh/codec"
-	"github.com/pairmesh/pairmesh/codec/serde"
 	"github.com/pairmesh/pairmesh/constant"
+	"github.com/pairmesh/pairmesh/internal/codec"
+	"github.com/pairmesh/pairmesh/internal/codec/serde"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/node/mesh/types"

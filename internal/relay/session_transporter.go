@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/flynn/noise"
-	"github.com/pairmesh/pairmesh/codec"
+	"github.com/pairmesh/pairmesh/internal/codec"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )

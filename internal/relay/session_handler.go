@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/flynn/noise"
-	"github.com/pairmesh/pairmesh/codec"
-	"github.com/pairmesh/pairmesh/codec/serde"
+	"github.com/pairmesh/pairmesh/internal/codec"
+	"github.com/pairmesh/pairmesh/internal/codec/serde"
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/security"
 	"google.golang.org/protobuf/proto"

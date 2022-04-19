@@ -24,7 +24,7 @@ import (
 
 	noise "github.com/flynn/noise"
 	gomock "github.com/golang/mock/gomock"
-	codec "github.com/pairmesh/pairmesh/codec"
+	"github.com/pairmesh/pairmesh/internal/codec"
 )
 
 // MockSessionTransporter is a mock of SessionTransporter interface.

@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pairmesh/pairmesh/codec"
-	"github.com/pairmesh/pairmesh/codec/serde"
 	"github.com/pairmesh/pairmesh/constant"
+	"github.com/pairmesh/pairmesh/internal/codec"
+	"github.com/pairmesh/pairmesh/internal/codec/serde"
 	"github.com/pairmesh/pairmesh/message"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/proto"

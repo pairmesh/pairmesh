@@ -16,7 +16,8 @@ package relay
 
 import (
 	"github.com/flynn/noise"
-	"github.com/pairmesh/pairmesh/codec"
+	"github.com/pairmesh/pairmesh/internal/codec"
+
 	"net"
 )
 

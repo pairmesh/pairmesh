@@ -19,7 +19,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/pairmesh/pairmesh/codec"
+	"github.com/pairmesh/pairmesh/internal/codec"
 	"github.com/pairmesh/pairmesh/message"
 
 	"github.com/flynn/noise"
