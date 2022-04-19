@@ -18,7 +18,7 @@ import (
 	"sort"
 
 	"github.com/pairmesh/pairmesh/constant"
-	"github.com/pairmesh/pairmesh/jsonapi"
+	"github.com/pairmesh/pairmesh/internal/jsonapi"
 	"github.com/pairmesh/pairmesh/protocol"
 	"go.uber.org/zap"
 )

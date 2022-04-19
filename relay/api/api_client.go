@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/pairmesh/pairmesh/constant"
-	"github.com/pairmesh/pairmesh/jsonapi"
+	"github.com/pairmesh/pairmesh/internal/jsonapi"
 	"github.com/pairmesh/pairmesh/protocol"
 	"github.com/pairmesh/pairmesh/relay/config"
 )
