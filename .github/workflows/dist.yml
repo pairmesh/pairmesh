@@ -1,0 +1,78 @@
+name: Distribution
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - "**.md"
+
+jobs:
+  dist-linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Checkout ARM64
+        uses: actions/checkout@v3
+        with:
+          repository: theradcolor/aarch64-linux-gnu
+          fetch-depth: 1
+          path: aarch64-linux-gnu
+          ref: stable-gcc
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.2"
+      - name: Build and Package
+        run: |
+          export PATH=$PATH:$GITHUB_WORKSPACE/aarch64-linux-gnu/bin
+          build/linux_dist.sh
+
+  dist-macos:
+    name: MacOS
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.2"
+      - name: Build and Package
+        run: build/macos_dist.sh
+
+  dist-windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - name: Install NSIS
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          iwr -useb get.scoop.sh -outfile 'install.ps1'
+          .\install.ps1 -RunAsAdmin
+          scoop bucket add extras
+          scoop install nsis
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: "1.17.2"
+      - name: Build
+        run: |
+          go build -o PairMesh.exe  -ldflags "-s -w -H=windowsgui -X github.com/pairmesh/pairmesh/version.GitHash=$(git describe --no-match --always --dirty) -X github.com/pairmesh/pairmesh/version.GitBranch=$(git rev-parse --abbrev-ref HEAD)" ./cmd/pairmesh
+          makensis .\build\windows_installer.nsi
+          mkdir dist
+          Compress-Archive -Update -Path .\PairMesh_Setup.exe dist/"pairmesh-$(git describe --always --tags --abbrev=0)-windows-amd64.zip"
