@@ -39,7 +39,7 @@ pairrelay:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairrelay ./cmd/pairrelay
 
 test:
-	$(GOTEST) `go list ./... | grep -v app/macos | grep -v systray`
+	$(GOTEST) `go list ./... | grep -v tools | grep -v systray`
 
 integration_test:
 
