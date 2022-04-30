@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pairmesh/pairmesh/benchmark"
-	"github.com/pairmesh/pairmesh/benchmark/client"
-	"github.com/pairmesh/pairmesh/benchmark/config"
-	"github.com/pairmesh/pairmesh/benchmark/server"
+	"github.com/pairmesh/pairmesh/bench"
+	"github.com/pairmesh/pairmesh/bench/client"
+	"github.com/pairmesh/pairmesh/bench/config"
+	"github.com/pairmesh/pairmesh/bench/server"
 	"github.com/pairmesh/pairmesh/pkg/cmdutil"
 	"github.com/pairmesh/pairmesh/pkg/logutil"
 	"github.com/pairmesh/pairmesh/version"
@@ -81,7 +81,7 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 			if mode != "relay" && mode != "echo" {
 				return errors.New("invalid mode param. Only relay or echo are valid")
 			}
-			modeType := benchmark.ModeType(mode)
+			modeType := bench.ModeType(mode)
 
 			// Validate and convert isBounce
 			var isBounce bool
@@ -101,12 +101,12 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 				serverCfg := config.NewServerConfig(modeType, port, isBounce)
 				return server.Run(&serverCfg)
 			case role == "client":
-				if clients > benchmark.MaxClientCount {
-					return fmt.Errorf("invalid client number. Cannot be more than %d", benchmark.MaxClientCount)
+				if clients > bench.MaxClientCount {
+					return fmt.Errorf("invalid client number. Cannot be more than %d", bench.MaxClientCount)
 				}
 
-				if payload > benchmark.MaxPayload {
-					return fmt.Errorf("invalid payload length. Cannot be more than %d", benchmark.MaxPayload)
+				if payload > bench.MaxPayload {
+					return fmt.Errorf("invalid payload length. Cannot be more than %d", bench.MaxPayload)
 				}
 
 				clientCfg := config.NewClientConfig(
@@ -130,8 +130,8 @@ spawning 12 clients, each request contains 42 bytes, and test for 60 seconds.`,
 	rootCmd.Flags().StringVarP(&host, "endpoint", "e", "127.0.0.1", "Specify the server endpoint when in client role")
 	rootCmd.Flags().Uint16VarP(&port, "port", "p", 9736, "Specify the portal of the server")
 	rootCmd.Flags().StringVarP(&isBounceStr, "bounce", "b", "true", "Specify whether server would echo back all data from clients. Otherwise simply echo back 'OK'")
-	rootCmd.Flags().Uint16VarP(&clients, "client", "c", 1, fmt.Sprintf("Specify the number of clients when in client role, max %d", benchmark.MaxClientCount))
-	rootCmd.Flags().Uint16VarP(&payload, "payload", "l", 128, fmt.Sprintf("Specify the payload in bytes, max %d", benchmark.MaxPayload))
+	rootCmd.Flags().Uint16VarP(&clients, "client", "c", 1, fmt.Sprintf("Specify the number of clients when in client role, max %d", bench.MaxClientCount))
+	rootCmd.Flags().Uint16VarP(&payload, "payload", "l", 128, fmt.Sprintf("Specify the payload in bytes, max %d", bench.MaxPayload))
 	rootCmd.Flags().Uint16VarP(&duration, "duration", "d", 60, "Specify the test duration in seconds")
 	cmdutil.Run(rootCmd)
 }

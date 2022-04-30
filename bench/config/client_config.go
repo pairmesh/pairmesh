@@ -14,11 +14,11 @@
 
 package config
 
-import "github.com/pairmesh/pairmesh/benchmark"
+import "github.com/pairmesh/pairmesh/bench"
 
 // ClientConfig is the config struct for client side pairbench
 type ClientConfig struct {
-	mode     benchmark.ModeType
+	mode     bench.ModeType
 	endpoint string
 	port     uint16
 	isBounce bool
@@ -29,7 +29,7 @@ type ClientConfig struct {
 
 // NewClientConfig function returns ClientConfig struct with parameters given
 func NewClientConfig(
-	mode benchmark.ModeType,
+	mode bench.ModeType,
 	endpoint string,
 	port uint16,
 	isBounce bool,
@@ -49,7 +49,7 @@ func NewClientConfig(
 }
 
 // Mode returns the mode of the server to connect to
-func (c *ClientConfig) Mode() benchmark.ModeType {
+func (c *ClientConfig) Mode() bench.ModeType {
 	return c.mode
 }
 

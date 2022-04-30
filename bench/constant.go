@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package benchmark
+package bench
 
 // ModeType as string alias, represents type of a mode
 type ModeType string
