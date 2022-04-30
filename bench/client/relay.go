@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/flynn/noise"
-	"github.com/pairmesh/pairmesh/benchmark/config"
-	"github.com/pairmesh/pairmesh/benchmark/results"
-	"github.com/pairmesh/pairmesh/benchmark/utils"
+	"github.com/pairmesh/pairmesh/bench/config"
+	"github.com/pairmesh/pairmesh/bench/results"
+	"github.com/pairmesh/pairmesh/bench/utils"
 	"github.com/pairmesh/pairmesh/internal/relay"
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/protocol"

@@ -12,33 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package client
 
 import (
 	"errors"
 
-	"github.com/pairmesh/pairmesh/benchmark"
-	"github.com/pairmesh/pairmesh/benchmark/config"
+	"github.com/pairmesh/pairmesh/bench"
+	"github.com/pairmesh/pairmesh/bench/config"
 )
 
-// Job is the interface of a server, which could be started with Start function
+// Job is the client interface that could be started with Start function
 type Job interface {
 	Start() error
 }
 
-// Run function starts a simple echo server as server side of pairbench
-// If cfg.isBounce is true, it echoes whatever it hears from incoming connection
-// Otherwise, it always echoes "OK" as minimal backward payload
-func Run(cfg *config.ServerConfig) error {
+// Run function connects to endpoint host and start performance testing
+func Run(cfg *config.ClientConfig) error {
 	var job Job
 	switch {
-	case cfg.Mode() == benchmark.ModeTypeEcho:
-		job = NewEchoServer(cfg)
+	case cfg.Mode() == bench.ModeTypeEcho:
+		job = NewEchoClient(cfg)
 		return job.Start()
-	case cfg.Mode() == benchmark.ModeTypeRelay:
-		job = NewRelayServer(cfg)
+	case cfg.Mode() == bench.ModeTypeRelay:
+		job = NewRelayClient(cfg)
 		return job.Start()
 	default:
-		return errors.New("invalid mode specified when starting a server (supported mode: echo/relay)")
+		return errors.New("invalid mode specified when starting client (supported mode: echo/relay)")
 	}
 }

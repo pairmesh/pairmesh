@@ -16,15 +16,14 @@ package client
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"sync"
 	"time"
 
-	"math/rand"
-
-	"github.com/pairmesh/pairmesh/benchmark/config"
-	"github.com/pairmesh/pairmesh/benchmark/results"
-	"github.com/pairmesh/pairmesh/benchmark/utils"
+	"github.com/pairmesh/pairmesh/bench/config"
+	"github.com/pairmesh/pairmesh/bench/results"
+	"github.com/pairmesh/pairmesh/bench/utils"
 	"go.uber.org/zap"
 )
 

@@ -21,8 +21,8 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/pairmesh/pairmesh/benchmark"
-	"github.com/pairmesh/pairmesh/benchmark/config"
+	"github.com/pairmesh/pairmesh/bench"
+	"github.com/pairmesh/pairmesh/bench/config"
 	"go.uber.org/zap"
 )
 
@@ -62,7 +62,7 @@ func (s *EchoServer) Start() error {
 		go func(conn net.Conn, bounce bool) {
 			defer conn.Close()
 			for {
-				buffer := make([]byte, benchmark.BufferSize)
+				buffer := make([]byte, bench.BufferSize)
 				if _, err = conn.Read(buffer); err != nil {
 					if err != io.EOF {
 						zap.L().Error(fmt.Sprintf("Error reading from connection: %s", err.Error()))

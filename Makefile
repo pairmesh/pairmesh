@@ -24,7 +24,7 @@ LINT_DIRS := $$(go list ./... | grep -vE "wintun|tools|systray|macos")
 FAILPOINT_ENABLE  := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl enable)
 FAILPOINT_DISABLE := $$(find $$PWD/ -type d | grep -vE "(\.git|tools)" | xargs tools/bin/failpoint-ctl disable)
 
-default: fmt pairbench pairmesh pairportal pairrelay
+default: fmt pairmesh pairportal pairrelay pairbench
 
 pairbench:
 	$(GOBUILD) -ldflags '$(LDFLAGS)' -o bin/pairbench ./cmd/pairbench

@@ -20,7 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pairmesh/pairmesh/benchmark/config"
+	"github.com/pairmesh/pairmesh/bench/config"
 	"go.uber.org/zap"
 )
 
