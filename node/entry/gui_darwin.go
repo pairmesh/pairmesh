@@ -70,9 +70,9 @@ func (app *osApp) createTray() {
 	app.login = app.addMenuItemWithActionWithTK("tray.login", app.onOpenLoginWeb)
 
 	// Login status
-	app.device = app.addMenuItemWithTK("tray.unknown")
 	app.status = app.addMenuItemWithTK("tray.unknown")
 	app.status.SetDisabled(true)
+	app.device = app.addMenuItemWithTK("tray.unknown")
 	app.enable = app.addMenuItemWithTK("tray.enable")
 	app.console = app.addMenuItemWithActionWithTK("tray.profile.console", app.onOpenConsole)
 
@@ -125,8 +125,8 @@ func (app *osApp) setMenuVisibility(isGuest bool) {
 	app.login.SetHidden(!isGuest)
 
 	// Login status menu items
-	app.device.SetHidden(isGuest)
 	app.status.SetHidden(isGuest)
+	app.device.SetHidden(isGuest)
 	app.console.SetHidden(isGuest)
 	app.enable.SetHidden(isGuest)
 	app.myDevices.SetHidden(isGuest)
@@ -156,12 +156,12 @@ func (app *osApp) render(summary *driver.Summary) {
 	if !isGuest {
 		profile := summary.Profile
 
+		// Display current network status.
+		app.status.SetTitle(i18n.L("tray.status." + summary.Status))
+
 		// Current device information.
 		app.device.SetTitle(fmt.Sprintf("%s\t%s", i18n.L("tray.device"), profile.Name))
 		app.device.SetAction(app.copyAddressToClipboard(profile.Name, profile.IPv4))
-
-		// Display current network status.
-		app.status.SetTitle(fmt.Sprintf("%s\t%s", i18n.L("tray.status.title"), i18n.L("tray.status."+summary.Status)))
 
 		// Enabled devices
 		app.enable.SetChecked(summary.Enabled)

@@ -100,9 +100,9 @@ func (app *osApp) createTray() error {
 	app.login = app.addActionWithActionWithTK(nil, "tray.login", app.onOpenLoginWeb)
 
 	// Login status
-	app.device = app.addActionWithTK(nil, "tray.unknown")
 	app.status = app.addActionWithTK(nil, "tray.unknown")
 	app.status.SetEnabled(false)
+	app.device = app.addActionWithTK(nil, "tray.unknown")
 	app.enable = app.addActionWithTK(nil, "tray.enable")
 	app.console = app.addActionWithActionWithTK(nil, "tray.profile.console", app.onOpenConsole)
 
@@ -146,8 +146,8 @@ func (app *osApp) setMenuVisibility(isGuest bool) {
 	app.login.SetVisible(isGuest)
 
 	// Login status menu items
-	app.device.SetVisible(!isGuest)
 	app.status.SetVisible(!isGuest)
+	app.device.SetVisible(!isGuest)
 	app.console.SetVisible(!isGuest)
 	app.enable.SetVisible(!isGuest)
 	app.myDevices.SetVisible(!isGuest)
@@ -178,12 +178,12 @@ func (app *osApp) render(summary *driver.Summary) {
 	if !isGuest {
 		profile := summary.Profile
 
+		// Display current device network status.
+		app.status.SetText(i18n.L("tray.status." + summary.Status))
+
 		// Only keep the first handler.
 		app.device.SetText(fmt.Sprintf("%s\t%s", i18n.L("tray.device"), profile.Name))
 		app.replaceHandler(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
-
-		// Display current device network status.
-		app.status.SetText(fmt.Sprintf("%s\t%s", i18n.L("tray.status.title"), i18n.L("tray.status."+summary.Status)))
 
 		// Enabled devices
 		app.enable.SetChecked(summary.Enabled)

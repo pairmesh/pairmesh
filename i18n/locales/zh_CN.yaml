@@ -41,7 +41,6 @@ tray:
   my_devices: "我的设备"
   my_networks: "我的网络"
   status:
-    title: "网络状态"
     connecting: "连接中..."
     connected: "已连接"
   enable: "启用设备"

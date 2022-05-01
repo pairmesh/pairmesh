@@ -41,7 +41,6 @@ tray:
   my_devices: "My Devices"
   my_networks: "My Networks"
   status:
-    title: "Network Status"
     connecting: "Connecting..."
     connected: "Connected"
   enable: "Device Enabled"
