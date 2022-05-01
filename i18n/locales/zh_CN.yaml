@@ -37,12 +37,13 @@ tray:
   profile:
     console: "管理后台"
     logout: "登出"
-  device: "当前设备\t%s"
+  device: "当前设备"
   my_devices: "我的设备"
   my_networks: "我的网络"
   status:
-    connecting: "网络状态\t连接中..."
-    connected: "网络状态\t已连接"
+    title: "网络状态"
+    connecting: "连接中..."
+    connected: "已连接"
   enable: "启用设备"
   autorun: "开机启动"
   help:
@@ -51,7 +52,7 @@ tray:
     file: "打开日志文件"
     update: "更新"
   about: "关于"
-  language: "语言\t%s"
+  language: "语言"
   exit: "退出"
   toast:
     my_address:

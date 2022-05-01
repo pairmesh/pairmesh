@@ -155,7 +155,7 @@
     NSMutableParagraphStyle *paragraph = [NSMutableParagraphStyle alloc];
     NSTextTab *tab =
         [[NSTextTab alloc] initWithTextAlignment:NSTextAlignmentRight
-                                        location:30.0f + maxWidth
+                                        location:40.0f + maxWidth
                                          options:@{}];
     [paragraph setTabStops:@[ tab ]];
     NSMutableAttributedString *attributed = [[NSMutableAttributedString alloc]

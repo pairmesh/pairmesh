@@ -95,7 +95,7 @@ func (app *osApp) createTray() {
 	app.about = app.addMenuItemWithActionWithTK("tray.about", app.onOpenAbout)
 	app.addSeparator()
 
-	app.language = app.addMenuItem(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+	app.language = app.addMenuItem(i18n.L("tray.language"))
 	app.addSeparator()
 
 	app.quit = app.addMenuItemWithActionWithTK("tray.exit", app.onQuit)
@@ -157,11 +157,11 @@ func (app *osApp) render(summary *driver.Summary) {
 		profile := summary.Profile
 
 		// Current device information.
-		app.device.SetTitle(i18n.L("tray.device", profile.Name))
+		app.device.SetTitle(fmt.Sprintf("%s\t%s", i18n.L("tray.device"), profile.Name))
 		app.device.SetAction(app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current network status.
-		app.status.SetTitle(i18n.L("tray.status." + summary.Status))
+		app.status.SetTitle(fmt.Sprintf("%s\t%s", i18n.L("tray.status.title"), i18n.L("tray.status."+summary.Status)))
 
 		// Enabled devices
 		app.enable.SetChecked(summary.Enabled)
@@ -360,7 +360,7 @@ func (app *osApp) setLocale(name string) func() {
 			for k, v := range app.itemLocaleNameMap {
 				k.SetTitle(i18n.L(v))
 			}
-			app.language.SetTitle(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+			app.language.SetTitle(i18n.L("tray.language"))
 
 			summary := app.driver.Summarize()
 			app.render(summary)

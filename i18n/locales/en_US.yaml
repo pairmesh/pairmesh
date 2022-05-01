@@ -37,12 +37,13 @@ tray:
   profile:
     console: "Management Console"
     logout: "Logout"
-  device: "Current Device\t%s"
+  device: "Current Device"
   my_devices: "My Devices"
   my_networks: "My Networks"
   status:
-    connecting: "Network Status\tConnecting..."
-    connected: "Network Status\tConnected"
+    title: "Network Status"
+    connecting: "Connecting..."
+    connected: "Connected"
   enable: "Device Enabled"
   autorun: "Auto Startup"
   help:
@@ -51,7 +52,7 @@ tray:
     file: "Open Log File"
     update: "Check Update"
   about: "About"
-  language: "Language\t%s"
+  language: "Language"
   exit: "Quit"
   toast:
     my_address:

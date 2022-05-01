@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/atotto/clipboard"
-	"github.com/lxn/walk"
 	"github.com/pairmesh/pairmesh/i18n"
 	"github.com/pairmesh/pairmesh/node/driver"
 	"github.com/pairmesh/pairmesh/node/resources"
@@ -125,7 +124,7 @@ func (app *osApp) createTray() error {
 	app.about = app.addActionWithActionWithTK(nil, "tray.about", app.onOpenAbout)
 	app.addSeparator()
 
-	app.language = app.addMenuAction(nil, i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+	app.language = app.addMenuAction(nil, i18n.L("tray.language"))
 	app.addSeparator()
 
 	app.exit = app.addActionWithActionWithTK(nil, "tray.exit", app.onQuit)
@@ -180,11 +179,11 @@ func (app *osApp) render(summary *driver.Summary) {
 		profile := summary.Profile
 
 		// Only keep the first handler.
-		app.device.SetText(i18n.L("tray.device", profile.Name))
+		app.device.SetText(fmt.Sprintf("%s\t%s", i18n.L("tray.device"), profile.Name))
 		app.replaceHandler(app.device, app.copyAddressToClipboard(profile.Name, profile.IPv4))
 
 		// Display current device network status.
-		app.status.SetText(i18n.L("tray.status." + summary.Status))
+		app.status.SetText(fmt.Sprintf("%s\t%s", i18n.L("tray.status.title"), i18n.L("tray.status."+summary.Status)))
 
 		// Enabled devices
 		app.enable.SetChecked(summary.Enabled)
@@ -406,7 +405,7 @@ func (app *osApp) setLocale(name string) func() {
 			for k, v := range app.actionLocaleNameMap {
 				k.SetText(i18n.L(v))
 			}
-			app.language.SetText(i18n.L("tray.language", i18n.GetCurrentLocaleName()))
+			app.language.SetText(i18n.L("tray.language"))
 
 			summary := app.driver.Summarize()
 			app.render(summary)
