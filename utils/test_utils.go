@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Wait time threshold for WaitFor func
+// WaitTime is the time threshold for WaitFor func
 const WaitTime = 5
 
 func waitFor(f func() bool) bool {
