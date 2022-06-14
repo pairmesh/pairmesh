@@ -5,12 +5,13 @@ import (
 	"time"
 )
 
-const WAIT_TIME = 5
+// Wait time threshold for WaitFor func
+const WaitTime = 5
 
-func WaitFor(f func() bool) bool {
+func waitFor(f func() bool) bool {
 	start := time.Now()
 	for {
-		if time.Since(start) > time.Second*WAIT_TIME {
+		if time.Since(start) > time.Second*WaitTime {
 			return false
 		}
 		if f() {
@@ -19,6 +20,7 @@ func WaitFor(f func() bool) bool {
 	}
 }
 
+// WaitForServerUp waits for a given server to be up
 func WaitForServerUp(addr string) bool {
 	var f = func() bool {
 		conn, err := net.Dial("tcp", addr)
@@ -28,5 +30,5 @@ func WaitForServerUp(addr string) bool {
 		conn.Close()
 		return true
 	}
-	return WaitFor(f)
+	return waitFor(f)
 }
