@@ -30,6 +30,7 @@ import (
 	"github.com/pairmesh/pairmesh/message"
 	"github.com/pairmesh/pairmesh/protocol"
 	"github.com/pairmesh/pairmesh/security"
+	"github.com/pairmesh/pairmesh/utils"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -77,7 +78,7 @@ func TestRelay(t *testing.T) {
 	}()
 
 	// Wait for the server to get up running and ready to accept connections
-	time.Sleep(time.Duration(1 * time.Second))
+	assert.True(t, utils.WaitForServerUp(addr))
 
 	// Generate mock credentials
 	credentials, err := security.Credential(priv, protocol.UserID(1), protocol.PeerID(11000), net.ParseIP("1.2.3.4"), time.Hour)
@@ -161,7 +162,7 @@ func TestRelayNetworkFailure(t *testing.T) {
 	}()
 
 	// Wait for the server to get up running and ready to accept connections
-	time.Sleep(time.Duration(1 * time.Second))
+	assert.True(t, utils.WaitForServerUp(addr))
 
 	peerID := protocol.PeerID(11000)
 
